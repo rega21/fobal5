@@ -397,12 +397,21 @@ function updateSelectedPlayers() {
   selectedPlayers = players.filter(p =>
     document.querySelector(`#matchPlayersList input[data-id="${p.id}"]`)?.checked
   );
+
+  const ready = selectedPlayers.length === 10;
+  document.querySelectorAll("#matchPlayersList .card-selectable").forEach(card => {
+    const checkbox = card.querySelector("input");
+    if (!checkbox) return;
+
+    card.classList.toggle("selected", checkbox.checked);
+    checkbox.disabled = ready && !checkbox.checked;
+  });
+
   const startBtn = document.getElementById("startMatchBtn");
   const genBtn = document.getElementById("generateBalancedBtn");
   const genManualBtn = document.getElementById("generateManualBtn");
   const matchCount = document.getElementById("matchCount");
   matchCount.textContent = `${selectedPlayers.length}/10`;
-  const ready = selectedPlayers.length === 10;
   if (startBtn) startBtn.disabled = !ready;
   if (genBtn) genBtn.disabled = !ready;
   if (genManualBtn) genManualBtn.disabled = !ready;
