@@ -187,11 +187,15 @@ body{
 .checkbox-visual{
   width:24px;
   height:24px;
-  border: 2px solid var(--line);
+  border: 2px solid var(--primary);
   border-radius: 6px;
   transition: all 0.2s;
+  display:none;
 }
 .checkbox input:checked ~ .checkbox-visual{
+  display:flex;
+  align-items:center;
+  justify-content:center;
   background: var(--primary);
   border-color: var(--primary);
 }
