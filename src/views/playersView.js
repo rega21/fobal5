@@ -1,0 +1,81 @@
+(function (global) {
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function renderPlayersList({
+    players,
+    playerSearchTerm,
+    adminAuthenticated,
+    onEdit,
+    onDelete,
+  }) {
+    const playersTitle = document.getElementById("playersTitle");
+    const playersList = document.getElementById("playersList");
+    if (!playersTitle || !playersList) return;
+
+    const term = (playerSearchTerm || "").trim().toLowerCase();
+    const filteredPlayers = term
+      ? players.filter((player) => {
+          const haystack = `${player.name} ${player.nickname || ""}`.toLowerCase();
+          return haystack.includes(term);
+        })
+      : players;
+
+    playersTitle.textContent = term
+      ? `Players (${filteredPlayers.length}/${players.length})`
+      : `Players (${players.length})`;
+
+    if (filteredPlayers.length === 0) {
+      playersList.innerHTML = '<p class="muted">Sin resultados</p>';
+      return;
+    }
+
+    playersList.innerHTML = filteredPlayers
+      .map((player) => {
+        const nick = player.nickname?.trim()
+          ? `<span class="player-nick">"${escapeHtml(player.nickname)}"</span>`
+          : "";
+
+        const adminControls = adminAuthenticated
+          ? `<div class="admin-controls">
+              <button class="btn-edit" data-id="${player.id}" title="Editar">✏️</button>
+              <button class="btn-delete" data-id="${player.id}" title="Eliminar">🗑️</button>
+            </div>`
+          : "";
+
+        return `
+          <article class="card">
+            <div class="player-info">
+              <div class="player-name">
+                ${escapeHtml(player.name)} ${nick}
+              </div>
+            </div>
+            ${adminControls}
+          </article>
+        `;
+      })
+      .join("");
+
+    playersList.querySelectorAll(".btn-edit").forEach((button) => {
+      button.addEventListener("click", () => onEdit?.(button.dataset.id));
+    });
+
+    playersList.querySelectorAll(".btn-delete").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (confirm("¿Eliminar jugador?")) {
+          onDelete?.(button.dataset.id);
+        }
+      });
+    });
+  }
+
+  global.PlayersView = {
+    renderPlayersList,
+  };
+})(window);

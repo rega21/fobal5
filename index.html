@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Futbol Foca</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-title">Futbol Foca</span>
+      <span class="ball" aria-hidden="true">🦭</span>
+      
+    </div>
+
+    <div class="topbar-actions">
+      <button class="admin" type="button" id="adminBtn" aria-label="Admin">
+        <span class="shield" aria-hidden="true">🛡️</span>
+        <span id="adminBtnText">Admin</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="page">
+    <!-- Players view -->
+    <section class="view" id="view-players">
+      <div class="players-header">
+        <h2 class="section-title" id="playersTitle">Players (0)</h2>
+        <div class="players-actions">
+          <button class="btn-add-mini" id="togglePlayerSearchBtn" type="button">🔎&nbsp;Search</button>
+          <div id="addPlayerForm" class="hidden">
+            <button class="btn-add-mini" id="openNewPlayerBtn" type="button">👤&nbsp;Add</button>
+          </div>
+        </div>
+      </div>
+      <div class="player-search hidden" id="playerSearchWrap">
+        <input id="playerSearchInput" type="text" placeholder="Search by name" autocomplete="off" />
+        <button class="btn-add-mini btn-clear-mini" id="clearPlayerSearchBtn" type="button" aria-label="Clear search">✕</button>
+      </div>
+      <div class="list" id="playersList"></div>
+    </section>
+
+    <!-- Match view -->
+    <section class="view hidden" id="view-match">
+      <h2 class="section-title">Match</h2>
+      <div id="matchContent">
+        <!-- Phase 1: Player Selection -->
+        <div id="matchSelection">
+          <p class="muted">Select Players <span id="matchCount">0/10</span></p>
+          <div class="list" id="matchPlayersList"></div>
+
+          <div class="match-controls" style="display:flex;gap:8px;align-items:center;margin-top:12px;">
+            <div class="segmented" id="matchMode">
+              <button class="seg-btn active" data-mode="balanced">Balanced</button>
+              <button class="seg-btn" data-mode="manual">Manual</button>
+            </div>
+            <button class="btn btn-success" id="generateBalancedBtn">🔀 Generate Balanced Teams</button>
+            <button class="btn btn-success hidden" id="generateManualBtn">👥 Assign Teams Manually</button>
+          </div>
+        </div>
+
+        <!-- Manual Team Selection (hidden by default) -->
+        <div id="manualTeamSelection" class="hidden" style="margin-top:16px;">
+          <button class="btn-link" id="backToSelectionFromManualBtn" style="margin-bottom:12px;">← Back to selection</button>
+          <h3 class="section-title" style="font-size:16px; margin:0 0 12px 0;">Assign Teams <span id="teamCount" style="font-size:13px; color:#6b7280; font-weight:400;">A: 0/5 - B: 0/5</span></h3>
+          <div id="manualPlayersList" style="display:flex; flex-direction:column; gap:8px;"></div>
+          <button class="btn btn-success" id="confirmTeamsBtn" style="width:100%; margin-top:12px;">→ Confirm Teams</button>
+        </div>
+
+        <!-- Phase 2: Match Results -->
+        <div id="matchResults" class="hidden">
+          <button class="btn-link" id="backToSelectionBtn">← Back to selection</button>
+
+          <div class="teams-container">
+            <div class="team">
+              <h3 class="team-title" style="color: #10b981;">● Team A</h3>
+              <div class="team-list" id="teamA"></div>
+            </div>
+            <div class="team">
+              <h3 class="team-title" style="color: #3b82f6;">● Team B</h3>
+              <div class="team-list" id="teamB"></div>
+            </div>
+          </div>
+
+          <button class="btn btn-secondary" id="copyToWhatsAppBtn" style="width:100%;margin-top:16px;">📋 Copy for WhatsApp</button>
+
+          <div style="margin-top:20px; padding:16px; background:#f9fafb; border-radius:12px;">
+            <h4 style="margin:0 0 12px 0; font-size:16px;">Match Result</h4>
+            <div style="display:grid; grid-template-columns: 1fr auto 1fr; gap:12px; align-items:end;">
+              <div>
+                <label style="display:block; font-size:12px; color: #6b7280; margin-bottom:4px;">Team A</label>
+                <input type="number" id="scoreTeamA" value="0" min="0" style="width:100%; padding:8px; border:1px solid #e5e7eb; border-radius:6px;">
+              </div>
+              <div style="text-align:center; font-weight:700; color: #9ca3af;">×</div>
+              <div>
+                <label style="display:block; font-size:12px; color: #6b7280; margin-bottom:4px;">Team B</label>
+                <input type="number" id="scoreTeamB" value="0" min="0" style="width:100%; padding:8px; border:1px solid #e5e7eb; border-radius:6px;">
+              </div>
+            </div>
+            <div style="margin-top:12px;">
+              <label style="display:block; font-size:12px; color: #6b7280; margin-bottom:4px;">⭐ MVP (optional)</label>
+              <select id="mvpSelect" style="width:100%; padding:8px; border:1px solid #e5e7eb; border-radius:6px;">
+                <option value="">Select MVP</option>
+              </select>
+            </div>
+            <button class="btn btn-success" id="recordMatchBtn" style="width:100%; margin-top:12px;">Save Result</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- History view -->
+    <section class="view hidden" id="view-history">
+      <h2 class="section-title">History</h2>
+      <div class="list" id="historyList">
+        <p class="muted">Sin partidos registrados</p>
+      </div>
+    </section>
+
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" class="modal hidden">
+      <div class="modal-content modal-small">
+        <div class="modal-header">
+          <h2>Admin Login</h2>
+          <button class="close-btn" id="closeLoginBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>PIN</label>
+            <input type="password" id="adminPin" placeholder="Ingresa PIN" maxlength="6">
+          </div>
+          <div id="loginError" class="error-msg hidden"></div>
+          <div id="loginSpinner" class="login-spinner hidden">
+            <div class="spinner"></div>
+            <p class="spinner-text">Validando...</p>
+          </div>
+          <button class="btn btn-primary" id="loginBtn">Ingresar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Player Modal -->
+    <div id="editPlayerModal" class="modal hidden">
+      <div class="modal-content modal-medium">
+        <div class="modal-header">
+          <h2>Edit Player</h2>
+          <button class="close-btn" id="closeEditBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" id="editPlayerName" placeholder="Nombre">
+          </div>
+          <div class="form-group">
+            <label>Apodo</label>
+            <input type="text" id="editPlayerNickname" placeholder="Apodo">
+          </div>
+          <div class="slider-group">
+            <label>Attack: <span id="attackValue">0</span></label>
+            <input type="range" id="editPlayerAttack" min="0" max="10" value="0" class="slider">
+          </div>
+          <div class="slider-group">
+            <label>Defense: <span id="defenseValue">0</span></label>
+            <input type="range" id="editPlayerDefense" min="0" max="10" value="0" class="slider">
+          </div>
+          <div class="slider-group">
+            <label>Midfield: <span id="midfieldValue">0</span></label>
+            <input type="range" id="editPlayerMidfield" min="0" max="10" value="0" class="slider">
+          </div>
+          <button class="btn btn-success" id="updatePlayerBtn">Update</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- New Player Modal -->
+  <div id="newPlayerModal" class="modal hidden">
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h2>New Player</h2>
+        <button class="close-btn" id="closeNewBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Full name</label>
+          <input type="text" id="newPlayerName" placeholder="Full name">
+        </div>
+        <div class="form-group">
+          <label>Nickname (optional)</label>
+          <input type="text" id="newPlayerNickname" placeholder="Nickname (optional)">
+        </div>
+        <div class="slider-group">
+          <label>Attack: <span id="newAttackValue">5</span></label>
+          <input type="range" id="newPlayerAttack" min="0" max="10" value="5" class="slider">
+        </div>
+        <div class="slider-group">
+          <label>Defense: <span id="newDefenseValue">5</span></label>
+          <input type="range" id="newPlayerDefense" min="0" max="10" value="5" class="slider">
+        </div>
+        <div class="slider-group">
+          <label>Midfield: <span id="newMidfieldValue">5</span></label>
+          <input type="range" id="newPlayerMidfield" min="0" max="10" value="5" class="slider">
+        </div>
+        <button class="btn btn-success" id="createPlayerBtn">Add Player</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottomnav" role="navigation" aria-label="Bottom Navigation">
+    <button class="tab active" data-target="players">
+      <span class="tab-ico" aria-hidden="true">👥</span>
+      <span class="tab-text">Players</span>
+    </button>
+
+    <button class="tab" data-target="match">
+      <span class="tab-ico" aria-hidden="true">⚔️</span>
+      <span class="tab-text">Match</span>
+    </button>
+
+    <button class="tab" data-target="history">
+      <span class="tab-ico" aria-hidden="true">🕘</span>
+      <span class="tab-text">History</span>
+    </button>
+  </nav>
+
+  <script src="config.js"></script>
+  <script src="src/api/client.js"></script>
+  <script src="src/api/authClient.js"></script>
+  <script src="src/views/playersView.js"></script>
+  <script src="src/views/historyView.js"></script>
+  <script src="src/controllers/historyController.js"></script>
+  <script src="src/controllers/matchController.js"></script>
+  <script src="src/controllers/adminPlayersController.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
