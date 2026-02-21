@@ -369,6 +369,9 @@ function renderPlayers() {
 /* Match view */
 function renderMatchPlayers() {
   const matchPlayersList = document.getElementById("matchPlayersList");
+  const controls = document.querySelector("#matchSelection .match-controls");
+  if (controls) controls.classList.remove("hidden");
+
   matchPlayersList.innerHTML = players.map(p => {
     const isSelected = selectedPlayers.some(sp => sp.id === p.id);
     const disabled = selectedPlayers.length >= 10 && !isSelected ? "disabled" : "";

@@ -335,6 +335,15 @@ body{
   overscroll-behavior: contain;
 }
 
+@media (max-width: 768px){
+  #matchPlayersList{
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+    overscroll-behavior: auto;
+  }
+}
+
 /* Players header and small add button */
 .players-header{
   display:flex;
