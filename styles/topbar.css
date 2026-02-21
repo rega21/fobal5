@@ -1,0 +1,71 @@
+/* Top bar */
+body.admin-active .topbar{
+  background: linear-gradient(to right, #f0fdf4, #ffffff);
+  border-bottom-color: #86efac;
+}
+
+.topbar{
+  height: 64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:700;
+  font-size:20px;
+}
+.ball{ font-size:20px; }
+
+.topbar-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.btn-add{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  border: 0;
+  background: #10b981;
+  color: white;
+  font-weight:600;
+  cursor:pointer;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size:14px;
+  transition: all 0.2s;
+}
+.btn-add:hover{
+  background: #059669;
+}
+.btn-add.hidden{
+  display:none;
+}
+
+.admin{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-weight:600;
+  cursor:pointer;
+  padding: 8px 10px;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+.admin:hover{ background:#f3f4f6; }
+.admin.authenticated{
+  background: var(--success);
+  color: white;
+}
+.admin.authenticated:hover{
+  background: #059669;
+}

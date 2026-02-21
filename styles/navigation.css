@@ -1,0 +1,32 @@
+/* Bottom nav */
+.bottomnav{
+  position: fixed;
+  left:0; right:0; bottom:0;
+  height: 74px;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  padding: 8px 10px env(safe-area-inset-bottom);
+}
+.tab{
+  border:0;
+  background: transparent;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  cursor:pointer;
+  color: var(--muted);
+  min-width: 92px;
+  transition: color 0.2s;
+}
+.tab-ico{ font-size: 18px; }
+.tab-text{ font-size: 12px; font-weight: 650; }
+
+.tab.active{
+  color: var(--success);
+}

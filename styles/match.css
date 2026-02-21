@@ -1,0 +1,174 @@
+/* Match segmented control */
+.segmented{
+  background: #f3f4f6;
+  border-radius: 999px;
+  padding: 4px;
+  display:flex;
+}
+.segmented .seg-btn{
+  border:0;
+  background:transparent;
+  padding:6px 12px;
+  border-radius: 999px;
+  cursor:pointer;
+  font-weight:600;
+}
+.segmented .seg-btn.active{
+  background: var(--success);
+  color: white;
+}
+
+/* Keep match action buttons visible while scrolling the player list */
+.match-controls{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:stretch;
+  margin-top:12px;
+  position: -webkit-sticky;
+  position: sticky;
+  top: 80px; /* adjust if topbar height differs */
+  z-index: 40;
+  background: white; /* ensures buttons remain readable when overlaying content */
+  padding-top:6px;
+  padding-bottom:calc(6px + env(safe-area-inset-bottom));
+  border-radius: 8px;
+}
+
+.match-controls .btn{
+  width:100%;
+  margin-top:0;
+}
+
+.match-controls .segmented{
+  width:100%;
+}
+
+.match-controls .segmented .seg-btn{
+  flex:1;
+}
+
+/* Scrollable player list in match selection */
+#matchPlayersList{
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 4px;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 768px){
+  #matchPlayersList{
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+    overscroll-behavior: auto;
+  }
+}
+
+/* Teams */
+.teams-container{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:16px;
+  margin:20px 0;
+}
+.team{
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  padding:16px;
+  background:#f9fafb;
+}
+.team-title{
+  margin: 0 0 12px 0;
+  font-size:18px;
+  font-weight:700;
+}
+.team-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.team-player{
+  background: white;
+  border: 1px solid var(--line);
+  border-radius:10px;
+  padding:10px 12px;
+  font-weight:600;
+  font-size:14px;
+}
+
+/* Match info */
+.match-date{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:8px;
+  font-weight:600;
+}
+.match-teams{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+  font-size:13px;
+}
+.match-team{
+  background:#f3f4f6;
+  padding:10px;
+  border-radius:8px;
+}
+.match-team strong{
+  display:block;
+  margin-bottom:6px;
+}
+
+/* History match entry specific styles to keep sizes consistent */
+.card.match-entry{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+}
+.card.match-entry .match-grid{
+  display:grid;
+  grid-template-columns: 1fr 200px 1fr;
+  gap:20px;
+  align-items:center;
+}
+.card.match-entry .match-score{
+  font-size:40px;
+  font-weight:700;
+  color:#333;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+}
+.card.match-entry .dash{ color:#d1d5db; }
+.card.match-entry .match-mvp{
+  margin:8px auto 0;
+  padding:6px 14px;
+  background:#f1eca8;
+  color:#78350f;
+  border-radius:999px;
+  font-weight:600;
+  font-size:12px;
+  display:block;
+  width:max-content;
+  box-shadow:0 3px 10px rgba(0,0,0,0.08);
+}
+.card.match-entry .match-player{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:4px;
+  background:#f8fafb;
+  font-size:13px;
+}
+
+/* Admin player */
+.admin-player{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.admin-actions{
+  display:flex;
+  gap:4px;
+}

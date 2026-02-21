@@ -1,0 +1,35 @@
+:root{
+  --bg: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --card: #ffffff;
+  --shadow: 0 1px 0 rgba(17,24,39,0.04);
+  --radius: 18px;
+  --primary: #3b82f6;
+  --success: #10b981;
+  --danger: #ef4444;
+}
+
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.hidden{ display: none !important; }
+
+/* Page */
+.page{
+  padding: 18px 16px calc(112px + env(safe-area-inset-bottom));
+  max-width: 640px;
+  margin: 0 auto;
+}
+.section-title{
+  margin: 8px 0 14px;
+  font-size: 24px;
+  font-weight:700;
+}
+.muted{ color: var(--muted); }
