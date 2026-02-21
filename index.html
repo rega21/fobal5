@@ -51,7 +51,7 @@
           <p class="muted">Select Players <span id="matchCount">0/10</span></p>
           <div class="list" id="matchPlayersList"></div>
 
-          <div class="match-controls" style="display:flex;gap:8px;align-items:center;margin-top:12px;">
+          <div class="match-controls">
             <div class="segmented" id="matchMode">
               <button class="seg-btn active" data-mode="balanced">Balanced</button>
               <button class="seg-btn" data-mode="manual">Manual</button>
@@ -69,8 +69,8 @@
           <button class="btn btn-success" id="confirmTeamsBtn" style="width:100%; margin-top:12px;">→ Confirm Teams</button>
         </div>
 
-        <!-- Phase 2: Match Results -->
-        <div id="matchResults" class="hidden">
+        <!-- Phase 2: Match Setup -->
+        <div id="matchSetup" class="hidden">
           <button class="btn-link" id="backToSelectionBtn">← Back to selection</button>
 
           <div class="teams-container">
@@ -85,6 +85,24 @@
           </div>
 
           <button class="btn btn-secondary" id="copyToWhatsAppBtn" style="width:100%;margin-top:16px;">📋 Copy for WhatsApp</button>
+
+          <div style="margin-top:20px; padding:16px; background:#f9fafb; border-radius:12px;">
+            <h4 style="margin:0 0 12px 0; font-size:16px;">Confirmar Partido</h4>
+            <div class="form-group">
+              <label>Lugar</label>
+              <input type="text" id="matchLocation" placeholder="Ej: Cancha Norte">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>Fecha y hora</label>
+              <input type="datetime-local" id="matchDatetime">
+            </div>
+            <button class="btn btn-success" id="confirmMatchInfoBtn" style="width:100%; margin-top:12px;">Confirmar Partido</button>
+          </div>
+        </div>
+
+        <!-- Phase 3: Match Results -->
+        <div id="matchResults" class="hidden">
+          <button class="btn-link" id="backToSetupBtn">← Volver a datos del partido</button>
 
           <div style="margin-top:20px; padding:16px; background:#f9fafb; border-radius:12px;">
             <h4 style="margin:0 0 12px 0; font-size:16px;">Match Result</h4>

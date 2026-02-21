@@ -36,6 +36,8 @@
           : ""
       }
       <div class="match-date">${m.date}</div>
+      ${m.location ? `<div class="muted" style="margin:0 0 10px 0;">📍 ${m.location}</div>` : ""}
+      ${m.mapsUrl ? `<div style="margin:0 0 10px 0;"><a href="${m.mapsUrl}" target="_blank" rel="noopener noreferrer">🗺️ Ver en Google Maps</a></div>` : ""}
 
       <div class="match-grid">
         <div>

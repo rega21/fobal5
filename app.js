@@ -7,6 +7,11 @@ let players = [];
 let selectedPlayers = [];
 let currentTeams = null;
 let playerSearchTerm = "";
+let currentMatchDetails = null;
+let selectedPlaceData = null;
+let googleMapsPlacesPromise = null;
+
+const GOOGLE_MAPS_API_KEY = window.APP_CONFIG?.GOOGLE_MAPS_API_KEY || "";
 
 const authClient = window.AuthApi || null;
 
@@ -111,9 +116,15 @@ const matchController = window.createMatchController
         const teamBNames = currentTeams.b.map((player) => player.name).join("\n");
         return `🔵 Team A:\n${teamANames}\n\n🔵 Team B:\n${teamBNames}`;
       },
-      buildMatchPayload(currentTeams, scoreA, scoreB, mvpName) {
+      buildMatchPayload(currentTeams, details = {}, scoreA, scoreB, mvpName) {
         return {
-          date: new Date().toLocaleString(),
+          date: details?.datetimeDisplay || new Date().toLocaleString(),
+          location: details?.location || "",
+          scheduledAt: details?.scheduledAt || "",
+          placeId: details?.placeId || "",
+          mapsUrl: details?.mapsUrl || "",
+          latitude: details?.latitude ?? null,
+          longitude: details?.longitude ?? null,
           teamA: currentTeams.a.map((player) => player.name),
           teamB: currentTeams.b.map((player) => player.name),
           scoreA,
@@ -379,11 +390,11 @@ function renderMatchPlayers() {
   // Event listeners
   document.querySelectorAll("#matchPlayersList .card-selectable").forEach(card => {
     card.addEventListener("click", (e) => {
-      if (e.target.tagName !== "INPUT") {
-        const checkbox = card.querySelector("input");
-        checkbox.checked = !checkbox.checked;
-        updateSelectedPlayers();
-      }
+      if (e.target.closest(".checkbox")) return;
+
+      const checkbox = card.querySelector("input");
+      if (checkbox?.disabled) return;
+      checkbox.click();
     });
 
     card.querySelector("input").addEventListener("change", updateSelectedPlayers);
@@ -420,7 +431,7 @@ function updateSelectedPlayers() {
 function divideTeams() {
   currentTeams = matchController.createRandomTeams(selectedPlayers);
   renderTeams();
-  showMatchResults();
+  showMatchSetup();
 }
 
 function generateBalancedTeams() {
@@ -431,7 +442,7 @@ function generateBalancedTeams() {
 
   currentTeams = matchController.createBalancedTeams(selectedPlayers);
   renderTeams();
-  showMatchResults();
+  showMatchSetup();
 }
 
 function renderTeams() {
@@ -445,9 +456,6 @@ function renderTeams() {
   teamB.innerHTML = currentTeams.b.map(p => `
     <div class="team-player">${escapeHtml(p.name)}</div>
   `).join("");
-  
-  // Populate MVP select
-  populateMVPSelect();
 }
 
 function populateMVPSelect() {
@@ -457,14 +465,36 @@ function populateMVPSelect() {
     allPlayers.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("");
 }
 
-function showMatchResults() {
+function showMatchSetup() {
   document.getElementById("matchSelection").classList.add("hidden");
   document.getElementById("manualTeamSelection").classList.add("hidden");
-  document.getElementById("matchResults").classList.remove("hidden");
+  document.getElementById("matchSetup").classList.remove("hidden");
+  document.getElementById("matchResults").classList.add("hidden");
   renderTeams();
-  // Repopulate MVP select
-  const mvpSelect = document.getElementById("mvpSelect");
-  mvpSelect.innerHTML = '<option value="">Select MVP</option>' + currentTeams.a.concat(currentTeams.b).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+  const locationInput = document.getElementById("matchLocation");
+  const datetimeInput = document.getElementById("matchDatetime");
+
+  if (locationInput) locationInput.value = currentMatchDetails?.location || "";
+  if (datetimeInput) datetimeInput.value = currentMatchDetails?.scheduledAt || getDefaultDateTimeLocal();
+
+  selectedPlaceData = currentMatchDetails?.placeId
+    ? {
+        location: currentMatchDetails.location || "",
+        placeId: currentMatchDetails.placeId || "",
+        mapsUrl: currentMatchDetails.mapsUrl || "",
+        latitude: currentMatchDetails.latitude ?? null,
+        longitude: currentMatchDetails.longitude ?? null,
+      }
+    : null;
+
+  void initLocationAutocomplete();
+}
+
+function showMatchResults() {
+  document.getElementById("matchSetup").classList.add("hidden");
+  document.getElementById("matchResults").classList.remove("hidden");
+  populateMVPSelect();
   // Reset scores
   document.getElementById("scoreTeamA").value = 0;
   document.getElementById("scoreTeamB").value = 0;
@@ -473,13 +503,159 @@ function showMatchResults() {
 
 function backToSelection() {
   document.getElementById("matchResults").classList.add("hidden");
+  document.getElementById("matchSetup").classList.add("hidden");
   document.getElementById("matchSelection").classList.remove("hidden");
   currentTeams = null;
+  currentMatchDetails = null;
+  selectedPlaceData = null;
+}
+
+function backToMatchSetup() {
+  document.getElementById("matchResults").classList.add("hidden");
+  document.getElementById("matchSetup").classList.remove("hidden");
+}
+
+function getDefaultDateTimeLocal() {
+  const date = new Date();
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function loadGoogleMapsPlacesScript() {
+  if (window.google?.maps?.places) {
+    return Promise.resolve(window.google.maps);
+  }
+
+  if (!GOOGLE_MAPS_API_KEY) {
+    return Promise.reject(new Error("GOOGLE_MAPS_API_KEY not configured"));
+  }
+
+  if (googleMapsPlacesPromise) {
+    return googleMapsPlacesPromise;
+  }
+
+  googleMapsPlacesPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-google-maps-places="1"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(window.google?.maps));
+      existing.addEventListener("error", () => reject(new Error("Error loading Google Maps script")));
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&libraries=places&loading=async`;
+    script.async = true;
+    script.defer = true;
+    script.dataset.googleMapsPlaces = "1";
+    script.onload = () => resolve(window.google?.maps);
+    script.onerror = () => reject(new Error("Error loading Google Maps script"));
+    document.head.appendChild(script);
+  });
+
+  return googleMapsPlacesPromise;
+}
+
+async function initLocationAutocomplete() {
+  const locationInput = document.getElementById("matchLocation");
+  if (!locationInput || locationInput.dataset.autocompleteReady === "1") return;
+
+  if (!GOOGLE_MAPS_API_KEY) return;
+
+  try {
+    await loadGoogleMapsPlacesScript();
+    if (!window.google?.maps?.places?.Autocomplete) return;
+
+    const autocomplete = new window.google.maps.places.Autocomplete(locationInput, {
+      types: ["establishment", "geocode"],
+    });
+
+    if (typeof autocomplete.setFields === "function") {
+      autocomplete.setFields(["place_id", "formatted_address", "name", "geometry"]);
+    }
+
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+      if (!place) return;
+
+      const resolvedLocation = place.formatted_address || place.name || locationInput.value.trim();
+      if (resolvedLocation) {
+        locationInput.value = resolvedLocation;
+      }
+
+      const lat = place.geometry?.location?.lat ? place.geometry.location.lat() : null;
+      const lng = place.geometry?.location?.lng ? place.geometry.location.lng() : null;
+      const placeId = place.place_id || "";
+
+      selectedPlaceData = {
+        location: resolvedLocation || "",
+        placeId,
+        mapsUrl: placeId
+          ? `https://www.google.com/maps/place/?q=place_id:${encodeURIComponent(placeId)}`
+          : "",
+        latitude: lat,
+        longitude: lng,
+      };
+    });
+
+    locationInput.addEventListener("input", () => {
+      if (!selectedPlaceData) return;
+      if ((locationInput.value || "").trim() !== (selectedPlaceData.location || "").trim()) {
+        selectedPlaceData = null;
+      }
+    });
+
+    locationInput.dataset.autocompleteReady = "1";
+  } catch (error) {
+    console.warn("Google Places autocomplete no disponible:", error?.message || error);
+  }
+}
+
+function confirmMatchInfo() {
+  if (!currentTeams) return;
+
+  const location = document.getElementById("matchLocation")?.value.trim() || "";
+  const scheduledAt = document.getElementById("matchDatetime")?.value || "";
+
+  if (!location) {
+    alert("Completa el lugar");
+    return;
+  }
+  if (!scheduledAt) {
+    alert("Completa la fecha y hora");
+    return;
+  }
+
+  const scheduledDate = new Date(scheduledAt);
+  const datetimeDisplay = Number.isNaN(scheduledDate.getTime())
+    ? scheduledAt
+    : scheduledDate.toLocaleString();
+
+  const matchedPlace =
+    selectedPlaceData &&
+    (selectedPlaceData.location || "").trim().toLowerCase() === location.toLowerCase()
+      ? selectedPlaceData
+      : null;
+
+  currentMatchDetails = {
+    location,
+    scheduledAt,
+    datetimeDisplay,
+    placeId: matchedPlace?.placeId || "",
+    mapsUrl: matchedPlace?.mapsUrl || "",
+    latitude: matchedPlace?.latitude ?? null,
+    longitude: matchedPlace?.longitude ?? null,
+  };
+
+  showMatchResults();
 }
 
 function copyToWhatsApp() {
   if (!currentTeams) return;
-  const text = matchController.buildWhatsAppText(currentTeams);
+  const teamsText = matchController.buildWhatsAppText(currentTeams);
+  const detailsText = currentMatchDetails
+    ? `📍 ${currentMatchDetails.location}\n🗓️ ${currentMatchDetails.datetimeDisplay}${currentMatchDetails.mapsUrl ? `\n🗺️ ${currentMatchDetails.mapsUrl}` : ""}\n\n`
+    : "";
+  const text = `${detailsText}${teamsText}`;
   
   // Copy to clipboard
   navigator.clipboard.writeText(text).then(() => {
@@ -491,13 +667,17 @@ function copyToWhatsApp() {
 
 async function recordMatch() {
   if (!currentTeams) return;
+  if (!currentMatchDetails) {
+    alert("Primero confirma partido, lugar y fecha/hora");
+    return;
+  }
 
   const scoreA = parseInt(document.getElementById("scoreTeamA").value) || 0;
   const scoreB = parseInt(document.getElementById("scoreTeamB").value) || 0;
   const mvpId = document.getElementById("mvpSelect").value;
   const mvpName = mvpId ? document.querySelector(`#mvpSelect option[value="${mvpId}"]`).textContent : null;
 
-  const match = matchController.buildMatchPayload(currentTeams, scoreA, scoreB, mvpName);
+  const match = matchController.buildMatchPayload(currentTeams, currentMatchDetails, scoreA, scoreB, mvpName);
   const storedMatch = await matchController.saveMatch(match);
 
   historyController.pushMatch(storedMatch);
@@ -505,6 +685,7 @@ async function recordMatch() {
   // Reset
   selectedPlayers = [];
   currentTeams = null;
+  currentMatchDetails = null;
   document.querySelectorAll("#matchPlayersList input").forEach(cb => cb.checked = false);
   backToSelection();
   renderMatchPlayers();
@@ -781,6 +962,8 @@ document.getElementById('createPlayerBtn')?.addEventListener('click', () => {
 document.getElementById("startMatchBtn")?.addEventListener("click", divideTeams);
 document.getElementById("recordMatchBtn")?.addEventListener("click", recordMatch);
 document.getElementById("backToSelectionBtn")?.addEventListener("click", backToSelection);
+document.getElementById("backToSetupBtn")?.addEventListener("click", backToMatchSetup);
+document.getElementById("confirmMatchInfoBtn")?.addEventListener("click", confirmMatchInfo);
 document.getElementById("copyToWhatsAppBtn")?.addEventListener("click", copyToWhatsApp);
 // Balanced teams
 const genBtnEl = document.getElementById("generateBalancedBtn");
@@ -809,7 +992,7 @@ if (confirmTeamsBtn) confirmTeamsBtn.addEventListener("click", () => {
     alert("Debes seleccionar 5 jugadores en cada equipo");
     return;
   }
-  showMatchResults();
+  showMatchSetup();
 });
 
 const backToSelectionFromManualBtn = document.getElementById("backToSelectionFromManualBtn");

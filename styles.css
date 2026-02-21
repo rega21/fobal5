@@ -95,7 +95,7 @@ body{
 
 /* Page */
 .page{
-  padding: 18px 16px 92px;
+  padding: 18px 16px calc(112px + env(safe-area-inset-bottom));
   max-width: 640px;
   margin: 0 auto;
 }
@@ -299,14 +299,32 @@ body{
 
 /* Keep match action buttons visible while scrolling the player list */
 .match-controls{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:stretch;
+  margin-top:12px;
   position: -webkit-sticky;
   position: sticky;
   top: 80px; /* adjust if topbar height differs */
   z-index: 40;
   background: white; /* ensures buttons remain readable when overlaying content */
   padding-top:6px;
-  padding-bottom:6px;
+  padding-bottom:calc(6px + env(safe-area-inset-bottom));
   border-radius: 8px;
+}
+
+.match-controls .btn{
+  width:100%;
+  margin-top:0;
+}
+
+.match-controls .segmented{
+  width:100%;
+}
+
+.match-controls .segmented .seg-btn{
+  flex:1;
 }
 
 /* Scrollable player list in match selection */

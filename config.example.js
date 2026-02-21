@@ -9,4 +9,8 @@ window.APP_CONFIG = {
   // Tu clave anónima de Supabase (anon key)
   // Encuentra esto en: Supabase Dashboard → Settings → API → anon key
   SUPABASE_ANON_KEY: "YOUR_SUPABASE_ANON_KEY_HERE",
+
+  // Google Maps JavaScript API Key (con Places API habilitada)
+  // Restringe esta key por dominio para mayor seguridad
+  GOOGLE_MAPS_API_KEY: "YOUR_GOOGLE_MAPS_API_KEY_HERE",
 };
