@@ -10,6 +10,7 @@ let playerSearchTerm = "";
 let currentMatchDetails = null;
 let selectedPlaceData = null;
 let googleMapsPlacesPromise = null;
+let previousGoogleAuthFailureHandler = null;
 
 const GOOGLE_MAPS_API_KEY = window.APP_CONFIG?.GOOGLE_MAPS_API_KEY || "";
 
@@ -524,6 +525,20 @@ function getDefaultDateTimeLocal() {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function setMatchLocationHint(message = "") {
+  const hintEl = document.getElementById("matchLocationHint");
+  if (!hintEl) return;
+
+  if (!message) {
+    hintEl.textContent = "";
+    hintEl.classList.add("hidden");
+    return;
+  }
+
+  hintEl.textContent = message;
+  hintEl.classList.remove("hidden");
+}
+
 function loadGoogleMapsPlacesScript() {
   if (window.google?.maps?.places) {
     return Promise.resolve(window.google.maps);
@@ -538,19 +553,40 @@ function loadGoogleMapsPlacesScript() {
   }
 
   googleMapsPlacesPromise = new Promise((resolve, reject) => {
+    const callbackName = "__fobalGoogleMapsPlacesReady";
+
+    const finishIfReady = () => {
+      if (window.google?.maps?.places) {
+        resolve(window.google.maps);
+        return true;
+      }
+      return false;
+    };
+
+    if (finishIfReady()) return;
+
+    window[callbackName] = () => {
+      if (!finishIfReady()) {
+        reject(new Error("Google Maps loaded but Places library is unavailable"));
+      }
+      try {
+        delete window[callbackName];
+      } catch (_error) {
+        window[callbackName] = undefined;
+      }
+    };
+
     const existing = document.querySelector('script[data-google-maps-places="1"]');
     if (existing) {
-      existing.addEventListener("load", () => resolve(window.google?.maps));
-      existing.addEventListener("error", () => reject(new Error("Error loading Google Maps script")));
+      existing.addEventListener("error", () => reject(new Error("Error loading Google Maps script")), { once: true });
       return;
     }
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&libraries=places&loading=async`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&libraries=places&v=weekly&callback=${callbackName}`;
     script.async = true;
     script.defer = true;
     script.dataset.googleMapsPlaces = "1";
-    script.onload = () => resolve(window.google?.maps);
     script.onerror = () => reject(new Error("Error loading Google Maps script"));
     document.head.appendChild(script);
   });
@@ -560,13 +596,34 @@ function loadGoogleMapsPlacesScript() {
 
 async function initLocationAutocomplete() {
   const locationInput = document.getElementById("matchLocation");
-  if (!locationInput || locationInput.dataset.autocompleteReady === "1") return;
+  if (!locationInput) return;
 
-  if (!GOOGLE_MAPS_API_KEY) return;
+  if (!previousGoogleAuthFailureHandler) {
+    previousGoogleAuthFailureHandler = window.gm_authFailure || null;
+  }
+  window.gm_authFailure = function gmAuthFailureProxy() {
+    if (typeof previousGoogleAuthFailureHandler === "function") {
+      previousGoogleAuthFailureHandler();
+    }
+    setMatchLocationHint("Google Maps rechazó la API Key (revisa restricciones de dominio, APIs habilitadas y facturación). Puedes escribir el lugar manualmente.");
+  };
+
+  if (!GOOGLE_MAPS_API_KEY) {
+    setMatchLocationHint("Autocomplete de Google Maps desactivado. Configura GOOGLE_MAPS_API_KEY en config.js (puedes escribir el lugar manualmente).");
+    return;
+  }
+
+  if (locationInput.dataset.autocompleteReady === "1") {
+    setMatchLocationHint("Autocomplete de Google Maps activo.");
+    return;
+  }
 
   try {
     await loadGoogleMapsPlacesScript();
-    if (!window.google?.maps?.places?.Autocomplete) return;
+    if (!window.google?.maps?.places?.Autocomplete) {
+      setMatchLocationHint("No se pudo activar Google Maps Autocomplete. Verifica que estén habilitadas Maps JavaScript API + Places API y que la key permita este dominio.");
+      return;
+    }
 
     const autocomplete = new window.google.maps.places.Autocomplete(locationInput, {
       types: ["establishment", "geocode"],
@@ -608,8 +665,10 @@ async function initLocationAutocomplete() {
     });
 
     locationInput.dataset.autocompleteReady = "1";
+    setMatchLocationHint("Autocomplete de Google Maps activo.");
   } catch (error) {
     console.warn("Google Places autocomplete no disponible:", error?.message || error);
+    setMatchLocationHint("Google Maps no disponible en este momento. Revisa la consola del navegador para el detalle del error y permisos de la API key.");
   }
 }
 
