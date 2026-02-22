@@ -627,6 +627,7 @@ async function initLocationAutocomplete() {
 
     const autocomplete = new window.google.maps.places.Autocomplete(locationInput, {
       types: ["establishment", "geocode"],
+      componentRestrictions: { country: "uy" },
     });
 
     if (typeof autocomplete.setFields === "function") {
