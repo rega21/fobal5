@@ -11,6 +11,8 @@ let currentMatchDetails = null;
 let selectedPlaceData = null;
 let googleMapsPlacesPromise = null;
 let previousGoogleAuthFailureHandler = null;
+const SOCCER_PLACE_KEYWORDS = ["futbol", "fútbol", "cancha", "soccer", "football", "futsal", "papi"];
+const SOCCER_PLACE_TYPES = ["stadium", "sports_complex", "gym"];
 
 const GOOGLE_MAPS_API_KEY = window.APP_CONFIG?.GOOGLE_MAPS_API_KEY || "";
 
@@ -478,12 +480,11 @@ function showMatchSetup() {
   renderTeams();
 
   const locationInput = document.getElementById("matchLocation");
-  const addressInput = document.getElementById("matchAddress");
   const datetimeInput = document.getElementById("matchDatetime");
 
   if (locationInput) locationInput.value = currentMatchDetails?.location || "";
-  if (addressInput) addressInput.value = currentMatchDetails?.address || "";
   if (datetimeInput) datetimeInput.value = currentMatchDetails?.scheduledAt || getDefaultDateTimeLocal();
+  setDetectedAddressDetails(currentMatchDetails?.address || "", currentMatchDetails?.mapsUrl || "");
 
   selectedPlaceData = currentMatchDetails?.placeId
     ? {
@@ -543,6 +544,62 @@ function setMatchLocationHint(message = "") {
   hintEl.classList.remove("hidden");
 }
 
+function buildMapsSearchUrl(location = "", address = "") {
+  const query = [String(location || "").trim(), String(address || "").trim()].filter(Boolean).join(", ");
+  if (!query) return "";
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+function buildMapsShortShareUrl(location = "", address = "") {
+  const query = [String(location || "").trim(), String(address || "").trim()].filter(Boolean).join(" ");
+  if (!query) return "";
+  return `https://maps.google.com/?q=${encodeURIComponent(query)}`;
+}
+
+function setDetectedAddressDetails(address = "", mapsUrl = "") {
+  const addressEl = document.getElementById("matchAddressDetected");
+  const mapsBtn = document.getElementById("openMapsBtn");
+  const trimmedAddress = String(address || "").trim();
+  const trimmedMapsUrl = String(mapsUrl || "").trim();
+
+  if (addressEl) {
+    addressEl.textContent = trimmedAddress || "Sin dirección detectada";
+    addressEl.dataset.value = trimmedAddress;
+  }
+
+  if (mapsBtn) {
+    mapsBtn.dataset.mapsUrl = trimmedMapsUrl;
+    mapsBtn.disabled = !trimmedMapsUrl;
+  }
+}
+
+function openDetectedLocationInMaps() {
+  const location = document.getElementById("matchLocation")?.value.trim() || "";
+  const address = document.getElementById("matchAddressDetected")?.dataset.value?.trim() || "";
+  const mapsBtn = document.getElementById("openMapsBtn");
+  const mapsUrl = mapsBtn?.dataset.mapsUrl || buildMapsSearchUrl(location, address);
+
+  if (!mapsUrl) {
+    alert("Primero selecciona un lugar para abrirlo en Google Maps");
+    return;
+  }
+
+  window.open(mapsUrl, "_blank", "noopener,noreferrer");
+}
+
+function seemsSoccerPlace(place) {
+  if (!place) return false;
+
+  const name = String(place.name || "").toLowerCase();
+  const address = String(place.formatted_address || "").toLowerCase();
+  const types = Array.isArray(place.types) ? place.types.map((item) => String(item).toLowerCase()) : [];
+
+  const keywordMatch = SOCCER_PLACE_KEYWORDS.some((keyword) => name.includes(keyword) || address.includes(keyword));
+  const typeMatch = SOCCER_PLACE_TYPES.some((type) => types.includes(type));
+
+  return keywordMatch || typeMatch;
+}
+
 function loadGoogleMapsPlacesScript() {
   if (window.google?.maps?.places) {
     return Promise.resolve(window.google.maps);
@@ -600,7 +657,6 @@ function loadGoogleMapsPlacesScript() {
 
 async function initLocationAutocomplete() {
   const locationInput = document.getElementById("matchLocation");
-  const addressInput = document.getElementById("matchAddress");
   if (!locationInput) return;
 
   if (!previousGoogleAuthFailureHandler) {
@@ -619,6 +675,9 @@ async function initLocationAutocomplete() {
   }
 
   if (locationInput.dataset.autocompleteReady === "1") {
+    const fallbackAddress = selectedPlaceData?.address || currentMatchDetails?.address || "";
+    const fallbackMapsUrl = selectedPlaceData?.mapsUrl || currentMatchDetails?.mapsUrl || "";
+    setDetectedAddressDetails(fallbackAddress, fallbackMapsUrl);
     setMatchLocationHint("Autocomplete de Google Maps activo.");
     return;
   }
@@ -631,12 +690,12 @@ async function initLocationAutocomplete() {
     }
 
     const autocomplete = new window.google.maps.places.Autocomplete(locationInput, {
-      types: ["establishment", "geocode"],
+      types: ["establishment"],
       componentRestrictions: { country: "uy" },
     });
 
     if (typeof autocomplete.setFields === "function") {
-      autocomplete.setFields(["place_id", "formatted_address", "name", "geometry"]);
+      autocomplete.setFields(["place_id", "formatted_address", "name", "geometry", "types"]);
     }
 
     autocomplete.addListener("place_changed", () => {
@@ -647,9 +706,6 @@ async function initLocationAutocomplete() {
       const resolvedAddress = place.formatted_address || "";
 
       locationInput.value = resolvedName || resolvedAddress || locationInput.value.trim();
-      if (addressInput) {
-        addressInput.value = resolvedAddress;
-      }
 
       const lat = place.geometry?.location?.lat ? place.geometry.location.lat() : null;
       const lng = place.geometry?.location?.lng ? place.geometry.location.lng() : null;
@@ -665,23 +721,22 @@ async function initLocationAutocomplete() {
         latitude: lat,
         longitude: lng,
       };
+      setDetectedAddressDetails(resolvedAddress, selectedPlaceData.mapsUrl || "");
+
+      if (seemsSoccerPlace(place)) {
+        setMatchLocationHint("Autocomplete de Google Maps activo.");
+      } else {
+        setMatchLocationHint("Lugar seleccionado. No parece una cancha de fútbol; verifica el nombre/dirección si era para partido.");
+      }
     });
 
     locationInput.addEventListener("input", () => {
       if (!selectedPlaceData) return;
       if ((locationInput.value || "").trim() !== (selectedPlaceData.location || "").trim()) {
         selectedPlaceData = null;
+        setDetectedAddressDetails("", "");
       }
     });
-
-    if (addressInput) {
-      addressInput.addEventListener("input", () => {
-        if (!selectedPlaceData) return;
-        if ((addressInput.value || "").trim() !== (selectedPlaceData.address || "").trim()) {
-          selectedPlaceData = null;
-        }
-      });
-    }
 
     locationInput.dataset.autocompleteReady = "1";
     setMatchLocationHint("Autocomplete de Google Maps activo.");
@@ -695,7 +750,7 @@ function confirmMatchInfo() {
   if (!currentTeams) return;
 
   const location = document.getElementById("matchLocation")?.value.trim() || "";
-  const address = document.getElementById("matchAddress")?.value.trim() || "";
+  const address = document.getElementById("matchAddressDetected")?.dataset.value?.trim() || "";
   const scheduledAt = document.getElementById("matchDatetime")?.value || "";
 
   if (!location) {
@@ -725,7 +780,7 @@ function confirmMatchInfo() {
     scheduledAt,
     datetimeDisplay,
     placeId: matchedPlace?.placeId || "",
-    mapsUrl: matchedPlace?.mapsUrl || "",
+    mapsUrl: matchedPlace?.mapsUrl || buildMapsSearchUrl(location, address),
     latitude: matchedPlace?.latitude ?? null,
     longitude: matchedPlace?.longitude ?? null,
   };
@@ -736,14 +791,37 @@ function confirmMatchInfo() {
 function copyToWhatsApp() {
   if (!currentTeams) return;
   const teamsText = matchController.buildWhatsAppText(currentTeams);
-  const locationLine = currentMatchDetails
-    ? currentMatchDetails.address
-      ? `📍 ${currentMatchDetails.location}\n📌 ${currentMatchDetails.address}`
-      : `📍 ${currentMatchDetails.location}`
+
+  const formLocation = document.getElementById("matchLocation")?.value.trim() || "";
+  const formAddress = document.getElementById("matchAddressDetected")?.dataset.value?.trim() || "";
+  const formScheduledAt = document.getElementById("matchDatetime")?.value || "";
+  const parsedDate = formScheduledAt ? new Date(formScheduledAt) : null;
+  const formDatetimeDisplay = parsedDate && !Number.isNaN(parsedDate.getTime())
+    ? parsedDate.toLocaleString()
+    : formScheduledAt;
+
+  const shareLocation = currentMatchDetails?.location || formLocation;
+  const shareAddress = currentMatchDetails?.address || formAddress;
+  const shareDatetime = currentMatchDetails?.datetimeDisplay || formDatetimeDisplay;
+  const shareMapsUrl = buildMapsShortShareUrl(shareLocation, shareAddress)
+    || currentMatchDetails?.mapsUrl
+    || buildMapsSearchUrl(shareLocation, shareAddress);
+
+  const locationLine = shareLocation
+    ? shareAddress
+      ? `📍 ${shareLocation}\n📌 ${shareAddress}`
+      : `📍 ${shareLocation}`
     : "";
-  const detailsText = currentMatchDetails
-    ? `${locationLine}\n🗓️ ${currentMatchDetails.datetimeDisplay}${currentMatchDetails.mapsUrl ? `\n🗺️ ${currentMatchDetails.mapsUrl}` : ""}\n\n`
-    : "";
+
+  const detailsParts = [];
+  if (locationLine) detailsParts.push(locationLine);
+  if (shareDatetime) detailsParts.push(`🗓️ ${shareDatetime}`);
+  if (shareMapsUrl) {
+    detailsParts.push("🌍 Ver en Google Maps");
+    detailsParts.push(shareMapsUrl);
+  }
+
+  const detailsText = detailsParts.length > 0 ? `${detailsParts.join("\n")}\n\n` : "";
   const text = `${detailsText}${teamsText}`;
   
   // Copy to clipboard
@@ -1053,6 +1131,7 @@ document.getElementById("recordMatchBtn")?.addEventListener("click", recordMatch
 document.getElementById("backToSelectionBtn")?.addEventListener("click", backToSelection);
 document.getElementById("backToSetupBtn")?.addEventListener("click", backToMatchSetup);
 document.getElementById("confirmMatchInfoBtn")?.addEventListener("click", confirmMatchInfo);
+document.getElementById("openMapsBtn")?.addEventListener("click", openDetectedLocationInMaps);
 document.getElementById("copyToWhatsAppBtn")?.addEventListener("click", copyToWhatsApp);
 // Balanced teams
 const genBtnEl = document.getElementById("generateBalancedBtn");

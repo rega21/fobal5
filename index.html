@@ -94,9 +94,10 @@
               <p class="muted hidden" id="matchLocationHint" style="margin:6px 0 0;font-size:12px;"></p>
             </div>
             <div class="form-group">
-              <label>Dirección</label>
-              <input type="text" id="matchAddress" placeholder="Ej: Dr. Alejandro Gallinal, Montevideo">
+              <label>Dirección detectada</label>
+              <p id="matchAddressDetected" class="muted" style="margin:0; padding:12px; border:1px solid #e5e7eb; border-radius:10px; background:#fff;">Sin dirección detectada</p>
             </div>
+            <button class="btn btn-secondary" id="openMapsBtn" type="button" style="width:100%; margin-bottom:12px;" disabled>🌍 Ver en Google Maps</button>
             <div class="form-group" style="margin-bottom:0;">
               <label>Fecha y hora</label>
               <input type="datetime-local" id="matchDatetime">
