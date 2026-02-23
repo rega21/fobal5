@@ -372,42 +372,18 @@ function renderPlayers() {
 
 /* Match view */
 function renderMatchPlayers() {
-  const matchPlayersList = document.getElementById("matchPlayersList");
-  const controls = document.querySelector("#matchSelection .match-controls");
-  if (controls) controls.classList.remove("hidden");
-
-  matchPlayersList.innerHTML = players.map(p => {
-    const isSelected = selectedPlayers.some(sp => sp.id === p.id);
-    const disabled = selectedPlayers.length >= 10 && !isSelected ? "disabled" : "";
-    
-    return `
-      <article class="card card-selectable ${isSelected ? "selected" : ""}" data-id="${p.id}">
-        <div class="player-name">
-          ${escapeHtml(p.name)}
-          ${p.nickname?.trim() ? `<span class="player-nick">"${escapeHtml(p.nickname)}"</span>` : ""}
-        </div>
-        <label class="checkbox">
-          <input type="checkbox" ${isSelected ? "checked" : ""} ${disabled} data-id="${p.id}">
-          <span class="checkbox-visual"></span>
-        </label>
-      </article>
-    `;
-  }).join("");
-
-  // Event listeners
-  document.querySelectorAll("#matchPlayersList .card-selectable").forEach(card => {
-    card.addEventListener("click", (e) => {
-      if (e.target.closest(".checkbox")) return;
-
-      const checkbox = card.querySelector("input");
-      if (checkbox?.disabled) return;
-      checkbox.click();
+  if (window.MatchView?.renderMatchPlayersList) {
+    window.MatchView.renderMatchPlayersList({
+      players,
+      selectedPlayers,
+      onSelectionChanged: (selectedIds) => {
+        const selectedIdSet = new Set((selectedIds || []).map((id) => String(id)));
+        selectedPlayers = players.filter((player) => selectedIdSet.has(String(player.id)));
+      },
     });
+    return;
+  }
 
-    card.querySelector("input").addEventListener("change", updateSelectedPlayers);
-  });
-
-  // Update match counter and button states
   updateSelectedPlayers();
 }
 
@@ -453,38 +429,24 @@ function generateBalancedTeams() {
 }
 
 function renderTeams() {
-  const teamA = document.getElementById("teamA");
-  const teamB = document.getElementById("teamB");
-
-  teamA.innerHTML = currentTeams.a.map(p => `
-    <div class="team-player">${escapeHtml(p.name)}</div>
-  `).join("");
-
-  teamB.innerHTML = currentTeams.b.map(p => `
-    <div class="team-player">${escapeHtml(p.name)}</div>
-  `).join("");
+  window.MatchView?.renderTeams?.({ teams: currentTeams });
 }
 
 function populateMVPSelect() {
-  const mvpSelect = document.getElementById("mvpSelect");
-  const allPlayers = [...currentTeams.a, ...currentTeams.b];
-  mvpSelect.innerHTML = '<option value="">Select MVP</option>' + 
-    allPlayers.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("");
+  window.MatchView?.populateMvpOptions?.({ teams: currentTeams });
 }
 
 function showMatchSetup() {
-  document.getElementById("matchSelection").classList.add("hidden");
-  document.getElementById("manualTeamSelection").classList.add("hidden");
-  document.getElementById("matchSetup").classList.remove("hidden");
-  document.getElementById("matchResults").classList.add("hidden");
+  window.MatchView?.showSetupState?.();
   renderTeams();
 
-  const locationInput = document.getElementById("matchLocation");
-  const datetimeInput = document.getElementById("matchDatetime");
-
-  if (locationInput) locationInput.value = currentMatchDetails?.location || "";
-  if (datetimeInput) datetimeInput.value = currentMatchDetails?.scheduledAt || getDefaultDateTimeLocal();
-  setDetectedAddressDetails(currentMatchDetails?.address || "", currentMatchDetails?.mapsUrl || "");
+  window.MatchView?.setMatchSetupValues?.({
+    location: currentMatchDetails?.location || "",
+    scheduledAt: currentMatchDetails?.scheduledAt || "",
+    fallbackScheduledAt: getDefaultDateTimeLocal(),
+    address: currentMatchDetails?.address || "",
+    mapsUrl: currentMatchDetails?.mapsUrl || "",
+  });
 
   selectedPlaceData = currentMatchDetails?.placeId
     ? {
@@ -501,27 +463,20 @@ function showMatchSetup() {
 }
 
 function showMatchResults() {
-  document.getElementById("matchSetup").classList.add("hidden");
-  document.getElementById("matchResults").classList.remove("hidden");
+  window.MatchView?.showResultsState?.();
   populateMVPSelect();
-  // Reset scores
-  document.getElementById("scoreTeamA").value = 0;
-  document.getElementById("scoreTeamB").value = 0;
-  document.getElementById("mvpSelect").value = "";
+  window.MatchView?.resetMatchResultInputs?.();
 }
 
 function backToSelection() {
-  document.getElementById("matchResults").classList.add("hidden");
-  document.getElementById("matchSetup").classList.add("hidden");
-  document.getElementById("matchSelection").classList.remove("hidden");
+  window.MatchView?.showSelectionState?.();
   currentTeams = null;
   currentMatchDetails = null;
   selectedPlaceData = null;
 }
 
 function backToMatchSetup() {
-  document.getElementById("matchResults").classList.add("hidden");
-  document.getElementById("matchSetup").classList.remove("hidden");
+  window.MatchView?.backToSetupState?.();
 }
 
 function getDefaultDateTimeLocal() {
@@ -531,60 +486,23 @@ function getDefaultDateTimeLocal() {
 }
 
 function setMatchLocationHint(message = "") {
-  const hintEl = document.getElementById("matchLocationHint");
-  if (!hintEl) return;
-
-  if (!message) {
-    hintEl.textContent = "";
-    hintEl.classList.add("hidden");
-    return;
-  }
-
-  hintEl.textContent = message;
-  hintEl.classList.remove("hidden");
+  window.MatchView?.setLocationHint?.(message);
 }
 
 function buildMapsSearchUrl(location = "", address = "") {
-  const query = [String(location || "").trim(), String(address || "").trim()].filter(Boolean).join(", ");
-  if (!query) return "";
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  return window.MatchView?.buildMapsSearchUrl?.(location, address) || "";
 }
 
 function buildMapsShortShareUrl(location = "", address = "") {
-  const query = [String(location || "").trim(), String(address || "").trim()].filter(Boolean).join(" ");
-  if (!query) return "";
-  return `https://maps.google.com/?q=${encodeURIComponent(query)}`;
+  return window.MatchView?.buildMapsShortShareUrl?.(location, address) || "";
 }
 
 function setDetectedAddressDetails(address = "", mapsUrl = "") {
-  const addressEl = document.getElementById("matchAddressDetected");
-  const mapsBtn = document.getElementById("openMapsBtn");
-  const trimmedAddress = String(address || "").trim();
-  const trimmedMapsUrl = String(mapsUrl || "").trim();
-
-  if (addressEl) {
-    addressEl.textContent = trimmedAddress || "Sin dirección detectada";
-    addressEl.dataset.value = trimmedAddress;
-  }
-
-  if (mapsBtn) {
-    mapsBtn.dataset.mapsUrl = trimmedMapsUrl;
-    mapsBtn.disabled = !trimmedMapsUrl;
-  }
+  window.MatchView?.setDetectedAddressDetails?.(address, mapsUrl);
 }
 
 function openDetectedLocationInMaps() {
-  const location = document.getElementById("matchLocation")?.value.trim() || "";
-  const address = document.getElementById("matchAddressDetected")?.dataset.value?.trim() || "";
-  const mapsBtn = document.getElementById("openMapsBtn");
-  const mapsUrl = mapsBtn?.dataset.mapsUrl || buildMapsSearchUrl(location, address);
-
-  if (!mapsUrl) {
-    alert("Primero selecciona un lugar para abrirlo en Google Maps");
-    return;
-  }
-
-  window.open(mapsUrl, "_blank", "noopener,noreferrer");
+  window.MatchView?.openDetectedLocationInMaps?.();
 }
 
 function seemsSoccerPlace(place) {
@@ -749,9 +667,12 @@ async function initLocationAutocomplete() {
 function confirmMatchInfo() {
   if (!currentTeams) return;
 
-  const location = document.getElementById("matchLocation")?.value.trim() || "";
-  const address = document.getElementById("matchAddressDetected")?.dataset.value?.trim() || "";
-  const scheduledAt = document.getElementById("matchDatetime")?.value || "";
+  const setupValues = window.MatchView?.getMatchSetupValues
+    ? window.MatchView.getMatchSetupValues()
+    : { location: "", address: "", scheduledAt: "" };
+  const location = setupValues.location || "";
+  const address = setupValues.address || "";
+  const scheduledAt = setupValues.scheduledAt || "";
 
   if (!location) {
     alert("Completa el lugar");
@@ -792,9 +713,12 @@ function copyToWhatsApp() {
   if (!currentTeams) return;
   const teamsText = matchController.buildWhatsAppText(currentTeams);
 
-  const formLocation = document.getElementById("matchLocation")?.value.trim() || "";
-  const formAddress = document.getElementById("matchAddressDetected")?.dataset.value?.trim() || "";
-  const formScheduledAt = document.getElementById("matchDatetime")?.value || "";
+  const setupValues = window.MatchView?.getMatchSetupValues
+    ? window.MatchView.getMatchSetupValues()
+    : { location: "", address: "", scheduledAt: "" };
+  const formLocation = setupValues.location || "";
+  const formAddress = setupValues.address || "";
+  const formScheduledAt = setupValues.scheduledAt || "";
   const parsedDate = formScheduledAt ? new Date(formScheduledAt) : null;
   const formDatetimeDisplay = parsedDate && !Number.isNaN(parsedDate.getTime())
     ? parsedDate.toLocaleString()
