@@ -175,6 +175,20 @@
       .join("");
   }
 
+  function renderConfirmedTeams({ teams }) {
+    const teamA = document.getElementById("resultTeamA");
+    const teamB = document.getElementById("resultTeamB");
+    if (!teamA || !teamB || !teams) return;
+
+    teamA.innerHTML = (teams.a || [])
+      .map((player) => `<div class="team-player">${escapeHtml(player.name)}</div>`)
+      .join("");
+
+    teamB.innerHTML = (teams.b || [])
+      .map((player) => `<div class="team-player">${escapeHtml(player.name)}</div>`)
+      .join("");
+  }
+
   function populateMvpOptions({ teams }) {
     const mvpSelect = document.getElementById("mvpSelect");
     if (!mvpSelect || !teams) return;
@@ -220,6 +234,7 @@
   global.MatchView = {
     renderMatchPlayersList,
     renderTeams,
+    renderConfirmedTeams,
     populateMvpOptions,
     buildMapsSearchUrl,
     buildMapsShortShareUrl,

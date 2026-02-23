@@ -464,6 +464,7 @@ function showMatchSetup() {
 
 function showMatchResults() {
   window.MatchView?.showResultsState?.();
+  window.MatchView?.renderConfirmedTeams?.({ teams: currentTeams });
   populateMVPSelect();
   window.MatchView?.resetMatchResultInputs?.();
 }
