@@ -27,6 +27,7 @@
       .map((m) => {
         const matchId = encodeURIComponent(String(m.id ?? ""));
         const matchDate = encodeURIComponent(String(m.date ?? ""));
+        const matchLocation = String(m.location || m.matchLocation || m.place || "").trim();
 
         return `
     <article class="card match-entry" style="position:relative;">
@@ -36,7 +37,7 @@
           : ""
       }
       <div class="match-date">${m.date}</div>
-      ${m.location ? `<div class="muted" style="margin:0 0 10px 0;">📍 ${m.location}</div>` : ""}
+      ${matchLocation ? `<div class="muted" style="margin:0 0 10px 0;">📍 ${matchLocation}</div>` : ""}
       ${m.mapsUrl ? `<div style="margin:0 0 10px 0;"><a href="${m.mapsUrl}" target="_blank" rel="noopener noreferrer">🗺️ Ver en Google Maps</a></div>` : ""}
 
       <div class="match-grid">

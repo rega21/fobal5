@@ -121,6 +121,7 @@ const matchController = window.createMatchController
         return {
           date: details?.datetimeDisplay || new Date().toLocaleString(),
           location: details?.location || "",
+          address: details?.address || "",
           scheduledAt: details?.scheduledAt || "",
           placeId: details?.placeId || "",
           mapsUrl: details?.mapsUrl || "",
@@ -477,14 +478,17 @@ function showMatchSetup() {
   renderTeams();
 
   const locationInput = document.getElementById("matchLocation");
+  const addressInput = document.getElementById("matchAddress");
   const datetimeInput = document.getElementById("matchDatetime");
 
   if (locationInput) locationInput.value = currentMatchDetails?.location || "";
+  if (addressInput) addressInput.value = currentMatchDetails?.address || "";
   if (datetimeInput) datetimeInput.value = currentMatchDetails?.scheduledAt || getDefaultDateTimeLocal();
 
   selectedPlaceData = currentMatchDetails?.placeId
     ? {
         location: currentMatchDetails.location || "",
+        address: currentMatchDetails.address || "",
         placeId: currentMatchDetails.placeId || "",
         mapsUrl: currentMatchDetails.mapsUrl || "",
         latitude: currentMatchDetails.latitude ?? null,
@@ -596,6 +600,7 @@ function loadGoogleMapsPlacesScript() {
 
 async function initLocationAutocomplete() {
   const locationInput = document.getElementById("matchLocation");
+  const addressInput = document.getElementById("matchAddress");
   if (!locationInput) return;
 
   if (!previousGoogleAuthFailureHandler) {
@@ -638,9 +643,12 @@ async function initLocationAutocomplete() {
       const place = autocomplete.getPlace();
       if (!place) return;
 
-      const resolvedLocation = place.formatted_address || place.name || locationInput.value.trim();
-      if (resolvedLocation) {
-        locationInput.value = resolvedLocation;
+      const resolvedName = place.name || locationInput.value.trim();
+      const resolvedAddress = place.formatted_address || "";
+
+      locationInput.value = resolvedName || resolvedAddress || locationInput.value.trim();
+      if (addressInput) {
+        addressInput.value = resolvedAddress;
       }
 
       const lat = place.geometry?.location?.lat ? place.geometry.location.lat() : null;
@@ -648,7 +656,8 @@ async function initLocationAutocomplete() {
       const placeId = place.place_id || "";
 
       selectedPlaceData = {
-        location: resolvedLocation || "",
+        location: locationInput.value.trim(),
+        address: resolvedAddress,
         placeId,
         mapsUrl: placeId
           ? `https://www.google.com/maps/place/?q=place_id:${encodeURIComponent(placeId)}`
@@ -665,6 +674,15 @@ async function initLocationAutocomplete() {
       }
     });
 
+    if (addressInput) {
+      addressInput.addEventListener("input", () => {
+        if (!selectedPlaceData) return;
+        if ((addressInput.value || "").trim() !== (selectedPlaceData.address || "").trim()) {
+          selectedPlaceData = null;
+        }
+      });
+    }
+
     locationInput.dataset.autocompleteReady = "1";
     setMatchLocationHint("Autocomplete de Google Maps activo.");
   } catch (error) {
@@ -677,6 +695,7 @@ function confirmMatchInfo() {
   if (!currentTeams) return;
 
   const location = document.getElementById("matchLocation")?.value.trim() || "";
+  const address = document.getElementById("matchAddress")?.value.trim() || "";
   const scheduledAt = document.getElementById("matchDatetime")?.value || "";
 
   if (!location) {
@@ -695,12 +714,14 @@ function confirmMatchInfo() {
 
   const matchedPlace =
     selectedPlaceData &&
-    (selectedPlaceData.location || "").trim().toLowerCase() === location.toLowerCase()
+    (selectedPlaceData.location || "").trim().toLowerCase() === location.toLowerCase() &&
+    (selectedPlaceData.address || "").trim().toLowerCase() === address.toLowerCase()
       ? selectedPlaceData
       : null;
 
   currentMatchDetails = {
     location,
+    address,
     scheduledAt,
     datetimeDisplay,
     placeId: matchedPlace?.placeId || "",
@@ -715,8 +736,13 @@ function confirmMatchInfo() {
 function copyToWhatsApp() {
   if (!currentTeams) return;
   const teamsText = matchController.buildWhatsAppText(currentTeams);
+  const locationLine = currentMatchDetails
+    ? currentMatchDetails.address
+      ? `📍 ${currentMatchDetails.location}\n📌 ${currentMatchDetails.address}`
+      : `📍 ${currentMatchDetails.location}`
+    : "";
   const detailsText = currentMatchDetails
-    ? `📍 ${currentMatchDetails.location}\n🗓️ ${currentMatchDetails.datetimeDisplay}${currentMatchDetails.mapsUrl ? `\n🗺️ ${currentMatchDetails.mapsUrl}` : ""}\n\n`
+    ? `${locationLine}\n🗓️ ${currentMatchDetails.datetimeDisplay}${currentMatchDetails.mapsUrl ? `\n🗺️ ${currentMatchDetails.mapsUrl}` : ""}\n\n`
     : "";
   const text = `${detailsText}${teamsText}`;
   
