@@ -1128,21 +1128,11 @@ function setMatchMode(mode){
 
 function renderManualTeamSelection() {
   if (selectedPlayers.length === 0) {
-    console.log('selectedPlayers está vacío');
     return;
-  }
-  // Debug: log selectedPlayers
-  console.log('selectedPlayers:', selectedPlayers);
-  if (selectedPlayers.length > 0) {
-    selectedPlayers.forEach((p, i) => {
-      console.log(`selectedPlayers[${i}]:`, p);
-    });
   }
 
   const playersList = document.getElementById('manualPlayersList');
   const teamCount = document.getElementById('teamCount');
-  console.log('manualPlayersList:', playersList);
-  console.log('teamCount:', teamCount);
 
   if (!playersList || !teamCount) {
     // Fallback: show error if elements not found
@@ -1172,7 +1162,6 @@ function renderManualTeamSelection() {
       </div>
     `;
   }).join('');
-  console.log('HTML generado para manualPlayersList:', html);
   playersList.innerHTML = html;
 
   // Agregar event listeners
