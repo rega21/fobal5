@@ -472,7 +472,6 @@ function showMatchResults() {
 
 function backToSelection() {
   window.MatchView?.showSelectionState?.();
-  stopMatchSong();
   currentTeams = null;
   currentMatchDetails = null;
   selectedPlaceData = null;
@@ -957,10 +956,6 @@ function showView(key) {
   Object.values(views).forEach(v => v.classList.add("hidden"));
   views[key].classList.remove("hidden");
   tabs.forEach(t => t.classList.toggle("active", t.dataset.target === key));
-
-  if (key !== "match") {
-    stopMatchSong();
-  }
 
   if (key === "players") {
     renderPlayers();

@@ -30,3 +30,28 @@
 .tab.active{
   color: var(--success);
 }
+
+.global-song-fab{
+  position: fixed;
+  right: 20px;
+  bottom: 88px;
+  bottom: calc(74px + env(safe-area-inset-bottom) + 14px);
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 1px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+  z-index: 999;
+}
+
+@media (max-width: 768px){
+  .global-song-fab{
+    right: 16px;
+    bottom: 84px;
+    bottom: calc(74px + env(safe-area-inset-bottom) + 10px);
+    width: 54px;
+    height: 54px;
+  }
+}

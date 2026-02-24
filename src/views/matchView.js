@@ -64,22 +64,11 @@
       const genBtn = document.getElementById("generateBalancedBtn");
       const genManualBtn = document.getElementById("generateManualBtn");
       const matchCount = document.getElementById("matchCount");
-      const songBtn = document.getElementById("matchSongToggleBtn");
 
       if (matchCount) matchCount.textContent = `${checkedIds.length}/10`;
       if (startBtn) startBtn.disabled = !ready;
       if (genBtn) genBtn.disabled = !ready;
       if (genManualBtn) genManualBtn.disabled = !ready;
-      if (songBtn) {
-        const hasSelectedPlayers = checkedIds.length > 0;
-        songBtn.classList.toggle("hidden", !hasSelectedPlayers);
-
-        if (!hasSelectedPlayers) {
-          stopMatchSong();
-        } else {
-          syncSongButtonFromState();
-        }
-      }
 
       onSelectionChanged?.(checkedIds);
     };
@@ -174,6 +163,7 @@
     if (!matchSongAudio) {
       matchSongAudio = new Audio(mp3Url);
       matchSongAudio.crossOrigin = "anonymous";
+      matchSongAudio.loop = true;
       matchSongAudio.addEventListener("play", () => {
         isSongPlaying = true;
         syncSongButtonFromState();

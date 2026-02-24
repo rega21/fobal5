@@ -50,7 +50,6 @@
         <div id="matchSelection">
           <div class="match-selection-header">
             <p class="muted">Select Players <span id="matchCount">0/10</span></p>
-            <button class="match-song-icon-btn hidden" id="matchSongToggleBtn" type="button" aria-label="Reproducir canción" title="Reproducir canción">🔊</button>
           </div>
           <div class="list" id="matchPlayersList"></div>
 
@@ -249,6 +248,8 @@
     </div>
   </div>
 
+  <button class="match-song-icon-btn global-song-fab" id="matchSongToggleBtn" type="button" aria-label="Reproducir música" title="Reproducir música" aria-pressed="false">🔊</button>
+
   <nav class="bottomnav" role="navigation" aria-label="Bottom Navigation">
     <button class="tab active" data-target="players">
       <span class="tab-ico" aria-hidden="true">👥</span>
@@ -264,6 +265,7 @@
       <span class="tab-ico" aria-hidden="true">🕘</span>
       <span class="tab-text">History</span>
     </button>
+
   </nav>
 
   <script src="config.public.js"></script>
