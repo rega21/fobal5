@@ -41,7 +41,7 @@
       if (!currentTeams) return "";
       const teamANames = currentTeams.a.map((player) => player.name).join("\n");
       const teamBNames = currentTeams.b.map((player) => player.name).join("\n");
-      return `🔵 Team A:\n${teamANames}\n\n🔵 Team B:\n${teamBNames}`;
+      return `🔵 Team A:\n${teamANames}\n\n🔴 Team B:\n${teamBNames}`;
     }
 
     function buildMatchPayload(currentTeams, details = {}, scoreA, scoreB, mvpName) {

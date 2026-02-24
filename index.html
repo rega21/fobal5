@@ -48,7 +48,10 @@
       <div id="matchContent">
         <!-- Phase 1: Player Selection -->
         <div id="matchSelection">
-          <p class="muted">Select Players <span id="matchCount">0/10</span></p>
+          <div class="match-selection-header">
+            <p class="muted">Select Players <span id="matchCount">0/10</span></p>
+            <button class="match-song-icon-btn hidden" id="matchSongToggleBtn" type="button" aria-label="Reproducir canción" title="Reproducir canción">🔊</button>
+          </div>
           <div class="list" id="matchPlayersList"></div>
 
           <div class="match-controls">

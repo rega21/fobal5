@@ -1,4 +1,8 @@
 (function (global) {
+  let matchSongAudio = null;
+  let isSongPlaying = false;
+  let isSongBusy = false;
+
   function escapeHtml(value) {
     return String(value)
       .replaceAll("&", "&amp;")
@@ -60,11 +64,22 @@
       const genBtn = document.getElementById("generateBalancedBtn");
       const genManualBtn = document.getElementById("generateManualBtn");
       const matchCount = document.getElementById("matchCount");
+      const songBtn = document.getElementById("matchSongToggleBtn");
 
       if (matchCount) matchCount.textContent = `${checkedIds.length}/10`;
       if (startBtn) startBtn.disabled = !ready;
       if (genBtn) genBtn.disabled = !ready;
       if (genManualBtn) genManualBtn.disabled = !ready;
+      if (songBtn) {
+        const hasSelectedPlayers = checkedIds.length > 0;
+        songBtn.classList.toggle("hidden", !hasSelectedPlayers);
+
+        if (!hasSelectedPlayers) {
+          stopMatchSong();
+        } else {
+          syncSongButtonFromState();
+        }
+      }
 
       onSelectionChanged?.(checkedIds);
     };
@@ -126,6 +141,101 @@
     const query = [String(location || "").trim(), String(address || "").trim()].filter(Boolean).join(" ");
     if (!query) return "";
     return `https://maps.google.com/?q=${encodeURIComponent(query)}`;
+  }
+
+  function parseYouTubeVideoId(url = "") {
+    return String(url || "").trim();
+  }
+
+  function setSongToggleButtonState({ icon = "", title = "", disabled = false, pressed = false } = {}) {
+    const button = document.getElementById("matchSongToggleBtn");
+    if (!button) return;
+
+    if (icon) button.textContent = icon;
+    if (title) {
+      button.title = title;
+      button.setAttribute("aria-label", title);
+    }
+    button.disabled = !!disabled;
+    button.setAttribute("aria-pressed", pressed ? "true" : "false");
+    button.classList.toggle("is-playing", !!pressed);
+  }
+
+  function syncSongButtonFromState() {
+    setSongToggleButtonState({
+      icon: isSongPlaying ? "⏸️" : "🔊",
+      title: isSongPlaying ? "Pausar canción" : "Reproducir canción",
+      disabled: isSongBusy,
+      pressed: isSongPlaying,
+    });
+  }
+
+  function ensureMatchSongAudio(mp3Url) {
+    if (!matchSongAudio) {
+      matchSongAudio = new Audio(mp3Url);
+      matchSongAudio.crossOrigin = "anonymous";
+      matchSongAudio.addEventListener("play", () => {
+        isSongPlaying = true;
+        syncSongButtonFromState();
+      });
+      matchSongAudio.addEventListener("pause", () => {
+        isSongPlaying = false;
+        syncSongButtonFromState();
+      });
+      matchSongAudio.addEventListener("ended", () => {
+        isSongPlaying = false;
+        syncSongButtonFromState();
+      });
+      matchSongAudio.addEventListener("error", (event) => {
+        console.error("Error cargando audio:", event);
+        isSongPlaying = false;
+        isSongBusy = false;
+        syncSongButtonFromState();
+        alert("No se pudo cargar la canción. Verifica la URL o permisos CORS.");
+      });
+    }
+    return matchSongAudio;
+  }
+
+  async function toggleMatchSong(mp3Url = "") {
+    const url = parseYouTubeVideoId(mp3Url);
+    if (!url) {
+      alert("URL de canción inválida");
+      return;
+    }
+
+    if (isSongBusy) return;
+    isSongBusy = true;
+    syncSongButtonFromState();
+
+    try {
+      const audio = ensureMatchSongAudio(url);
+
+      if (audio.paused) {
+        await audio.play();
+        isSongPlaying = true;
+      } else {
+        audio.pause();
+        isSongPlaying = false;
+      }
+    } catch (error) {
+      console.error("No se pudo reproducir/pausar la canción:", error);
+      alert("No se pudo reproducir la canción");
+      isSongPlaying = false;
+    } finally {
+      isSongBusy = false;
+      syncSongButtonFromState();
+    }
+  }
+
+  function stopMatchSong() {
+    if (matchSongAudio) {
+      matchSongAudio.pause();
+      matchSongAudio.currentTime = 0;
+    }
+    isSongPlaying = false;
+    isSongBusy = false;
+    syncSongButtonFromState();
   }
 
   function getMatchSetupValues() {
@@ -203,6 +313,7 @@
     document.getElementById("manualTeamSelection")?.classList.add("hidden");
     document.getElementById("matchSetup")?.classList.remove("hidden");
     document.getElementById("matchResults")?.classList.add("hidden");
+    syncSongButtonFromState();
   }
 
   function showResultsState() {
@@ -249,5 +360,7 @@
     setMatchSetupValues,
     getOpenMapsUrl,
     openDetectedLocationInMaps,
+    toggleMatchSong,
+    stopMatchSong,
   };
 })(window);

@@ -13,6 +13,7 @@ let googleMapsPlacesPromise = null;
 let previousGoogleAuthFailureHandler = null;
 const SOCCER_PLACE_KEYWORDS = ["futbol", "fútbol", "cancha", "soccer", "football", "futsal", "papi"];
 const SOCCER_PLACE_TYPES = ["stadium", "sports_complex", "gym"];
+const MATCH_SONG_MP3_URL = "https://zguqyimgxppglgrblvim.supabase.co/storage/v1/object/public/futbolApp/notaigenerated-fifa-298032.mp3";
 
 const GOOGLE_MAPS_API_KEY = window.APP_CONFIG?.GOOGLE_MAPS_API_KEY || "";
 
@@ -117,7 +118,7 @@ const matchController = window.createMatchController
         if (!currentTeams) return "";
         const teamANames = currentTeams.a.map((player) => player.name).join("\n");
         const teamBNames = currentTeams.b.map((player) => player.name).join("\n");
-        return `🔵 Team A:\n${teamANames}\n\n🔵 Team B:\n${teamBNames}`;
+        return `🔵 Team A:\n${teamANames}\n\n🔴 Team B:\n${teamBNames}`;
       },
       buildMatchPayload(currentTeams, details = {}, scoreA, scoreB, mvpName) {
         return {
@@ -471,6 +472,7 @@ function showMatchResults() {
 
 function backToSelection() {
   window.MatchView?.showSelectionState?.();
+  stopMatchSong();
   currentTeams = null;
   currentMatchDetails = null;
   selectedPlaceData = null;
@@ -504,6 +506,14 @@ function setDetectedAddressDetails(address = "", mapsUrl = "") {
 
 function openDetectedLocationInMaps() {
   window.MatchView?.openDetectedLocationInMaps?.();
+}
+
+function toggleMatchSong() {
+  window.MatchView?.toggleMatchSong?.(MATCH_SONG_MP3_URL);
+}
+
+function stopMatchSong() {
+  window.MatchView?.stopMatchSong?.();
 }
 
 function seemsSoccerPlace(place) {
@@ -718,7 +728,6 @@ function copyToWhatsApp() {
     ? window.MatchView.getMatchSetupValues()
     : { location: "", address: "", scheduledAt: "" };
   const formLocation = setupValues.location || "";
-  const formAddress = setupValues.address || "";
   const formScheduledAt = setupValues.scheduledAt || "";
   const parsedDate = formScheduledAt ? new Date(formScheduledAt) : null;
   const formDatetimeDisplay = parsedDate && !Number.isNaN(parsedDate.getTime())
@@ -726,28 +735,21 @@ function copyToWhatsApp() {
     : formScheduledAt;
 
   const shareLocation = currentMatchDetails?.location || formLocation;
-  const shareAddress = currentMatchDetails?.address || formAddress;
   const shareDatetime = currentMatchDetails?.datetimeDisplay || formDatetimeDisplay;
-  const shareMapsUrl = buildMapsShortShareUrl(shareLocation, shareAddress)
+  const shareMapsUrl = buildMapsShortShareUrl(shareLocation, "")
     || currentMatchDetails?.mapsUrl
-    || buildMapsSearchUrl(shareLocation, shareAddress);
+    || buildMapsSearchUrl(shareLocation, "");
 
-  const locationLine = shareLocation
-    ? shareAddress
-      ? `📍 ${shareLocation}\n📌 ${shareAddress}`
-      : `📍 ${shareLocation}`
-    : "";
+  const headerParts = [];
+  if (shareLocation) headerParts.push(`⚽ ${shareLocation}`);
+  if (shareDatetime) headerParts.push(`🕒 ${shareDatetime}`);
 
-  const detailsParts = [];
-  if (locationLine) detailsParts.push(locationLine);
-  if (shareDatetime) detailsParts.push(`🗓️ ${shareDatetime}`);
-  if (shareMapsUrl) {
-    detailsParts.push("🌍 Ver en Google Maps");
-    detailsParts.push(shareMapsUrl);
-  }
+  const sections = [];
+  if (headerParts.length > 0) sections.push(headerParts.join("\n"));
+  if (teamsText) sections.push(teamsText);
+  if (shareMapsUrl) sections.push(`📍 Location:\n${shareMapsUrl}`);
 
-  const detailsText = detailsParts.length > 0 ? `${detailsParts.join("\n")}\n\n` : "";
-  const text = `${detailsText}${teamsText}`;
+  const text = sections.join("\n\n");
   
   // Copy to clipboard
   navigator.clipboard.writeText(text).then(() => {
@@ -956,6 +958,10 @@ function showView(key) {
   views[key].classList.remove("hidden");
   tabs.forEach(t => t.classList.toggle("active", t.dataset.target === key));
 
+  if (key !== "match") {
+    stopMatchSong();
+  }
+
   if (key === "players") {
     renderPlayers();
   } else if (key === "match") {
@@ -1057,6 +1063,7 @@ document.getElementById("backToSelectionBtn")?.addEventListener("click", backToS
 document.getElementById("backToSetupBtn")?.addEventListener("click", backToMatchSetup);
 document.getElementById("confirmMatchInfoBtn")?.addEventListener("click", confirmMatchInfo);
 document.getElementById("openMapsBtn")?.addEventListener("click", openDetectedLocationInMaps);
+document.getElementById("matchSongToggleBtn")?.addEventListener("click", toggleMatchSong);
 document.getElementById("copyToWhatsAppBtn")?.addEventListener("click", copyToWhatsApp);
 // Balanced teams
 const genBtnEl = document.getElementById("generateBalancedBtn");

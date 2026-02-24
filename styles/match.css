@@ -48,6 +48,50 @@
   flex:1;
 }
 
+.match-selection-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.match-selection-header .muted{
+  margin:0;
+}
+
+.match-song-icon-btn{
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--text);
+  width:40px;
+  height:40px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  line-height:1;
+  cursor:pointer;
+  transition:all 0.2s;
+  flex-shrink:0;
+}
+
+.match-song-icon-btn:hover:not(:disabled){
+  background:#f3f4f6;
+}
+
+.match-song-icon-btn.is-playing{
+  border-color: var(--primary);
+  color: var(--primary);
+  background:#eff6ff;
+}
+
+.match-song-icon-btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+
 /* Scrollable player list in match selection */
 #matchPlayersList{
   max-height: 60vh;
@@ -62,6 +106,12 @@
     overflow-y: visible;
     padding-right: 0;
     overscroll-behavior: auto;
+  }
+
+  .match-song-icon-btn{
+    width:36px;
+    height:36px;
+    font-size:17px;
   }
 }
 
@@ -128,7 +178,7 @@
 }
 .card.match-entry .match-grid{
   display:grid;
-  grid-template-columns: 1fr 200px 1fr;
+  grid-template-columns: minmax(0, 1fr) 200px minmax(0, 1fr);
   gap:20px;
   align-items:center;
 }
@@ -160,6 +210,47 @@
   border-radius:4px;
   background:#f8fafb;
   font-size:13px;
+  max-width:100%;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+.match-song-player-host{
+  position:absolute;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+  opacity:0;
+  pointer-events:none;
+}
+
+.card.match-entry .muted{
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+@media (max-width: 640px){
+  .card.match-entry .match-grid{
+    grid-template-columns: minmax(0, 1fr) 120px minmax(0, 1fr);
+    gap:10px;
+  }
+
+  .card.match-entry .match-score{
+    font-size:28px;
+    gap:8px;
+  }
+
+  .card.match-entry .match-mvp{
+    font-size:11px;
+    padding:5px 10px;
+  }
+
+  .card.match-entry .match-team{
+    font-size:12px !important;
+    padding:6px !important;
+    margin-bottom:8px !important;
+  }
 }
 
 /* Admin player */

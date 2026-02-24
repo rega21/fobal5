@@ -28,6 +28,10 @@
         const matchId = encodeURIComponent(String(m.id ?? ""));
         const matchDate = encodeURIComponent(String(m.date ?? ""));
         const matchLocation = String(m.location || m.matchLocation || m.place || "").trim();
+        const mapsLink = String(m.mapsUrl || "").trim() ||
+          (matchLocation
+            ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(matchLocation)}`
+            : "");
 
         return `
     <article class="card match-entry" style="position:relative;">
@@ -37,8 +41,7 @@
           : ""
       }
       <div class="match-date">${m.date}</div>
-      ${matchLocation ? `<div class="muted" style="margin:0 0 10px 0;">📍 ${matchLocation}</div>` : ""}
-      ${m.mapsUrl ? `<div style="margin:0 0 10px 0;"><a href="${m.mapsUrl}" target="_blank" rel="noopener noreferrer">🌍 Ver en Google Maps</a></div>` : ""}
+      ${matchLocation ? `<div style="margin:0 0 10px 0;"><a class="muted" href="${mapsLink}" target="_blank" rel="noopener noreferrer">📍 ${matchLocation}</a></div>` : ""}
 
       <div class="match-grid">
         <div>
