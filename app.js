@@ -456,6 +456,7 @@ function updateSelectedPlayers() {
 
     card.classList.toggle("selected", checkbox.checked);
     checkbox.disabled = ready && !checkbox.checked;
+    card.classList.toggle("is-disabled", checkbox.disabled && !checkbox.checked);
   });
 
   const startBtn = document.getElementById("startMatchBtn");
@@ -463,6 +464,7 @@ function updateSelectedPlayers() {
   const genManualBtn = document.getElementById("generateManualBtn");
   const matchCount = document.getElementById("matchCount");
   matchCount.textContent = `${selectedPlayers.length}/10`;
+  matchCount.classList.toggle("ready", ready);
   if (startBtn) startBtn.disabled = !ready;
   if (genBtn) genBtn.disabled = !ready;
   if (genManualBtn) genManualBtn.disabled = !ready;

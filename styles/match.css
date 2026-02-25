@@ -49,6 +49,13 @@
 }
 
 .match-selection-header{
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 20;
+  border-bottom: 1px solid #eee;
+  padding: 12px 16px;
+  font-weight: 600;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -58,6 +65,11 @@
 
 .match-selection-header .muted{
   margin:0;
+}
+
+#matchCount.ready{
+  color: var(--success);
+  font-weight: 700;
 }
 
 .match-song-icon-btn{

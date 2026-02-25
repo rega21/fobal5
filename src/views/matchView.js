@@ -58,6 +58,7 @@
 
         card.classList.toggle("selected", checkbox.checked);
         checkbox.disabled = ready && !checkbox.checked;
+        card.classList.toggle("is-disabled", checkbox.disabled && !checkbox.checked);
       });
 
       const startBtn = document.getElementById("startMatchBtn");
@@ -65,7 +66,10 @@
       const genManualBtn = document.getElementById("generateManualBtn");
       const matchCount = document.getElementById("matchCount");
 
-      if (matchCount) matchCount.textContent = `${checkedIds.length}/10`;
+      if (matchCount) {
+        matchCount.textContent = `${checkedIds.length}/10`;
+        matchCount.classList.toggle("ready", ready);
+      }
       if (startBtn) startBtn.disabled = !ready;
       if (genBtn) genBtn.disabled = !ready;
       if (genManualBtn) genManualBtn.disabled = !ready;

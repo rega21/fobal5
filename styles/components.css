@@ -54,6 +54,18 @@
   background:#eff6ff;
   border-color: var(--primary);
 }
+.card-selectable.is-disabled{
+  opacity: 0.48;
+  background:#f3f4f6;
+  border-color:#e5e7eb;
+  cursor:not-allowed;
+}
+.card-selectable.is-disabled:hover{
+  background:#f3f4f6;
+}
+.card-selectable.is-disabled .player-name{
+  color:#9ca3af;
+}
 
 .player-name{
   font-size: 20px;
