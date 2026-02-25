@@ -176,6 +176,55 @@ const matchController = window.createMatchController
       },
     };
 
+const whatsappShareService = window.createWhatsAppShareService
+  ? window.createWhatsAppShareService()
+  : {
+      sanitizeShareText: (value) => String(value ?? "")
+        .normalize("NFC")
+        .replace(/\u00A0/g, " ")
+        .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g, "")
+        .replace(/\uFFFD+/g, "")
+        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, "")
+        .replace(/[\*_~`]/g, "")
+        .trim(),
+      buildShareMessage({ location = "", datetime = "", teamsText = "", mapsUrl = "" } = {}) {
+        const cleanLocation = this.sanitizeShareText(location);
+        const cleanDatetime = this.sanitizeShareText(datetime);
+        const cleanTeamsText = this.sanitizeShareText(teamsText);
+        const cleanMapsUrl = this.sanitizeShareText(mapsUrl);
+        const headerParts = [];
+        if (cleanLocation) headerParts.push(`Location: ${cleanLocation}`);
+        if (cleanDatetime) headerParts.push(`Date: ${cleanDatetime}`);
+        const sections = [];
+        if (headerParts.length > 0) sections.push(headerParts.join("\n"));
+        if (cleanTeamsText) sections.push(cleanTeamsText);
+        if (cleanMapsUrl) sections.push(`Map:\n${cleanMapsUrl}`);
+        return this.sanitizeShareText(sections.join("\n\n")).replace(/\n{3,}/g, "\n\n");
+      },
+      async shareText(text) {
+        const cleanText = this.sanitizeShareText(text);
+        if (!cleanText) return { status: "empty", text: "" };
+        const encodedText = encodeURIComponent(cleanText);
+        const waWebUrl = `https://wa.me/?text=${encodedText}`;
+        let popup = null;
+        try {
+          popup = window.open(waWebUrl, "_blank", "noopener,noreferrer");
+        } catch {
+          popup = null;
+        }
+        if (popup) return { status: "opened", text: cleanText };
+        if (navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(cleanText);
+            return { status: "copied", text: cleanText };
+          } catch {
+            return { status: "manual", text: cleanText };
+          }
+        }
+        return { status: "manual", text: cleanText };
+      },
+    };
+
 const adminPlayersController = window.createAdminPlayersController
   ? window.createAdminPlayersController({
       apiClient,
@@ -726,18 +775,9 @@ function confirmMatchInfo() {
   showMatchResults();
 }
 
-function copyToWhatsApp() {
+async function copyToWhatsApp() {
   if (!currentTeams) return;
   const teamsText = matchController.buildWhatsAppText(currentTeams);
-
-  const sanitizeShareText = (value) => String(value ?? "")
-    .normalize("NFC")
-    .replace(/\u00A0/g, " ")
-    .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g, "")
-    .replace(/\uFFFD+/g, "")
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, "")
-    .replace(/[\*_~`]/g, "")
-    .trim();
 
   const setupValues = window.MatchView?.getMatchSetupValues
     ? window.MatchView.getMatchSetupValues()
@@ -749,65 +789,28 @@ function copyToWhatsApp() {
     ? parsedDate.toLocaleString()
     : formScheduledAt;
 
-  const shareLocation = sanitizeShareText(currentMatchDetails?.location || formLocation);
-  const shareDatetime = sanitizeShareText(currentMatchDetails?.datetimeDisplay || formDatetimeDisplay);
+  const shareLocation = whatsappShareService.sanitizeShareText(currentMatchDetails?.location || formLocation);
+  const shareDatetime = whatsappShareService.sanitizeShareText(currentMatchDetails?.datetimeDisplay || formDatetimeDisplay);
   const shareMapsUrl = buildMapsShortShareUrl(shareLocation, "")
     || currentMatchDetails?.mapsUrl
     || buildMapsSearchUrl(shareLocation, "");
 
-  const headerParts = [];
-  if (shareLocation) headerParts.push(`Location: ${shareLocation}`);
-  if (shareDatetime) headerParts.push(`Date: ${shareDatetime}`);
+  const text = whatsappShareService.buildShareMessage({
+    location: shareLocation,
+    datetime: shareDatetime,
+    teamsText,
+    mapsUrl: shareMapsUrl,
+  });
 
-  const sections = [];
-  if (headerParts.length > 0) sections.push(headerParts.join("\n"));
-  if (teamsText) sections.push(teamsText);
-  if (shareMapsUrl) sections.push(`Map:\n${shareMapsUrl}`);
-
-  const text = sanitizeShareText(sections.join("\n\n")).replace(/\n{3,}/g, "\n\n");
-
-  const encodedText = encodeURIComponent(text);
-  const waAppUrl = `whatsapp://send?text=${encodedText}`;
-  const waWebUrl = `https://wa.me/?text=${encodedText}`;
-  const waApiUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
-  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "");
-
-  if (isMobile) {
-    try {
-      window.location.href = waAppUrl;
-      return;
-    } catch {
-      // continue with web fallbacks
-    }
-  }
-
-  let popup = null;
-  try {
-    popup = window.open(waWebUrl, "_blank", "noopener,noreferrer");
-  } catch {
-    popup = null;
-  }
-
-  if (!popup) {
-    try {
-      popup = window.open(waApiUrl, "_blank", "noopener,noreferrer");
-    } catch {
-      popup = null;
-    }
-  }
-
-  if (popup) return;
-
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      alert("No se pudo abrir WhatsApp. Mensaje copiado al portapapeles.");
-    }).catch(() => {
-      alert("No se pudo abrir WhatsApp ni copiar automáticamente. Mensaje:\n\n" + text);
-    });
+  const result = await whatsappShareService.shareText(text);
+  if (result.status === "opened") return;
+  if (result.status === "copied") {
+    alert("No se pudo abrir WhatsApp. Mensaje copiado al portapapeles.");
     return;
   }
-
-  alert("No se pudo abrir WhatsApp. Copia este mensaje:\n\n" + text);
+  if (result.status === "manual") {
+    alert("No se pudo abrir WhatsApp ni copiar automáticamente. Mensaje:\n\n" + result.text);
+  }
 }
 
 async function recordMatch() {
