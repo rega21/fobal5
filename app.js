@@ -776,7 +776,22 @@ function confirmMatchInfo() {
 }
 
 async function copyToWhatsApp() {
-  if (!currentTeams) return;
+  const text = buildCurrentMatchShareText("compat");
+  if (!text) return;
+
+  const result = await whatsappShareService.shareText(text);
+  if (result.status === "opened") return;
+  if (result.status === "copied") {
+    alert("No se pudo abrir WhatsApp. Mensaje copiado al portapapeles.");
+    return;
+  }
+  if (result.status === "manual") {
+    alert("No se pudo abrir WhatsApp ni copiar automáticamente. Mensaje:\n\n" + result.text);
+  }
+}
+
+function buildCurrentMatchShareText(mode = "compat") {
+  if (!currentTeams) return "";
   const teamsText = matchController.buildWhatsAppText(currentTeams);
 
   const setupValues = window.MatchView?.getMatchSetupValues
@@ -800,17 +815,49 @@ async function copyToWhatsApp() {
     datetime: shareDatetime,
     teamsText,
     mapsUrl: shareMapsUrl,
+    mode,
   });
 
-  const result = await whatsappShareService.shareText(text);
-  if (result.status === "opened") return;
-  if (result.status === "copied") {
-    alert("No se pudo abrir WhatsApp. Mensaje copiado al portapapeles.");
-    return;
+  return text;
+}
+
+let copyShareFeedbackTimeoutId = null;
+
+function setCopyShareFeedback(message) {
+  const feedbackEl = document.getElementById("copyShareFeedback");
+  if (!feedbackEl) return;
+
+  feedbackEl.textContent = message || "";
+  feedbackEl.classList.toggle("hidden", !message);
+
+  if (copyShareFeedbackTimeoutId) {
+    clearTimeout(copyShareFeedbackTimeoutId);
   }
-  if (result.status === "manual") {
-    alert("No se pudo abrir WhatsApp ni copiar automáticamente. Mensaje:\n\n" + result.text);
+
+  if (message) {
+    copyShareFeedbackTimeoutId = setTimeout(() => {
+      feedbackEl.textContent = "";
+      feedbackEl.classList.add("hidden");
+    }, 2600);
   }
+}
+
+async function copyShareMessage() {
+  const text = buildCurrentMatchShareText("rich");
+  if (!text) return;
+
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyShareFeedback("Mensaje copiado al portapapeles");
+      return;
+    } catch {
+      setCopyShareFeedback("No se pudo copiar automáticamente");
+      return;
+    }
+  }
+
+  setCopyShareFeedback("Tu navegador no soporta copiado automático");
 }
 
 async function recordMatch() {
@@ -1115,6 +1162,7 @@ document.getElementById("confirmMatchInfoBtn")?.addEventListener("click", confir
 document.getElementById("openMapsBtn")?.addEventListener("click", openDetectedLocationInMaps);
 document.getElementById("matchSongToggleBtn")?.addEventListener("click", toggleMatchSong);
 document.getElementById("copyToWhatsAppBtn")?.addEventListener("click", copyToWhatsApp);
+document.getElementById("copyShareMessageBtn")?.addEventListener("click", copyShareMessage);
 // Balanced teams
 const genBtnEl = document.getElementById("generateBalancedBtn");
 if (genBtnEl) genBtnEl.addEventListener("click", generateBalancedTeams);
