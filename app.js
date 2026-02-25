@@ -116,9 +116,16 @@ const matchController = window.createMatchController
       },
       buildWhatsAppText(currentTeams) {
         if (!currentTeams) return "";
-        const teamANames = currentTeams.a.map((player) => player.name).join("\n");
-        const teamBNames = currentTeams.b.map((player) => player.name).join("\n");
-        return `🔵 Team A:\n${teamANames}\n\n🔴 Team B:\n${teamBNames}`;
+        const cleanShareToken = (value) => String(value ?? "")
+          .normalize("NFC")
+          .replace(/\u00A0/g, " ")
+          .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g, "")
+          .replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
+          .replace(/[\*_~`]/g, "")
+          .trim();
+        const teamANames = currentTeams.a.map((player) => `- ${cleanShareToken(player.name)}`).join("\n");
+        const teamBNames = currentTeams.b.map((player) => `- ${cleanShareToken(player.name)}`).join("\n");
+        return `Team A:\n${teamANames}\n\nTeam B:\n${teamBNames}`;
       },
       buildMatchPayload(currentTeams, details = {}, scoreA, scoreB, mvpName) {
         return {
@@ -723,6 +730,15 @@ function copyToWhatsApp() {
   if (!currentTeams) return;
   const teamsText = matchController.buildWhatsAppText(currentTeams);
 
+  const sanitizeShareText = (value) => String(value ?? "")
+    .normalize("NFC")
+    .replace(/\u00A0/g, " ")
+    .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g, "")
+    .replace(/\uFFFD+/g, "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, "")
+    .replace(/[\*_~`]/g, "")
+    .trim();
+
   const setupValues = window.MatchView?.getMatchSetupValues
     ? window.MatchView.getMatchSetupValues()
     : { location: "", address: "", scheduledAt: "" };
@@ -733,29 +749,65 @@ function copyToWhatsApp() {
     ? parsedDate.toLocaleString()
     : formScheduledAt;
 
-  const shareLocation = currentMatchDetails?.location || formLocation;
-  const shareDatetime = currentMatchDetails?.datetimeDisplay || formDatetimeDisplay;
+  const shareLocation = sanitizeShareText(currentMatchDetails?.location || formLocation);
+  const shareDatetime = sanitizeShareText(currentMatchDetails?.datetimeDisplay || formDatetimeDisplay);
   const shareMapsUrl = buildMapsShortShareUrl(shareLocation, "")
     || currentMatchDetails?.mapsUrl
     || buildMapsSearchUrl(shareLocation, "");
 
   const headerParts = [];
-  if (shareLocation) headerParts.push(`⚽ ${shareLocation}`);
-  if (shareDatetime) headerParts.push(`🕒 ${shareDatetime}`);
+  if (shareLocation) headerParts.push(`Location: ${shareLocation}`);
+  if (shareDatetime) headerParts.push(`Date: ${shareDatetime}`);
 
   const sections = [];
   if (headerParts.length > 0) sections.push(headerParts.join("\n"));
   if (teamsText) sections.push(teamsText);
-  if (shareMapsUrl) sections.push(`📍 Location:\n${shareMapsUrl}`);
+  if (shareMapsUrl) sections.push(`Map:\n${shareMapsUrl}`);
 
-  const text = sections.join("\n\n");
-  
-  // Copy to clipboard
-  navigator.clipboard.writeText(text).then(() => {
-    alert('✓ Copied to clipboard!');
-  }).catch(() => {
-    alert('Teams:\n\n' + text);
-  });
+  const text = sanitizeShareText(sections.join("\n\n")).replace(/\n{3,}/g, "\n\n");
+
+  const encodedText = encodeURIComponent(text);
+  const waAppUrl = `whatsapp://send?text=${encodedText}`;
+  const waWebUrl = `https://wa.me/?text=${encodedText}`;
+  const waApiUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
+  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "");
+
+  if (isMobile) {
+    try {
+      window.location.href = waAppUrl;
+      return;
+    } catch {
+      // continue with web fallbacks
+    }
+  }
+
+  let popup = null;
+  try {
+    popup = window.open(waWebUrl, "_blank", "noopener,noreferrer");
+  } catch {
+    popup = null;
+  }
+
+  if (!popup) {
+    try {
+      popup = window.open(waApiUrl, "_blank", "noopener,noreferrer");
+    } catch {
+      popup = null;
+    }
+  }
+
+  if (popup) return;
+
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert("No se pudo abrir WhatsApp. Mensaje copiado al portapapeles.");
+    }).catch(() => {
+      alert("No se pudo abrir WhatsApp ni copiar automáticamente. Mensaje:\n\n" + text);
+    });
+    return;
+  }
+
+  alert("No se pudo abrir WhatsApp. Copia este mensaje:\n\n" + text);
 }
 
 async function recordMatch() {

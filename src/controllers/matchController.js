@@ -39,9 +39,16 @@
 
     function buildWhatsAppText(currentTeams) {
       if (!currentTeams) return "";
-      const teamANames = currentTeams.a.map((player) => player.name).join("\n");
-      const teamBNames = currentTeams.b.map((player) => player.name).join("\n");
-      return `🔵 Team A:\n${teamANames}\n\n🔴 Team B:\n${teamBNames}`;
+      const cleanShareToken = (value) => String(value ?? "")
+        .normalize("NFC")
+        .replace(/\u00A0/g, " ")
+        .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g, "")
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
+        .replace(/[\*_~`]/g, "")
+        .trim();
+      const teamANames = currentTeams.a.map((player) => `- ${cleanShareToken(player.name)}`).join("\n");
+      const teamBNames = currentTeams.b.map((player) => `- ${cleanShareToken(player.name)}`).join("\n");
+      return `Team A:\n${teamANames}\n\nTeam B:\n${teamBNames}`;
     }
 
     function buildMatchPayload(currentTeams, details = {}, scoreA, scoreB, mvpName) {
