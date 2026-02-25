@@ -405,12 +405,14 @@ function renderPlayers() {
       ? `<span class="player-nick">"${escapeHtml(p.nickname)}"</span>`
       : "";
 
-    const adminControls = adminAuthenticated
-      ? `<div class="admin-controls">
-          <button class="btn-edit" data-id="${p.id}" title="Editar">✏️</button>
-          <button class="btn-delete" data-id="${p.id}" title="Eliminar">🗑️</button>
-        </div>`
+    const deleteControl = adminAuthenticated
+      ? `<button class="btn-delete" data-id="${p.id}" title="Eliminar">🗑️</button>`
       : "";
+
+    const adminControls = `<div class="admin-controls">
+          <button class="btn-edit" data-id="${p.id}" title="Editar">✏️</button>
+          ${deleteControl}
+        </div>`;
 
     return `
       <article class="card">
@@ -913,10 +915,6 @@ function renderHistory() {
 
 /* Admin modal */
 function editPlayer(id) {
-  if (!adminAuthenticated) {
-    alert("Solo el admin puede editar jugadores");
-    return;
-  }
   const player = players.find(p => p.id == id);
   if (!player) return;
 

@@ -53,12 +53,14 @@
           ? `<span class="player-nick">"${escapeHtml(player.nickname)}"</span>`
           : "";
 
-        const adminControls = adminAuthenticated
-          ? `<div class="admin-controls">
-              <button class="btn-edit" data-id="${player.id}" title="Editar">✏️</button>
-              <button class="btn-delete" data-id="${player.id}" title="Eliminar">🗑️</button>
-            </div>`
+        const deleteControl = adminAuthenticated
+          ? `<button class="btn-delete" data-id="${player.id}" title="Eliminar">🗑️</button>`
           : "";
+
+        const adminControls = `<div class="admin-controls">
+              <button class="btn-edit" data-id="${player.id}" title="Editar">✏️</button>
+              ${deleteControl}
+            </div>`;
 
         return `
           <article class="card">
