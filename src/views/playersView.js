@@ -8,6 +8,15 @@
       .replaceAll("'", "&#039;");
   }
 
+  function shufflePlayers(list) {
+    const items = [...(list || [])];
+    for (let index = items.length - 1; index > 0; index -= 1) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [items[index], items[randomIndex]] = [items[randomIndex], items[index]];
+    }
+    return items;
+  }
+
   function renderPlayersList({
     players,
     playerSearchTerm,
@@ -36,7 +45,9 @@
       return;
     }
 
-    playersList.innerHTML = filteredPlayers
+    const visualPlayers = shufflePlayers(filteredPlayers);
+
+    playersList.innerHTML = visualPlayers
       .map((player) => {
         const nick = player.nickname?.trim()
           ? `<span class="player-nick">"${escapeHtml(player.nickname)}"</span>`

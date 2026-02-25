@@ -259,6 +259,15 @@ function escapeHtml(str) {
     .replaceAll("'", "&#039;");
 }
 
+function shufflePlayers(list = []) {
+  const items = [...list];
+  for (let index = items.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [items[index], items[randomIndex]] = [items[randomIndex], items[index]];
+  }
+  return items;
+}
+
 function renderAdminPlayers() {
   // Placeholder to refresh admin-related UI after changes
   // For now, refresh match players list so views stay in sync
@@ -389,7 +398,9 @@ function renderPlayers() {
     return;
   }
 
-  playersList.innerHTML = filteredPlayers.map(p => {
+  const visualPlayers = shufflePlayers(filteredPlayers);
+
+  playersList.innerHTML = visualPlayers.map(p => {
     const nick = p.nickname?.trim()
       ? `<span class="player-nick">"${escapeHtml(p.nickname)}"</span>`
       : "";
