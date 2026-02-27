@@ -12,11 +12,17 @@
       (m) => m.teamA && m.teamB && m.teamA.length > 0 && m.teamB.length > 0
     );
 
-    const orderedMatches = [...validMatches].sort((a, b) => {
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
-      return dateB - dateA;
-    });
+    const getMatchTimestamp = (match) => {
+      const candidates = [match?.scheduledAt, match?.createdAt, match?.updatedAt, match?.date];
+      for (const rawValue of candidates) {
+        if (!rawValue) continue;
+        const timestamp = new Date(rawValue).getTime();
+        if (!Number.isNaN(timestamp)) return timestamp;
+      }
+      return 0;
+    };
+
+    const orderedMatches = [...validMatches].sort((a, b) => getMatchTimestamp(b) - getMatchTimestamp(a));
 
     if (validMatches.length === 0) {
       historyList.innerHTML = '<p class="muted">Sin partidos registrados</p>';
