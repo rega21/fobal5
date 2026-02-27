@@ -663,7 +663,6 @@ function openPendingResultModal(matchId) {
   const scoreAInput = document.getElementById("historyScoreTeamA");
   const scoreBInput = document.getElementById("historyScoreTeamB");
   const mvpSelect = document.getElementById("historyMvpSelect");
-  const meta = document.getElementById("historyResultMeta");
   const modal = document.getElementById("historyResultModal");
 
   if (!scoreAInput || !scoreBInput || !mvpSelect || !modal) {
@@ -682,13 +681,6 @@ function openPendingResultModal(matchId) {
   mvpSelect.innerHTML = '<option value="">Select MVP</option>'
     + uniqueCandidates.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
   mvpSelect.value = pendingMatch.mvp ? String(pendingMatch.mvp) : "";
-
-  if (meta) {
-    const locationText = String(pendingMatch.location || "").trim();
-    meta.textContent = locationText
-      ? `${pendingMatch.date || ""} · ${locationText}`
-      : String(pendingMatch.date || "");
-  }
 
   modal.classList.remove("hidden");
 }
