@@ -294,6 +294,32 @@ function shufflePlayers(list = []) {
   return items;
 }
 
+function parseValidatedScore(inputId, teamLabel = "") {
+  const input = document.getElementById(inputId);
+  const rawValue = String(input?.value ?? "").trim();
+
+  if (rawValue === "") {
+    alert(`Ingresa un marcador válido para ${teamLabel}`);
+    input?.focus();
+    return null;
+  }
+
+  if (!/^\d+$/.test(rawValue)) {
+    alert(`El marcador de ${teamLabel} debe ser un número entero (0 o mayor)`);
+    input?.focus();
+    return null;
+  }
+
+  const parsed = Number(rawValue);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    alert(`El marcador de ${teamLabel} debe ser un número entero (0 o mayor)`);
+    input?.focus();
+    return null;
+  }
+
+  return parsed;
+}
+
 let toastTimeoutId = null;
 function showToast(message = "", duration = 2000) {
   const text = String(message || "").trim();
@@ -676,8 +702,12 @@ async function savePendingResultFromModal() {
     return;
   }
 
-  const scoreA = parseInt(document.getElementById("historyScoreTeamA")?.value || "0", 10) || 0;
-  const scoreB = parseInt(document.getElementById("historyScoreTeamB")?.value || "0", 10) || 0;
+  const scoreA = parseValidatedScore("historyScoreTeamA", "Team A");
+  if (scoreA === null) return;
+
+  const scoreB = parseValidatedScore("historyScoreTeamB", "Team B");
+  if (scoreB === null) return;
+
   const mvpName = document.getElementById("historyMvpSelect")?.value || null;
   if (!mvpName) {
     alert("Selecciona un MVP para guardar el resultado");
@@ -1095,8 +1125,12 @@ async function recordMatch() {
     return;
   }
 
-  const scoreA = parseInt(document.getElementById("scoreTeamA").value) || 0;
-  const scoreB = parseInt(document.getElementById("scoreTeamB").value) || 0;
+  const scoreA = parseValidatedScore("scoreTeamA", "Team A");
+  if (scoreA === null) return;
+
+  const scoreB = parseValidatedScore("scoreTeamB", "Team B");
+  if (scoreB === null) return;
+
   const mvpId = document.getElementById("mvpSelect").value;
   if (!mvpId) {
     alert("Selecciona un MVP para guardar el resultado");
