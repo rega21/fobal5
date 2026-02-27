@@ -8,6 +8,7 @@ let selectedPlayers = [];
 let currentTeams = null;
 let playerSearchTerm = "";
 let currentMatchDetails = null;
+let pendingHistoryResultMatchId = "";
 let selectedPlaceData = null;
 let googleMapsPlacesPromise = null;
 let previousGoogleAuthFailureHandler = null;
@@ -62,6 +63,15 @@ const apiClient = window.FobalApi || {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
+  async updateMatch(id, body) {
+    const res = await fetch(`https://698cdcb221a248a27362c974.mockapi.io/matches/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
   async deleteMatch(id) {
     const res = await fetch(`https://698cdcb221a248a27362c974.mockapi.io/matches/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -74,6 +84,7 @@ const historyController = window.createHistoryController
       historyKey: HISTORY_KEY,
       apiClient,
       isAdmin: () => adminAuthenticated,
+      onResolveResult: (matchId) => openPendingResultModal(matchId),
     })
   : {
       getHistory: () => [],
@@ -127,8 +138,10 @@ const matchController = window.createMatchController
         const teamBNames = currentTeams.b.map((player) => `- ${cleanShareToken(player.name)}`).join("\n");
         return `Team A:\n${teamANames}\n\nTeam B:\n${teamBNames}`;
       },
-      buildMatchPayload(currentTeams, details = {}, scoreA, scoreB, mvpName) {
+      buildMatchPayload(currentTeams, details = {}, scoreA, scoreB, mvpName, options = {}) {
         return {
+          id: options?.id || details?.matchId || "",
+          status: options?.status || "played",
           date: details?.datetimeDisplay || new Date().toLocaleString(),
           location: details?.location || "",
           address: details?.address || "",
@@ -139,17 +152,30 @@ const matchController = window.createMatchController
           longitude: details?.longitude ?? null,
           teamA: currentTeams.a.map((player) => player.name),
           teamB: currentTeams.b.map((player) => player.name),
-          scoreA,
-          scoreB,
+          scoreA: scoreA ?? null,
+          scoreB: scoreB ?? null,
           mvp: mvpName || null,
         };
       },
       async saveMatch(match) {
         let storedMatch = { ...match };
         try {
-          const created = await apiClient.createMatch(match);
-          if (created && typeof created === "object") {
-            storedMatch = created;
+          const hasMatchId =
+            match?.id !== null && match?.id !== undefined && String(match.id).trim() !== "";
+
+          const payload = { ...match };
+          delete payload.id;
+
+          if (hasMatchId && typeof apiClient.updateMatch === "function") {
+            const updated = await apiClient.updateMatch(match.id, payload);
+            if (updated && typeof updated === "object") {
+              storedMatch = updated;
+            }
+          } else {
+            const created = await apiClient.createMatch(payload);
+            if (created && typeof created === "object") {
+              storedMatch = created;
+            }
           }
         } catch (error) {
           console.error("Error saving match to API:", error);
@@ -268,6 +294,42 @@ function shufflePlayers(list = []) {
   return items;
 }
 
+let toastTimeoutId = null;
+function showToast(message = "", duration = 2000) {
+  const text = String(message || "").trim();
+  if (!text) return;
+
+  let toastEl = document.getElementById("appToast");
+  if (!toastEl) {
+    toastEl = document.createElement("div");
+    toastEl.id = "appToast";
+    toastEl.style.position = "fixed";
+    toastEl.style.left = "50%";
+    toastEl.style.bottom = "88px";
+    toastEl.style.transform = "translateX(-50%)";
+    toastEl.style.background = "rgba(17, 24, 39, 0.92)";
+    toastEl.style.color = "#fff";
+    toastEl.style.padding = "10px 14px";
+    toastEl.style.borderRadius = "10px";
+    toastEl.style.fontSize = "13px";
+    toastEl.style.fontWeight = "600";
+    toastEl.style.zIndex = "1600";
+    toastEl.style.boxShadow = "0 10px 20px rgba(0,0,0,.25)";
+    toastEl.style.opacity = "0";
+    toastEl.style.transition = "opacity .18s ease";
+    toastEl.style.pointerEvents = "none";
+    document.body.appendChild(toastEl);
+  }
+
+  toastEl.textContent = text;
+  toastEl.style.opacity = "1";
+
+  if (toastTimeoutId) clearTimeout(toastTimeoutId);
+  toastTimeoutId = setTimeout(() => {
+    toastEl.style.opacity = "0";
+  }, Math.max(800, Number(duration) || 2000));
+}
+
 function renderAdminPlayers() {
   // Placeholder to refresh admin-related UI after changes
   // For now, refresh match players list so views stay in sync
@@ -293,6 +355,7 @@ async function fetchPlayers() {
 
 async function fetchMatches() {
   await historyController.fetchMatches();
+  updateMatchCreationLockUi();
 }
 
 async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0) {
@@ -449,12 +512,15 @@ function renderMatchPlayers() {
       onSelectionChanged: (selectedIds) => {
         const selectedIdSet = new Set((selectedIds || []).map((id) => String(id)));
         selectedPlayers = players.filter((player) => selectedIdSet.has(String(player.id)));
+        updateMatchCreationLockUi();
       },
     });
+    updateMatchCreationLockUi();
     return;
   }
 
   updateSelectedPlayers();
+  updateMatchCreationLockUi();
 }
 
 function updateSelectedPlayers() {
@@ -484,12 +550,20 @@ function updateSelectedPlayers() {
 }
 
 function divideTeams() {
+  if (hasPendingScheduledMatch()) {
+    return;
+  }
+
   currentTeams = matchController.createRandomTeams(selectedPlayers);
   renderTeams();
   showMatchSetup();
 }
 
 function generateBalancedTeams() {
+  if (hasPendingScheduledMatch()) {
+    return;
+  }
+
   if (selectedPlayers.length !== 10) {
     alert('Selecciona 10 jugadores para generar equipos balanceados');
     return;
@@ -506,6 +580,124 @@ function renderTeams() {
 
 function populateMVPSelect() {
   window.MatchView?.populateMvpOptions?.({ teams: currentTeams });
+}
+
+function hasPendingScheduledMatch(excludeMatchId = "") {
+  const history = historyController.getHistory?.() || [];
+  const excluded = String(excludeMatchId || "").trim();
+
+  return history.some((match) => {
+    const status = String(match?.status || "").trim().toLowerCase();
+    if (status !== "scheduled") return false;
+    if (!excluded) return true;
+    return String(match?.id || "").trim() !== excluded;
+  });
+}
+
+function updateMatchCreationLockUi() {
+  const hasPending = hasPendingScheduledMatch();
+  const genBtn = document.getElementById("generateBalancedBtn");
+  const genManualBtn = document.getElementById("generateManualBtn");
+  const startBtn = document.getElementById("startMatchBtn");
+  const pendingNotice = document.getElementById("pendingMatchNotice");
+
+  if (genBtn) genBtn.disabled = hasPending || selectedPlayers.length !== 10;
+  if (genManualBtn) genManualBtn.disabled = hasPending || selectedPlayers.length !== 10;
+  if (startBtn) startBtn.disabled = hasPending || selectedPlayers.length !== 10;
+  if (pendingNotice) pendingNotice.classList.toggle("hidden", !hasPending);
+}
+
+function findHistoryMatchById(matchId) {
+  const history = historyController.getHistory?.() || [];
+  return history.find((item) => String(item.id) === String(matchId)) || null;
+}
+
+function closePendingResultModal() {
+  const modal = document.getElementById("historyResultModal");
+  if (modal) modal.classList.add("hidden");
+  pendingHistoryResultMatchId = "";
+}
+
+function openPendingResultModal(matchId) {
+  const pendingMatch = findHistoryMatchById(matchId);
+
+  if (!pendingMatch) {
+    alert("No se encontró el partido pendiente");
+    return;
+  }
+
+  const status = String(pendingMatch.status || "").toLowerCase();
+  if (status && status !== "scheduled") {
+    alert("Este partido ya no está pendiente");
+    return;
+  }
+
+  pendingHistoryResultMatchId = String(pendingMatch.id || "");
+
+  const scoreAInput = document.getElementById("historyScoreTeamA");
+  const scoreBInput = document.getElementById("historyScoreTeamB");
+  const mvpSelect = document.getElementById("historyMvpSelect");
+  const meta = document.getElementById("historyResultMeta");
+  const modal = document.getElementById("historyResultModal");
+
+  if (!scoreAInput || !scoreBInput || !mvpSelect || !modal) {
+    alert("No se pudo abrir el modal de resultado");
+    return;
+  }
+
+  scoreAInput.value = String(pendingMatch.scoreA ?? 0);
+  scoreBInput.value = String(pendingMatch.scoreB ?? 0);
+
+  const mvpCandidates = [...(pendingMatch.teamA || []), ...(pendingMatch.teamB || [])]
+    .map((name) => String(name || "").trim())
+    .filter(Boolean);
+  const uniqueCandidates = [...new Set(mvpCandidates)];
+
+  mvpSelect.innerHTML = '<option value="">Select MVP</option>'
+    + uniqueCandidates.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
+  mvpSelect.value = pendingMatch.mvp ? String(pendingMatch.mvp) : "";
+
+  if (meta) {
+    const locationText = String(pendingMatch.location || "").trim();
+    meta.textContent = locationText
+      ? `${pendingMatch.date || ""} · ${locationText}`
+      : String(pendingMatch.date || "");
+  }
+
+  modal.classList.remove("hidden");
+}
+
+async function savePendingResultFromModal() {
+  if (!pendingHistoryResultMatchId) return;
+
+  const pendingMatch = findHistoryMatchById(pendingHistoryResultMatchId);
+  if (!pendingMatch) {
+    alert("No se encontró el partido pendiente");
+    return;
+  }
+
+  const scoreA = parseInt(document.getElementById("historyScoreTeamA")?.value || "0", 10) || 0;
+  const scoreB = parseInt(document.getElementById("historyScoreTeamB")?.value || "0", 10) || 0;
+  const mvpName = document.getElementById("historyMvpSelect")?.value || null;
+  if (!mvpName) {
+    alert("Selecciona un MVP para guardar el resultado");
+    return;
+  }
+
+  const updatedMatch = {
+    ...pendingMatch,
+    id: pendingMatch.id,
+    status: "played",
+    scoreA,
+    scoreB,
+    mvp: mvpName || null,
+  };
+
+  const storedMatch = await matchController.saveMatch(updatedMatch);
+  historyController.pushMatch(storedMatch);
+  await fetchMatches();
+  closePendingResultModal();
+  showToast("✔ Resultado guardado", 2000);
 }
 
 function showMatchSetup() {
@@ -745,7 +937,7 @@ async function initLocationAutocomplete() {
   }
 }
 
-function confirmMatchInfo() {
+async function confirmMatchInfo() {
   if (!currentTeams) return;
 
   const setupValues = window.MatchView?.getMatchSetupValues
@@ -776,16 +968,37 @@ function confirmMatchInfo() {
       ? selectedPlaceData
       : null;
 
+  const previousMatchId = currentMatchDetails?.matchId || "";
+
   currentMatchDetails = {
     location,
     address,
     scheduledAt,
     datetimeDisplay,
+    matchId: previousMatchId,
     placeId: matchedPlace?.placeId || "",
     mapsUrl: matchedPlace?.mapsUrl || buildMapsSearchUrl(location, address),
     latitude: matchedPlace?.latitude ?? null,
     longitude: matchedPlace?.longitude ?? null,
   };
+
+  const scheduledMatch = matchController.buildMatchPayload(
+    currentTeams,
+    currentMatchDetails,
+    null,
+    null,
+    null,
+    {
+      id: previousMatchId,
+      status: "scheduled",
+    }
+  );
+
+  const storedScheduledMatch = await matchController.saveMatch(scheduledMatch);
+  if (storedScheduledMatch?.id) {
+    currentMatchDetails.matchId = storedScheduledMatch.id;
+    historyController.pushMatch(storedScheduledMatch);
+  }
 
   showMatchResults();
 }
@@ -885,9 +1098,23 @@ async function recordMatch() {
   const scoreA = parseInt(document.getElementById("scoreTeamA").value) || 0;
   const scoreB = parseInt(document.getElementById("scoreTeamB").value) || 0;
   const mvpId = document.getElementById("mvpSelect").value;
+  if (!mvpId) {
+    alert("Selecciona un MVP para guardar el resultado");
+    return;
+  }
   const mvpName = mvpId ? document.querySelector(`#mvpSelect option[value="${mvpId}"]`).textContent : null;
 
-  const match = matchController.buildMatchPayload(currentTeams, currentMatchDetails, scoreA, scoreB, mvpName);
+  const match = matchController.buildMatchPayload(
+    currentTeams,
+    currentMatchDetails,
+    scoreA,
+    scoreB,
+    mvpName,
+    {
+      id: currentMatchDetails?.matchId || "",
+      status: "played",
+    }
+  );
   const storedMatch = await matchController.saveMatch(match);
 
   historyController.pushMatch(storedMatch);
@@ -1181,6 +1408,10 @@ if (genBtnEl) genBtnEl.addEventListener("click", generateBalancedTeams);
 // Manual teams
 const genManualBtnEl = document.getElementById("generateManualBtn");
 if (genManualBtnEl) genManualBtnEl.addEventListener("click", () => {
+  if (hasPendingScheduledMatch()) {
+    return;
+  }
+
   // Mostrar la tabla de asignación y ocultar la lista de selección
   const matchSelection = document.getElementById('matchSelection');
   const manualSelector = document.getElementById('manualTeamSelection');
@@ -1241,6 +1472,8 @@ function setMatchMode(mode){
     manualSelector.classList.add('hidden');
     currentTeams = { a: [], b: [] };
   }
+
+  updateMatchCreationLockUi();
 }
 
 function renderManualTeamSelection() {
@@ -1318,6 +1551,16 @@ document.getElementById("editPlayerMidfield")?.addEventListener("input", updateS
 document.getElementById("editPlayerModal").addEventListener("click", (e) => {
   if (e.target.id === "editPlayerModal") {
     closeEditModal();
+  }
+});
+
+document.getElementById("closeHistoryResultBtn")?.addEventListener("click", closePendingResultModal);
+document.getElementById("saveHistoryResultBtn")?.addEventListener("click", () => {
+  void savePendingResultFromModal();
+});
+document.getElementById("historyResultModal")?.addEventListener("click", (e) => {
+  if (e.target.id === "historyResultModal") {
+    closePendingResultModal();
   }
 });
 

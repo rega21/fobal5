@@ -1,5 +1,5 @@
 (function (global) {
-  function createHistoryController({ historyKey, apiClient, isAdmin }) {
+  function createHistoryController({ historyKey, apiClient, isAdmin, onResolveResult }) {
     let history = getLocalHistory();
 
     function getLocalHistory() {
@@ -24,6 +24,7 @@
         history,
         adminAuthenticated: Boolean(isAdmin?.()),
         onDelete: deleteMatch,
+        onResolveResult,
       });
     }
 
@@ -72,7 +73,20 @@
     }
 
     function pushMatch(match) {
-      history.push(match);
+      const hasMatchId =
+        match?.id !== null && match?.id !== undefined && String(match.id).trim() !== "";
+
+      if (!hasMatchId) {
+        history.push(match);
+      } else {
+        const index = history.findIndex((item) => String(item.id) === String(match.id));
+        if (index >= 0) {
+          history[index] = match;
+        } else {
+          history.push(match);
+        }
+      }
+
       persistHistory();
     }
 

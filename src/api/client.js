@@ -47,6 +47,13 @@
         body: JSON.stringify(body),
       });
     },
+    updateMatch(id, body) {
+      return request(`${MATCHES_URL}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    },
     deleteMatch(id) {
       return request(`${MATCHES_URL}/${id}`, { method: "DELETE" });
     },

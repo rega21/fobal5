@@ -30,12 +30,13 @@
         const playerId = String(player.id);
         const isSelected = selectedIds.has(playerId);
         const disabled = selectedIds.size >= 10 && !isSelected ? "disabled" : "";
+        const hasNickname = Boolean(player.nickname?.trim());
+        const displayName = hasNickname ? player.nickname.trim() : player.name;
 
         return `
           <article class="card card-selectable ${isSelected ? "selected" : ""}" data-id="${playerId}">
             <div class="player-name">
-              ${escapeHtml(player.name)}
-              ${player.nickname?.trim() ? `<span class="player-nick">"${escapeHtml(player.nickname)}"</span>` : ""}
+              ${escapeHtml(displayName)}
             </div>
             <label class="checkbox">
               <input type="checkbox" ${isSelected ? "checked" : ""} ${disabled} data-id="${playerId}">
@@ -108,14 +109,13 @@
   }
 
   function setDetectedAddressDetails(address = "", mapsUrl = "") {
-    const addressEl = document.getElementById("matchAddressDetected");
+    const locationInput = document.getElementById("matchLocation");
     const mapsBtn = document.getElementById("openMapsBtn");
     const trimmedAddress = String(address || "").trim();
     const trimmedMapsUrl = String(mapsUrl || "").trim();
 
-    if (addressEl) {
-      addressEl.textContent = trimmedAddress || "Sin dirección detectada";
-      addressEl.dataset.value = trimmedAddress;
+    if (locationInput) {
+      locationInput.dataset.detectedAddress = trimmedAddress;
     }
 
     if (mapsBtn) {
@@ -234,7 +234,7 @@
 
   function getMatchSetupValues() {
     const location = document.getElementById("matchLocation")?.value.trim() || "";
-    const address = document.getElementById("matchAddressDetected")?.dataset.value?.trim() || "";
+    const address = document.getElementById("matchLocation")?.dataset.detectedAddress?.trim() || "";
     const scheduledAt = document.getElementById("matchDatetime")?.value || "";
     const mapsUrl = document.getElementById("openMapsBtn")?.dataset.mapsUrl?.trim() || "";
     return { location, address, scheduledAt, mapsUrl };
@@ -311,6 +311,8 @@
   }
 
   function showResultsState() {
+    document.getElementById("matchSelection")?.classList.add("hidden");
+    document.getElementById("manualTeamSelection")?.classList.add("hidden");
     document.getElementById("matchSetup")?.classList.add("hidden");
     document.getElementById("matchResults")?.classList.remove("hidden");
   }

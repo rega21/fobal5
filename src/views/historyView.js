@@ -1,5 +1,5 @@
 (function (global) {
-  function renderHistoryList({ history, adminAuthenticated, onDelete }) {
+  function renderHistoryList({ history, adminAuthenticated, onDelete, onResolveResult }) {
     const historyList = document.getElementById("historyList");
     if (!historyList) return;
 
@@ -28,6 +28,7 @@
         const matchId = encodeURIComponent(String(m.id ?? ""));
         const matchDate = encodeURIComponent(String(m.date ?? ""));
         const matchLocation = String(m.location || m.matchLocation || m.place || "").trim();
+        const matchStatus = String(m.status || "played").trim().toLowerCase();
         const mapsLink = String(m.mapsUrl || "").trim() ||
           (matchLocation
             ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(matchLocation)}`
@@ -41,6 +42,9 @@
           : ""
       }
       <div class="match-date">${m.date}</div>
+      ${matchStatus === "scheduled"
+        ? `<div class="muted" style="margin:4px 0 10px 0; font-weight:600;">⏳ Pendiente</div>`
+        : ""}
       ${matchLocation ? `<div style="margin:0 0 10px 0;"><a class="muted" href="${mapsLink}" target="_blank" rel="noopener noreferrer">📍 ${matchLocation}</a></div>` : ""}
 
       <div class="match-grid">
@@ -53,10 +57,13 @@
 
         <div class="match-center">
           <div class="match-score">
-            <span>${m.scoreA !== undefined ? m.scoreA : "—"}</span>
+            <span>${m.scoreA ?? "—"}</span>
             <span class="dash">−</span>
-            <span>${m.scoreB !== undefined ? m.scoreB : "—"}</span>
+            <span>${m.scoreB ?? "—"}</span>
           </div>
+          ${matchStatus === "scheduled"
+            ? `<button class="btn btn-primary match-resolve-btn" data-match-id="${matchId}" style="margin-top:10px; padding:6px 10px; font-size:12px;">Cargar resultado</button>`
+            : ""}
           ${m.mvp ? `<div class="match-mvp">⭐ ${m.mvp}</div>` : ""}
         </div>
 
@@ -78,6 +85,15 @@
           const id = decodeURIComponent(btn.dataset.matchId || "");
           const date = decodeURIComponent(btn.dataset.matchDate || "");
           onDelete(id, date);
+        });
+      });
+    }
+
+    if (typeof onResolveResult === "function") {
+      historyList.querySelectorAll(".match-resolve-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = decodeURIComponent(btn.dataset.matchId || "");
+          onResolveResult(id);
         });
       });
     }

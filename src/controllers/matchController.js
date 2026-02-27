@@ -51,10 +51,13 @@
       return `Team A:\n${teamANames}\n\nTeam B:\n${teamBNames}`;
     }
 
-    function buildMatchPayload(currentTeams, details = {}, scoreA, scoreB, mvpName) {
+    function buildMatchPayload(currentTeams, details = {}, scoreA, scoreB, mvpName, options = {}) {
       return {
+        id: options?.id || details?.matchId || "",
+        status: options?.status || "played",
         date: details?.datetimeDisplay || new Date().toLocaleString(),
         location: details?.location || "",
+        address: details?.address || "",
         scheduledAt: details?.scheduledAt || "",
         placeId: details?.placeId || "",
         mapsUrl: details?.mapsUrl || "",
@@ -62,8 +65,8 @@
         longitude: details?.longitude ?? null,
         teamA: currentTeams.a.map((player) => player.name),
         teamB: currentTeams.b.map((player) => player.name),
-        scoreA,
-        scoreB,
+        scoreA: scoreA ?? null,
+        scoreB: scoreB ?? null,
         mvp: mvpName || null,
       };
     }
@@ -71,9 +74,22 @@
     async function saveMatch(match) {
       let storedMatch = { ...match };
       try {
-        const created = await apiClient.createMatch(match);
-        if (created && typeof created === "object") {
-          storedMatch = created;
+        const hasMatchId =
+          match?.id !== null && match?.id !== undefined && String(match.id).trim() !== "";
+
+        const payload = { ...match };
+        delete payload.id;
+
+        if (hasMatchId && typeof apiClient.updateMatch === "function") {
+          const updated = await apiClient.updateMatch(match.id, payload);
+          if (updated && typeof updated === "object") {
+            storedMatch = updated;
+          }
+        } else {
+          const created = await apiClient.createMatch(payload);
+          if (created && typeof created === "object") {
+            storedMatch = created;
+          }
         }
       } catch (error) {
         console.error("Error saving match to API:", error);

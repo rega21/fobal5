@@ -60,6 +60,7 @@
             </div>
             <button class="btn btn-success" id="generateBalancedBtn">🔀 Generate Balanced Teams</button>
             <button class="btn btn-success hidden" id="generateManualBtn">👥 Assign Teams Manually</button>
+            <p id="pendingMatchNotice" class="muted hidden" style="margin:12px 0 0; padding-top:10px; border-top:1px solid var(--line); color:var(--muted); font-weight:600; font-size:12px; text-align:center;">Hay un partido pendiente. Completalo en Historial.</p>
           </div>
         </div>
 
@@ -93,10 +94,6 @@
               <input type="text" id="matchLocation" placeholder="Ej: Cancha Norte">
               <p class="muted hidden" id="matchLocationHint" style="margin:6px 0 0;font-size:12px;"></p>
             </div>
-            <div class="form-group">
-              <label>Dirección detectada</label>
-              <p id="matchAddressDetected" class="muted" style="margin:0; padding:12px; border:1px solid #e5e7eb; border-radius:10px; background:#fff;">Sin dirección detectada</p>
-            </div>
             <button class="btn btn-secondary" id="openMapsBtn" type="button" style="width:100%; margin-bottom:12px;" disabled>🌍 Ver en Google Maps</button>
             <div class="form-group" style="margin-bottom:0;">
               <label>Fecha y hora</label>
@@ -128,7 +125,7 @@
             </div>
           </div>
 
-          <div style="margin-top:20px; padding:16px; background:#f9fafb; border-radius:12px;">
+          <div id="matchResultCard" class="hidden" style="margin-top:20px; padding:16px; background:#f9fafb; border-radius:12px;">
             <h4 style="margin:0 0 12px 0; font-size:16px;">Match Result</h4>
             <div style="display:grid; grid-template-columns: 1fr auto 1fr; gap:12px; align-items:end;">
               <div>
@@ -142,7 +139,7 @@
               </div>
             </div>
             <div style="margin-top:12px;">
-              <label style="display:block; font-size:12px; color: #6b7280; margin-bottom:4px;">⭐ MVP (optional)</label>
+              <label style="display:block; font-size:12px; color: #6b7280; margin-bottom:4px;">⭐ MVP</label>
               <select id="mvpSelect" style="width:100%; padding:8px; border:1px solid #e5e7eb; border-radius:6px;">
                 <option value="">Select MVP</option>
               </select>
@@ -212,6 +209,37 @@
             <input type="range" id="editPlayerMidfield" min="0" max="10" value="0" class="slider">
           </div>
           <button class="btn btn-success" id="updatePlayerBtn">Update</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Result Modal -->
+    <div id="historyResultModal" class="modal hidden">
+      <div class="modal-content modal-medium">
+        <div class="modal-header">
+          <h2>Cargar resultado</h2>
+          <button class="close-btn" id="closeHistoryResultBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p id="historyResultMeta" class="muted" style="margin:0 0 12px 0;"></p>
+          <div style="display:grid; grid-template-columns: 1fr auto 1fr; gap:12px; align-items:end;">
+            <div>
+              <label style="display:block; font-size:12px; color: #6b7280; margin-bottom:4px;">Team A</label>
+              <input type="number" id="historyScoreTeamA" value="0" min="0" style="width:100%; padding:8px; border:1px solid #e5e7eb; border-radius:6px;">
+            </div>
+            <div style="text-align:center; font-weight:700; color: #9ca3af;">×</div>
+            <div>
+              <label style="display:block; font-size:12px; color: #6b7280; margin-bottom:4px;">Team B</label>
+              <input type="number" id="historyScoreTeamB" value="0" min="0" style="width:100%; padding:8px; border:1px solid #e5e7eb; border-radius:6px;">
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <label style="display:block; font-size:12px; color: #6b7280; margin-bottom:4px;">⭐ MVP</label>
+            <select id="historyMvpSelect" style="width:100%; padding:8px; border:1px solid #e5e7eb; border-radius:6px;">
+              <option value="">Select MVP</option>
+            </select>
+          </div>
+          <button class="btn btn-success" id="saveHistoryResultBtn" style="width:100%; margin-top:12px;">Save Result</button>
         </div>
       </div>
     </div>
