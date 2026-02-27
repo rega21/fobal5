@@ -1095,7 +1095,7 @@ async function copyShareMessage() {
   if (navigator.clipboard?.writeText) {
     try {
       await navigator.clipboard.writeText(text);
-      setCopyShareFeedback("Mensaje copiado al portapapeles");
+      setCopyShareFeedback("Mensaje copiado");
       return;
     } catch {
       setCopyShareFeedback("No se pudo copiar automáticamente");

@@ -29,16 +29,34 @@
       return;
     }
 
+    const buildMobileFriendlyMapsLink = (rawMapsUrl = "", matchLocation = "") => {
+      const safeLocation = String(matchLocation || "").trim();
+      const fallbackLink = safeLocation
+        ? `https://maps.google.com/?q=${encodeURIComponent(safeLocation)}`
+        : "";
+
+      const safeRawUrl = String(rawMapsUrl || "").trim();
+      if (!safeRawUrl) return fallbackLink;
+
+      try {
+        const parsedUrl = new URL(safeRawUrl);
+        const queryParam = parsedUrl.searchParams.get("query");
+        if (queryParam) {
+          return `https://maps.google.com/?q=${encodeURIComponent(queryParam)}`;
+        }
+      } catch (_error) {
+      }
+
+      return fallbackLink || safeRawUrl;
+    };
+
     historyList.innerHTML = orderedMatches
       .map((m) => {
         const matchId = encodeURIComponent(String(m.id ?? ""));
         const matchDate = encodeURIComponent(String(m.date ?? ""));
         const matchLocation = String(m.location || m.matchLocation || m.place || "").trim();
         const matchStatus = String(m.status || "played").trim().toLowerCase();
-        const mapsLink = String(m.mapsUrl || "").trim() ||
-          (matchLocation
-            ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(matchLocation)}`
-            : "");
+        const mapsLink = buildMobileFriendlyMapsLink(m.mapsUrl, matchLocation);
 
         return `
     <article class="card match-entry" style="position:relative;">
