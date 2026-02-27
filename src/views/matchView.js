@@ -113,6 +113,7 @@
     const mapsBtn = document.getElementById("openMapsBtn");
     const trimmedAddress = String(address || "").trim();
     const trimmedMapsUrl = String(mapsUrl || "").trim();
+    const locationValue = String(locationInput?.value || "").trim();
 
     if (locationInput) {
       locationInput.dataset.detectedAddress = trimmedAddress;
@@ -120,7 +121,7 @@
 
     if (mapsBtn) {
       mapsBtn.dataset.mapsUrl = trimmedMapsUrl;
-      mapsBtn.disabled = !trimmedMapsUrl;
+      mapsBtn.disabled = !trimmedMapsUrl && !locationValue;
     }
   }
 

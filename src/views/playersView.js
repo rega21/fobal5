@@ -36,9 +36,7 @@
         })
       : players;
 
-    playersTitle.textContent = term
-      ? `Players (${filteredPlayers.length}/${players.length})`
-      : `Players (${players.length})`;
+    playersTitle.textContent = "Players";
 
     if (filteredPlayers.length === 0) {
       playersList.innerHTML = '<p class="muted">Sin resultados</p>';

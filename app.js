@@ -474,9 +474,7 @@ function renderPlayers() {
       })
     : players;
 
-  playersTitle.textContent = term
-    ? `Players (${filteredPlayers.length}/${players.length})`
-    : `Players (${players.length})`;
+  playersTitle.textContent = "Players";
 
   if (filteredPlayers.length === 0) {
     playersList.innerHTML = '<p class="muted">Sin resultados</p>';
@@ -919,14 +917,16 @@ async function initLocationAutocomplete() {
       const lat = place.geometry?.location?.lat ? place.geometry.location.lat() : null;
       const lng = place.geometry?.location?.lng ? place.geometry.location.lng() : null;
       const placeId = place.place_id || "";
+      const placeQuery = locationInput.value.trim() || resolvedAddress || "";
+      const resolvedMapsUrl = placeId
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeQuery || "Cancha")}&query_place_id=${encodeURIComponent(placeId)}`
+        : buildMapsSearchUrl(placeQuery, resolvedAddress);
 
       selectedPlaceData = {
         location: locationInput.value.trim(),
         address: resolvedAddress,
         placeId,
-        mapsUrl: placeId
-          ? `https://www.google.com/maps/place/?q=place_id:${encodeURIComponent(placeId)}`
-          : "",
+        mapsUrl: resolvedMapsUrl,
         latitude: lat,
         longitude: lng,
       };
