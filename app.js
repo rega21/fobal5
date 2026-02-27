@@ -390,10 +390,6 @@ async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0) 
     return;
   }
 
-  if (!adminAuthenticated) {
-    alert("Solo el admin puede agregar jugadores");
-    return;
-  }
   try {
     const body = { name, nickname: nickname || "", attack, defense, midfield };
     const newPlayer = await apiClient.createPlayer(body);
@@ -1295,14 +1291,16 @@ function updateAdminUI() {
   const adminBtn = document.getElementById("adminBtn");
   const body = document.body;
 
+  if (addForm) {
+    addForm.classList.remove("hidden");
+  }
+
   if (adminAuthenticated) {
     btnText.textContent = "Admin ✓";
-    addForm.classList.remove("hidden");
     adminBtn.classList.add("authenticated");
     body.classList.add("admin-active");
   } else {
     btnText.textContent = "Admin";
-    addForm.classList.add("hidden");
     adminBtn.classList.remove("authenticated");
     body.classList.remove("admin-active");
   }

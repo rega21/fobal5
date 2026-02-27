@@ -22,11 +22,6 @@
     }
 
     async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0) {
-      if (!getIsAdmin()) {
-        alert("Solo el admin puede agregar jugadores");
-        return;
-      }
-
       try {
         const body = { name, nickname: nickname || "", attack, defense, midfield };
         const newPlayer = await apiClient.createPlayer(body);
