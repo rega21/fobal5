@@ -78,6 +78,36 @@
   color: var(--muted);
   margin-left: 6px;
 }
+.player-meta{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:6px;
+}
+.player-community{
+  display:inline-flex;
+  align-items:center;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.2px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:3px 8px;
+  color: var(--muted);
+}
+.player-community--pending{
+  color: var(--muted);
+}
+.player-community--ok{
+  color: var(--success);
+  border-color: var(--success);
+}
+.player-stats{
+  font-size:12px;
+  font-weight:700;
+  color: var(--muted);
+}
 
 /* Checkbox */
 .checkbox{

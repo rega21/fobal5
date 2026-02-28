@@ -1,4 +1,5 @@
 const HISTORY_KEY = "fobal5_history";
+const COMMUNITY_MIN_VOTES = 3;
 const ADMIN_PIN = "";
 let adminAuthenticated = false;
 let currentEditingPlayerId = null;
@@ -7,6 +8,7 @@ let players = [];
 let selectedPlayers = [];
 let currentTeams = null;
 let playerSearchTerm = "";
+let playerRatingsSummaryById = {};
 let currentMatchDetails = null;
 let pendingHistoryResultMatchId = "";
 let selectedPlaceData = null;
@@ -251,6 +253,10 @@ const whatsappShareService = window.createWhatsAppShareService
       },
     };
 
+const playerRatingsService = window.createPlayerRatingsService
+  ? window.createPlayerRatingsService({ apiClient })
+  : null;
+
 const adminPlayersController = window.createAdminPlayersController
   ? window.createAdminPlayersController({
       apiClient,
@@ -321,9 +327,32 @@ function parseValidatedScore(inputId, teamLabel = "") {
 }
 
 let toastTimeoutId = null;
-function showToast(message = "", duration = 2000) {
+function showToast(message = "", duration = 2000, variant = "default") {
   const text = String(message || "").trim();
   if (!text) return;
+
+  const palette = {
+    default: {
+      background: "rgba(17, 24, 39, 0.92)",
+      color: "#fff",
+      border: "1px solid rgba(255,255,255,.12)",
+      icon: "ℹ️",
+    },
+    success: {
+      background: "#065f46",
+      color: "#ecfdf5",
+      border: "1px solid rgba(16,185,129,.45)",
+      icon: "✅",
+    },
+    error: {
+      background: "#7f1d1d",
+      color: "#fef2f2",
+      border: "1px solid rgba(239,68,68,.45)",
+      icon: "⚠️",
+    },
+  };
+
+  const appearance = palette[variant] || palette.default;
 
   let toastEl = document.getElementById("appToast");
   if (!toastEl) {
@@ -333,8 +362,9 @@ function showToast(message = "", duration = 2000) {
     toastEl.style.left = "50%";
     toastEl.style.bottom = "88px";
     toastEl.style.transform = "translateX(-50%)";
-    toastEl.style.background = "rgba(17, 24, 39, 0.92)";
-    toastEl.style.color = "#fff";
+    toastEl.style.background = appearance.background;
+    toastEl.style.color = appearance.color;
+    toastEl.style.border = appearance.border;
     toastEl.style.padding = "10px 14px";
     toastEl.style.borderRadius = "10px";
     toastEl.style.fontSize = "13px";
@@ -347,13 +377,82 @@ function showToast(message = "", duration = 2000) {
     document.body.appendChild(toastEl);
   }
 
-  toastEl.textContent = text;
+  toastEl.style.background = appearance.background;
+  toastEl.style.color = appearance.color;
+  toastEl.style.border = appearance.border;
+  toastEl.textContent = `${appearance.icon} ${text}`;
   toastEl.style.opacity = "1";
 
   if (toastTimeoutId) clearTimeout(toastTimeoutId);
   toastTimeoutId = setTimeout(() => {
     toastEl.style.opacity = "0";
-  }, Math.max(800, Number(duration) || 2000));
+  }, Math.max(900, Number(duration) || 2200));
+}
+
+function normalizePlayerId(value) {
+  return String(value ?? "").trim();
+}
+
+function toScoreNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getPlayerCommunitySummary(playerId) {
+  const key = normalizePlayerId(playerId);
+  return playerRatingsSummaryById[key] || null;
+}
+
+function enrichPlayerWithCommunityState(player) {
+  const summary = getPlayerCommunitySummary(player?.id);
+  const votes = Number(summary?.votes) || 0;
+  const isValidated = votes >= COMMUNITY_MIN_VOTES;
+
+  const baseAttack = toScoreNumber(player?.attack);
+  const baseDefense = toScoreNumber(player?.defense);
+  const baseMidfield = toScoreNumber(player?.midfield);
+
+  const effectiveAttack = isValidated ? toScoreNumber(summary?.avgAttack) : baseAttack;
+  const effectiveDefense = isValidated ? toScoreNumber(summary?.avgDefense) : baseDefense;
+  const effectiveMidfield = isValidated ? toScoreNumber(summary?.avgMidfield) : baseMidfield;
+
+  return {
+    ...player,
+    communityVotes: votes,
+    communityMinVotes: COMMUNITY_MIN_VOTES,
+    communityStatus: isValidated ? "validated" : "pending",
+    effectiveAttack,
+    effectiveDefense,
+    effectiveMidfield,
+  };
+}
+
+function getPlayersForDisplay(list = []) {
+  return (list || []).map((player) => enrichPlayerWithCommunityState(player));
+}
+
+function getPlayersForMatch(list = []) {
+  return getPlayersForDisplay(list).map((player) => ({
+    ...player,
+    attack: player.effectiveAttack,
+    defense: player.effectiveDefense,
+    midfield: player.effectiveMidfield,
+  }));
+}
+
+async function refreshPlayerRatingsSummary() {
+  if (typeof apiClient.getPlayerRatingsSummaryByPlayerId !== "function") {
+    playerRatingsSummaryById = {};
+    return;
+  }
+
+  try {
+    const summary = await apiClient.getPlayerRatingsSummaryByPlayerId();
+    playerRatingsSummaryById = summary && typeof summary === "object" ? summary : {};
+  } catch (error) {
+    console.warn("No se pudo cargar resumen community ratings:", error);
+    playerRatingsSummaryById = {};
+  }
 }
 
 function renderAdminPlayers() {
@@ -366,17 +465,21 @@ function renderAdminPlayers() {
 async function fetchPlayers() {
   if (adminPlayersController) {
     await adminPlayersController.fetchPlayers();
+    await refreshPlayerRatingsSummary();
+    renderPlayers();
     return;
   }
 
   try {
     const data = await apiClient.getPlayers();
     players = data || [];
-    renderPlayers();
   } catch (e) {
     console.error("Error fetching players:", e);
     players = [];
   }
+
+  await refreshPlayerRatingsSummary();
+  renderPlayers();
 }
 
 async function fetchMatches() {
@@ -452,9 +555,11 @@ async function updatePlayer(id, name, nickname, attack, defense, midfield) {
 
 /* Players view */
 function renderPlayers() {
+  const playersForView = getPlayersForDisplay(players);
+
   if (window.PlayersView?.renderPlayersList) {
     window.PlayersView.renderPlayersList({
-      players,
+      players: playersForView,
       playerSearchTerm,
       adminAuthenticated,
       onEdit: (id) => editPlayer(id),
@@ -468,11 +573,11 @@ function renderPlayers() {
 
   const term = playerSearchTerm.trim().toLowerCase();
   const filteredPlayers = term
-    ? players.filter(p => {
+    ? playersForView.filter(p => {
         const haystack = `${p.name} ${p.nickname || ""}`.toLowerCase();
         return haystack.includes(term);
       })
-    : players;
+    : playersForView;
 
   playersTitle.textContent = "Players";
 
@@ -487,13 +592,23 @@ function renderPlayers() {
     const nick = p.nickname?.trim()
       ? `<span class="player-nick">"${escapeHtml(p.nickname)}"</span>`
       : "";
+    const votes = Number(p.communityVotes) || 0;
+    const minVotes = Number(p.communityMinVotes) || COMMUNITY_MIN_VOTES;
+    const statusClass = p.communityStatus === "validated" ? "player-community player-community--ok" : "player-community player-community--pending";
+    const statusText = p.communityStatus === "validated"
+      ? `✅ Validado (${votes} votos)`
+      : `⏳ Pendiente (${votes}/${minVotes})`;
+    const scoreText = `A ${toScoreNumber(p.effectiveAttack)} · D ${toScoreNumber(p.effectiveDefense)} · M ${toScoreNumber(p.effectiveMidfield)}`;
+    const scoreMarkup = adminAuthenticated
+      ? `<span class="player-stats">${scoreText}</span>`
+      : "";
 
     const deleteControl = adminAuthenticated
       ? `<button class="btn-delete" data-id="${p.id}" title="Eliminar">🗑️</button>`
       : "";
 
     const adminControls = `<div class="admin-controls">
-          <button class="btn-edit" data-id="${p.id}" title="Editar">✏️</button>
+          <button class="btn-edit" data-id="${p.id}" title="Calificar">✏️</button>
           ${deleteControl}
         </div>`;
 
@@ -502,6 +617,10 @@ function renderPlayers() {
         <div class="player-info">
           <div class="player-name">
             ${escapeHtml(p.name)} ${nick}
+          </div>
+          <div class="player-meta">
+            <span class="${statusClass}">${statusText}</span>
+            ${scoreMarkup}
           </div>
         </div>
         ${adminControls}
@@ -531,7 +650,7 @@ function renderMatchPlayers() {
       selectedPlayers,
       onSelectionChanged: (selectedIds) => {
         const selectedIdSet = new Set((selectedIds || []).map((id) => String(id)));
-        selectedPlayers = players.filter((player) => selectedIdSet.has(String(player.id)));
+        selectedPlayers = getPlayersForMatch(players).filter((player) => selectedIdSet.has(String(player.id)));
         updateMatchCreationLockUi();
       },
     });
@@ -544,7 +663,7 @@ function renderMatchPlayers() {
 }
 
 function updateSelectedPlayers() {
-  selectedPlayers = players.filter(p =>
+  selectedPlayers = getPlayersForMatch(players).filter(p =>
     document.querySelector(`#matchPlayersList input[data-id="${p.id}"]`)?.checked
   );
 
@@ -1167,18 +1286,47 @@ function editPlayer(id) {
   const player = players.find(p => p.id == id);
   if (!player) return;
 
+  const playerForEdit = enrichPlayerWithCommunityState(player);
+
   currentEditingPlayerId = id;
-  document.getElementById("editPlayerName").value = player.name;
-  document.getElementById("editPlayerNickname").value = player.nickname || "";
-  document.getElementById("editPlayerAttack").value = player.attack || 0;
-  document.getElementById("editPlayerDefense").value = player.defense || 0;
-  document.getElementById("editPlayerMidfield").value = player.midfield || 0;
+  document.getElementById("editPlayerName").value = playerForEdit.name;
+  document.getElementById("editPlayerNickname").value = playerForEdit.nickname || "";
+  const shouldPrefillCommunityAverage = playerForEdit.communityStatus === "validated";
+  const initialAttack = adminAuthenticated
+    ? (playerForEdit.effectiveAttack || 0)
+    : (shouldPrefillCommunityAverage ? (playerForEdit.effectiveAttack || 0) : 0);
+  const initialDefense = adminAuthenticated
+    ? (playerForEdit.effectiveDefense || 0)
+    : (shouldPrefillCommunityAverage ? (playerForEdit.effectiveDefense || 0) : 0);
+  const initialMidfield = adminAuthenticated
+    ? (playerForEdit.effectiveMidfield || 0)
+    : (shouldPrefillCommunityAverage ? (playerForEdit.effectiveMidfield || 0) : 0);
+  document.getElementById("editPlayerAttack").value = initialAttack;
+  document.getElementById("editPlayerDefense").value = initialDefense;
+  document.getElementById("editPlayerMidfield").value = initialMidfield;
   
   updateSliderValues();
   openEditModal();
 }
 
 function openEditModal() {
+  const title = document.getElementById("editPlayerModalTitle");
+  const saveBtn = document.getElementById("updatePlayerBtn");
+  const nameInput = document.getElementById("editPlayerName");
+  const nicknameInput = document.getElementById("editPlayerNickname");
+
+  if (adminAuthenticated) {
+    if (title) title.textContent = "Editar jugador";
+    if (saveBtn) saveBtn.textContent = "Guardar cambios";
+    if (nameInput) nameInput.disabled = false;
+    if (nicknameInput) nicknameInput.disabled = false;
+  } else {
+    if (title) title.textContent = "Calificar jugador";
+    if (saveBtn) saveBtn.textContent = "Guardar calificación";
+    if (nameInput) nameInput.disabled = true;
+    if (nicknameInput) nicknameInput.disabled = true;
+  }
+
   document.getElementById("editPlayerModal").classList.remove("hidden");
 }
 
@@ -1188,18 +1336,50 @@ function closeEditModal() {
 }
 
 async function saveEditPlayer() {
+  const editPlayerId = String(currentEditingPlayerId || "").trim();
+  if (!editPlayerId) return;
+
   const name = document.getElementById("editPlayerName").value.trim();
   const nickname = document.getElementById("editPlayerNickname").value.trim();
   const attack = parseInt(document.getElementById("editPlayerAttack").value) || 0;
   const defense = parseInt(document.getElementById("editPlayerDefense").value) || 0;
   const midfield = parseInt(document.getElementById("editPlayerMidfield").value) || 0;
 
+  if (!adminAuthenticated) {
+    if (!/^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i.test(editPlayerId)) {
+      alert("Este jugador todavía usa ID de MockAPI. Para calificar en comunidad, primero migra players a Supabase (UUID).");
+      return;
+    }
+
+    if (!playerRatingsService) {
+      alert("No se pudo inicializar el servicio de calificaciones");
+      return;
+    }
+
+    try {
+      await playerRatingsService.savePlayerRating({
+        playerId: editPlayerId,
+        attack,
+        defense,
+        midfield,
+      });
+      await refreshPlayerRatingsSummary();
+      renderPlayers();
+      closeEditModal();
+      showToast("Calificación guardada", 2200, "success");
+    } catch (error) {
+      console.error("Error guardando calificación:", error);
+      showToast("No se pudo guardar la calificación", 2600, "error");
+    }
+    return;
+  }
+
   if (!name) {
     alert("El nombre no puede estar vacío");
     return;
   }
 
-  await updatePlayer(currentEditingPlayerId, name, nickname, attack, defense, midfield);
+  await updatePlayer(editPlayerId, name, nickname, attack, defense, midfield);
   closeEditModal();
 }
 

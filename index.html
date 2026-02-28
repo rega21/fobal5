@@ -180,11 +180,11 @@
       </div>
     </div>
 
-    <!-- Edit Player Modal -->
+    <!-- Rate Player Modal -->
     <div id="editPlayerModal" class="modal hidden">
       <div class="modal-content modal-medium">
         <div class="modal-header">
-          <h2>Edit Player</h2>
+          <h2 id="editPlayerModalTitle">Calificar jugador</h2>
           <button class="close-btn" id="closeEditBtn">&times;</button>
         </div>
         <div class="modal-body">
@@ -197,18 +197,18 @@
             <input type="text" id="editPlayerNickname" placeholder="Apodo">
           </div>
           <div class="slider-group">
-            <label>Attack: <span id="attackValue">0</span></label>
+            <label>Ataque: <span id="attackValue">0</span></label>
             <input type="range" id="editPlayerAttack" min="0" max="10" value="0" class="slider">
           </div>
           <div class="slider-group">
-            <label>Defense: <span id="defenseValue">0</span></label>
+            <label>Defensa: <span id="defenseValue">0</span></label>
             <input type="range" id="editPlayerDefense" min="0" max="10" value="0" class="slider">
           </div>
           <div class="slider-group">
-            <label>Midfield: <span id="midfieldValue">0</span></label>
+            <label>Medio: <span id="midfieldValue">0</span></label>
             <input type="range" id="editPlayerMidfield" min="0" max="10" value="0" class="slider">
           </div>
-          <button class="btn btn-success" id="updatePlayerBtn">Update</button>
+          <button class="btn btn-success" id="updatePlayerBtn">Guardar calificación</button>
         </div>
       </div>
     </div>
@@ -308,6 +308,7 @@
   <script src="src/controllers/matchController.js"></script>
   <script src="src/controllers/adminPlayersController.js"></script>
   <script src="src/services/whatsappShareService.js"></script>
+  <script src="src/services/playerRatingsService.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
