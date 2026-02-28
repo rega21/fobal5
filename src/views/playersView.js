@@ -26,7 +26,7 @@
   }) {
     const playersTitle = document.getElementById("playersTitle");
     const playersList = document.getElementById("playersList");
-    if (!playersTitle || !playersList) return;
+    if (!playersList) return;
 
     const term = (playerSearchTerm || "").trim().toLowerCase();
     const filteredPlayers = term
@@ -36,7 +36,9 @@
         })
       : players;
 
-    playersTitle.textContent = "Players";
+    if (playersTitle) {
+      playersTitle.textContent = "Players";
+    }
 
     if (filteredPlayers.length === 0) {
       playersList.innerHTML = '<p class="muted">Sin resultados</p>';
@@ -56,8 +58,8 @@
           ? "player-community player-community--ok"
           : "player-community player-community--pending";
         const statusText = player.communityStatus === "validated"
-          ? `✅ Validado (${votes} votos)`
-          : `⏳ Pendiente (${votes}/${minVotes})`;
+          ? "✔ Validado"
+          : `🗳️ Voto pueblo (${votes}/${minVotes})`;
         const effectiveAttack = Number(player.effectiveAttack ?? player.attack ?? 0);
         const effectiveDefense = Number(player.effectiveDefense ?? player.defense ?? 0);
         const effectiveMidfield = Number(player.effectiveMidfield ?? player.midfield ?? 0);

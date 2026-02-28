@@ -579,7 +579,9 @@ function renderPlayers() {
       })
     : playersForView;
 
-  playersTitle.textContent = "Players";
+  if (playersTitle) {
+    playersTitle.textContent = "Players";
+  }
 
   if (filteredPlayers.length === 0) {
     playersList.innerHTML = '<p class="muted">Sin resultados</p>';
@@ -596,8 +598,8 @@ function renderPlayers() {
     const minVotes = Number(p.communityMinVotes) || COMMUNITY_MIN_VOTES;
     const statusClass = p.communityStatus === "validated" ? "player-community player-community--ok" : "player-community player-community--pending";
     const statusText = p.communityStatus === "validated"
-      ? `✅ Validado (${votes} votos)`
-      : `⏳ Pendiente (${votes}/${minVotes})`;
+      ? "✔ Validado"
+      : `🗳️ Voto pueblo (${votes}/${minVotes})`;
     const scoreText = `A ${toScoreNumber(p.effectiveAttack)} · D ${toScoreNumber(p.effectiveDefense)} · M ${toScoreNumber(p.effectiveMidfield)}`;
     const scoreMarkup = adminAuthenticated
       ? `<span class="player-stats">${scoreText}</span>`
@@ -1306,10 +1308,10 @@ function editPlayer(id) {
   document.getElementById("editPlayerMidfield").value = initialMidfield;
   
   updateSliderValues();
-  openEditModal();
+  openEditModal(playerForEdit.communityStatus === "validated");
 }
 
-function openEditModal() {
+function openEditModal(isValidatedPlayer = false) {
   const title = document.getElementById("editPlayerModalTitle");
   const saveBtn = document.getElementById("updatePlayerBtn");
   const nameInput = document.getElementById("editPlayerName");
@@ -1321,7 +1323,7 @@ function openEditModal() {
     if (nameInput) nameInput.disabled = false;
     if (nicknameInput) nicknameInput.disabled = false;
   } else {
-    if (title) title.textContent = "Calificar jugador";
+    if (title) title.textContent = isValidatedPlayer ? "Actualizar jugador" : "Calificar jugador";
     if (saveBtn) saveBtn.textContent = "Guardar calificación";
     if (nameInput) nameInput.disabled = true;
     if (nicknameInput) nicknameInput.disabled = true;
@@ -1344,6 +1346,14 @@ async function saveEditPlayer() {
   const attack = parseInt(document.getElementById("editPlayerAttack").value) || 0;
   const defense = parseInt(document.getElementById("editPlayerDefense").value) || 0;
   const midfield = parseInt(document.getElementById("editPlayerMidfield").value) || 0;
+  const allRatingsZero = attack === 0 && defense === 0 && midfield === 0;
+
+  if (allRatingsZero) {
+    const confirmed = confirm("Vas a guardar ataque, defensa y medio en 0. ¿Querés continuar?");
+    if (!confirmed) {
+      return;
+    }
+  }
 
   if (!adminAuthenticated) {
     if (!/^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i.test(editPlayerId)) {
