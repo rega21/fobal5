@@ -763,15 +763,22 @@ function renderPlayers(options = {}) {
   const visualPlayers = getVisualPlayersForRender(filteredPlayers, term, shouldPreserveOrder);
 
   playersList.innerHTML = visualPlayers.map(p => {
+    const yaVotaste = !adminAuthenticated && hasUserVotedForPlayer(p.id);
     const nick = p.nickname?.trim()
       ? `<span class="player-nick">"${escapeHtml(p.nickname)}"</span>`
       : "";
     const votes = Number(p.communityVotes) || 0;
     const minVotes = Number(p.communityMinVotes) || COMMUNITY_MIN_VOTES;
-    const statusClass = p.communityStatus === "validated" ? "player-community player-community--ok" : "player-community player-community--pending";
+    const statusClass = p.communityStatus === "validated"
+      ? "player-community player-community--ok"
+      : (yaVotaste
+        ? "player-community player-community--pending"
+        : "player-community player-community--pending");
     const statusText = p.communityStatus === "validated"
       ? "✔ Validado"
-      : (adminAuthenticated ? `🗳️ Voto pueblo (${votes}/${minVotes})` : "🗳️ Voto pueblo");
+      : (yaVotaste
+        ? "✓ Voto pueblo"
+        : (adminAuthenticated ? `🗳️ Voto pueblo (${votes}/${minVotes})` : "🗳️ Voto pueblo"));
     const scoreText = `A ${toScoreNumber(p.effectiveAttack)} · D ${toScoreNumber(p.effectiveDefense)} · M ${toScoreNumber(p.effectiveMidfield)}`;
     const scoreMarkup = adminAuthenticated
       ? `<span class="player-stats">${scoreText}</span>`
@@ -781,7 +788,6 @@ function renderPlayers(options = {}) {
       ? `<button class="btn-delete" data-id="${p.id}" title="Eliminar">🗑️</button>`
       : "";
 
-    const yaVotaste = !adminAuthenticated && hasUserVotedForPlayer(p.id);
     const editButtonClass = yaVotaste ? "btn-edit btn-edit--voted" : "btn-edit";
     const editButtonTitle = yaVotaste ? "Actualizar voto" : "Calificar";
     const editButtonIcon = yaVotaste ? "📝" : "✏️";

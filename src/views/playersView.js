@@ -88,24 +88,6 @@
           : "";
         const votes = Number(player.communityVotes) || 0;
         const minVotes = Number(player.communityMinVotes) || 3;
-        const statusClass = player.communityStatus === "validated"
-          ? "player-community player-community--ok"
-          : "player-community player-community--pending";
-        const statusText = player.communityStatus === "validated"
-          ? "✔ Validado"
-          : (adminAuthenticated ? `🗳️ Voto pueblo (${votes}/${minVotes})` : "🗳️ Voto pueblo");
-        const effectiveAttack = Number(player.effectiveAttack ?? player.attack ?? 0);
-        const effectiveDefense = Number(player.effectiveDefense ?? player.defense ?? 0);
-        const effectiveMidfield = Number(player.effectiveMidfield ?? player.midfield ?? 0);
-        const statsText = `A ${effectiveAttack} · D ${effectiveDefense} · M ${effectiveMidfield}`;
-        const statsMarkup = adminAuthenticated
-          ? `<span class="player-stats">${escapeHtml(statsText)}</span>`
-          : "";
-
-        const deleteControl = adminAuthenticated
-          ? `<button class="btn-delete" data-id="${player.id}" title="Eliminar">🗑️</button>`
-          : "";
-
         // Verificar si el usuario ya votó a este jugador
         let votedPlayers = [];
         try {
@@ -117,6 +99,27 @@
         const yaVotaste = !adminAuthenticated && votedPlayers
           .map((id) => String(id).trim().toLowerCase())
           .includes(playerIdNormalized);
+        const statusClass = player.communityStatus === "validated"
+          ? "player-community player-community--ok"
+          : (yaVotaste
+            ? "player-community player-community--pending"
+            : "player-community player-community--pending");
+        const statusText = player.communityStatus === "validated"
+          ? "✔ Validado"
+          : (yaVotaste
+            ? "✓ Voto pueblo"
+            : (adminAuthenticated ? `🗳️ Voto pueblo (${votes}/${minVotes})` : "🗳️ Voto pueblo"));
+        const effectiveAttack = Number(player.effectiveAttack ?? player.attack ?? 0);
+        const effectiveDefense = Number(player.effectiveDefense ?? player.defense ?? 0);
+        const effectiveMidfield = Number(player.effectiveMidfield ?? player.midfield ?? 0);
+        const statsText = `A ${effectiveAttack} · D ${effectiveDefense} · M ${effectiveMidfield}`;
+        const statsMarkup = adminAuthenticated
+          ? `<span class="player-stats">${escapeHtml(statsText)}</span>`
+          : "";
+
+        const deleteControl = adminAuthenticated
+          ? `<button class="btn-delete" data-id="${player.id}" title="Eliminar">🗑️</button>`
+          : "";
         const editButtonClass = yaVotaste ? "btn-edit btn-edit--voted" : "btn-edit";
         const editButtonTitle = yaVotaste ? "Actualizar voto" : "Calificar";
         const editButtonIcon = yaVotaste ? "📝" : "✏️";
