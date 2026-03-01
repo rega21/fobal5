@@ -771,7 +771,7 @@ function renderPlayers(options = {}) {
     const statusClass = p.communityStatus === "validated" ? "player-community player-community--ok" : "player-community player-community--pending";
     const statusText = p.communityStatus === "validated"
       ? "✔ Validado"
-      : `🗳️ Voto pueblo (${votes}/${minVotes})`;
+      : (adminAuthenticated ? `🗳️ Voto pueblo (${votes}/${minVotes})` : "🗳️ Voto pueblo");
     const scoreText = `A ${toScoreNumber(p.effectiveAttack)} · D ${toScoreNumber(p.effectiveDefense)} · M ${toScoreNumber(p.effectiveMidfield)}`;
     const scoreMarkup = adminAuthenticated
       ? `<span class="player-stats">${scoreText}</span>`

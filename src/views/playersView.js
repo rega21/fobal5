@@ -93,7 +93,7 @@
           : "player-community player-community--pending";
         const statusText = player.communityStatus === "validated"
           ? "✔ Validado"
-          : `🗳️ Voto pueblo (${votes}/${minVotes})`;
+          : (adminAuthenticated ? `🗳️ Voto pueblo (${votes}/${minVotes})` : "🗳️ Voto pueblo");
         const effectiveAttack = Number(player.effectiveAttack ?? player.attack ?? 0);
         const effectiveDefense = Number(player.effectiveDefense ?? player.defense ?? 0);
         const effectiveMidfield = Number(player.effectiveMidfield ?? player.midfield ?? 0);
