@@ -143,7 +143,7 @@ const matchController = window.createMatchController
           .trim();
         const teamANames = currentTeams.a.map((player) => `- ${cleanShareToken(player.name)}`).join("\n");
         const teamBNames = currentTeams.b.map((player) => `- ${cleanShareToken(player.name)}`).join("\n");
-        return `Team A:\n${teamANames}\n\nTeam B:\n${teamBNames}`;
+        return `Equipo A:\n${teamANames}\n\nEquipo B:\n${teamBNames}`;
       },
       buildMatchPayload(currentTeams, details = {}, scoreA, scoreB, mvpName, options = {}) {
         return {
@@ -971,7 +971,7 @@ function openPendingResultModal(matchId) {
     .filter(Boolean);
   const uniqueCandidates = [...new Set(mvpCandidates)];
 
-  mvpSelect.innerHTML = '<option value="">Select MVP</option>'
+  mvpSelect.innerHTML = '<option value="">Seleccionar MVP</option>'
     + uniqueCandidates.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
   mvpSelect.value = pendingMatch.mvp ? String(pendingMatch.mvp) : "";
 
@@ -987,10 +987,10 @@ async function savePendingResultFromModal() {
     return;
   }
 
-  const scoreA = parseValidatedScore("historyScoreTeamA", "Team A");
+  const scoreA = parseValidatedScore("historyScoreTeamA", "Equipo A");
   if (scoreA === null) return;
 
-  const scoreB = parseValidatedScore("historyScoreTeamB", "Team B");
+  const scoreB = parseValidatedScore("historyScoreTeamB", "Equipo B");
   if (scoreB === null) return;
 
   const mvpName = document.getElementById("historyMvpSelect")?.value || null;
@@ -1412,10 +1412,10 @@ async function recordMatch() {
     return;
   }
 
-  const scoreA = parseValidatedScore("scoreTeamA", "Team A");
+  const scoreA = parseValidatedScore("scoreTeamA", "Equipo A");
   if (scoreA === null) return;
 
-  const scoreB = parseValidatedScore("scoreTeamB", "Team B");
+  const scoreB = parseValidatedScore("scoreTeamB", "Equipo B");
   if (scoreB === null) return;
 
   const mvpId = document.getElementById("mvpSelect").value;

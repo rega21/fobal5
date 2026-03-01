@@ -117,7 +117,7 @@
 
       <div class="match-grid">
         <div>
-          <div class="match-team" style="font-weight:700; color:#10b981; margin-bottom:12px; font-size:13px; padding:8px; background:#ecfdf5; border-radius:6px;">● TEAM A</div>
+          <div class="match-team" style="font-weight:700; color:#10b981; margin-bottom:12px; font-size:13px; padding:8px; background:#ecfdf5; border-radius:6px;">● EQUIPO A</div>
           <div style="display:flex; flex-direction:column; gap:8px;">
             ${(m.teamA || []).map((player) => renderMatchPlayer(player)).join("")}
           </div>
@@ -136,7 +136,7 @@
         </div>
 
         <div style="text-align:right;">
-          <div class="match-team" style="font-weight:700; color:#3b82f6; margin-bottom:12px; font-size:13px; padding:8px; background:#eff6ff; border-radius:6px;">TEAM B ●</div>
+          <div class="match-team" style="font-weight:700; color:#3b82f6; margin-bottom:12px; font-size:13px; padding:8px; background:#eff6ff; border-radius:6px;">EQUIPO B ●</div>
           <div style="display:flex; flex-direction:column; gap:8px; ">
             ${(m.teamB || []).map((player) => renderMatchPlayer(player)).join("")}
           </div>
