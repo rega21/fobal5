@@ -91,6 +91,7 @@ const historyController = window.createHistoryController
       apiClient,
       isAdmin: () => adminAuthenticated,
       onResolveResult: (matchId) => openPendingResultModal(matchId),
+      resolvePlayerDisplay: (entry) => resolveHistoryPlayerDisplay(entry),
     })
   : {
       getHistory: () => [],
@@ -156,8 +157,16 @@ const matchController = window.createMatchController
           mapsUrl: details?.mapsUrl || "",
           latitude: details?.latitude ?? null,
           longitude: details?.longitude ?? null,
-          teamA: currentTeams.a.map((player) => player.name),
-          teamB: currentTeams.b.map((player) => player.name),
+          teamA: currentTeams.a.map((player) => ({
+            id: player.id,
+            name: player.name,
+            nickname: player.nickname || "",
+          })),
+          teamB: currentTeams.b.map((player) => ({
+            id: player.id,
+            name: player.name,
+            nickname: player.nickname || "",
+          })),
           scoreA: scoreA ?? null,
           scoreB: scoreB ?? null,
           mvp: mvpName || null,
@@ -494,6 +503,61 @@ function normalizePlayerId(value) {
 function toScoreNumber(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getHistoryEntryName(entry) {
+  if (entry && typeof entry === "object") {
+    return String(entry.name || "").trim();
+  }
+  return String(entry || "").trim();
+}
+
+function getHistoryEntryNickname(entry) {
+  if (entry && typeof entry === "object") {
+    return String(entry.nickname || "").trim();
+  }
+  return "";
+}
+
+function resolveHistoryPlayerDisplay(entry) {
+  const entryId = entry && typeof entry === "object"
+    ? String(entry.id || "").trim()
+    : "";
+  const entryName = getHistoryEntryName(entry);
+  const entryNameNormalized = entryName.toLowerCase();
+
+  let matchedPlayer = null;
+  if (entryId) {
+    matchedPlayer = players.find((player) => String(player?.id || "").trim() === entryId) || null;
+  }
+
+  if (!matchedPlayer && entryNameNormalized) {
+    matchedPlayer = players.find((player) => {
+      const playerName = String(player?.name || "").trim().toLowerCase();
+      return playerName === entryNameNormalized;
+    }) || null;
+  }
+
+  if (!matchedPlayer) {
+    return {
+      name: entryName,
+      nickname: getHistoryEntryNickname(entry),
+    };
+  }
+
+  return {
+    name: String(matchedPlayer.name || "").trim(),
+    nickname: String(matchedPlayer.nickname || "").trim(),
+  };
+}
+
+function getHistoryPlayerDisplayLabel(entry) {
+  const resolved = resolveHistoryPlayerDisplay(entry);
+  const resolvedNickname = String(resolved?.nickname || "").trim();
+  const resolvedName = String(resolved?.name || "").trim();
+  if (resolvedNickname) return resolvedNickname;
+  if (resolvedName) return resolvedName;
+  return getHistoryEntryName(entry) || "Jugador";
 }
 
 function getPlayerCommunitySummary(playerId) {
@@ -903,7 +967,7 @@ function openPendingResultModal(matchId) {
   scoreBInput.value = String(pendingMatch.scoreB ?? 0);
 
   const mvpCandidates = [...(pendingMatch.teamA || []), ...(pendingMatch.teamB || [])]
-    .map((name) => String(name || "").trim())
+    .map((entry) => getHistoryPlayerDisplayLabel(entry))
     .filter(Boolean);
   const uniqueCandidates = [...new Set(mvpCandidates)];
 

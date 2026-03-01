@@ -63,8 +63,16 @@
         mapsUrl: details?.mapsUrl || "",
         latitude: details?.latitude ?? null,
         longitude: details?.longitude ?? null,
-        teamA: currentTeams.a.map((player) => player.name),
-        teamB: currentTeams.b.map((player) => player.name),
+        teamA: currentTeams.a.map((player) => ({
+          id: player.id,
+          name: player.name,
+          nickname: player.nickname || "",
+        })),
+        teamB: currentTeams.b.map((player) => ({
+          id: player.id,
+          name: player.name,
+          nickname: player.nickname || "",
+        })),
         scoreA: scoreA ?? null,
         scoreB: scoreB ?? null,
         mvp: mvpName || null,

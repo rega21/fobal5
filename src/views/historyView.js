@@ -1,5 +1,44 @@
 (function (global) {
-  function renderHistoryList({ history, adminAuthenticated, onDelete, onResolveResult }) {
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function getEntryName(entry) {
+    if (entry && typeof entry === "object") {
+      return String(entry.name || "").trim();
+    }
+    return String(entry || "").trim();
+  }
+
+  function getEntryNickname(entry) {
+    if (entry && typeof entry === "object") {
+      return String(entry.nickname || "").trim();
+    }
+    return "";
+  }
+
+  function getHistoryPlayerLabel(entry, resolvePlayerDisplay) {
+    const entryName = getEntryName(entry);
+    const entryNickname = getEntryNickname(entry);
+    if (entryNickname) return entryNickname;
+
+    if (typeof resolvePlayerDisplay === "function") {
+      const resolved = resolvePlayerDisplay(entry);
+      const resolvedNickname = String(resolved?.nickname || "").trim();
+      const resolvedName = String(resolved?.name || "").trim();
+      if (resolvedNickname) return resolvedNickname;
+      if (resolvedName) return resolvedName;
+    }
+
+    return entryName || "Jugador";
+  }
+
+  function renderHistoryList({ history, adminAuthenticated, onDelete, onResolveResult, resolvePlayerDisplay }) {
     const historyList = document.getElementById("historyList");
     if (!historyList) return;
 
@@ -58,6 +97,11 @@
         const matchStatus = String(m.status || "played").trim().toLowerCase();
         const mapsLink = buildMobileFriendlyMapsLink(m.mapsUrl, matchLocation);
 
+        const renderMatchPlayer = (entry) => {
+          const label = getHistoryPlayerLabel(entry, resolvePlayerDisplay);
+          return `<span class="match-player">${escapeHtml(label)}</span>`;
+        };
+
         return `
     <article class="card match-entry" style="position:relative;">
       ${
@@ -75,7 +119,7 @@
         <div>
           <div class="match-team" style="font-weight:700; color:#10b981; margin-bottom:12px; font-size:13px; padding:8px; background:#ecfdf5; border-radius:6px;">● TEAM A</div>
           <div style="display:flex; flex-direction:column; gap:8px;">
-            ${m.teamA.map((player) => `<span class="match-player">${player}</span>`).join("")}
+            ${(m.teamA || []).map((player) => renderMatchPlayer(player)).join("")}
           </div>
         </div>
 
@@ -94,7 +138,7 @@
         <div style="text-align:right;">
           <div class="match-team" style="font-weight:700; color:#3b82f6; margin-bottom:12px; font-size:13px; padding:8px; background:#eff6ff; border-radius:6px;">TEAM B ●</div>
           <div style="display:flex; flex-direction:column; gap:8px; ">
-            ${m.teamB.map((player) => `<span class="match-player">${player}</span>`).join("")}
+            ${(m.teamB || []).map((player) => renderMatchPlayer(player)).join("")}
           </div>
         </div>
       </div>
