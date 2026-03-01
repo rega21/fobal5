@@ -35,6 +35,21 @@
   }
 
   function createPlayerRatingsService({ apiClient }) {
+    async function getCurrentUserRatingForPlayer(playerId) {
+      if (!apiClient?.getPlayerRatingByPlayerAndVoter) {
+        return null;
+      }
+
+      const normalizedPlayerId = String(playerId || "").trim();
+      if (!normalizedPlayerId) return null;
+
+      const voterKey = getOrCreateVoterKey();
+      return apiClient.getPlayerRatingByPlayerAndVoter({
+        playerId: normalizedPlayerId,
+        voterKey,
+      });
+    }
+
     async function savePlayerRating({ playerId, attack, defense, midfield }) {
       if (!apiClient?.upsertPlayerRating) {
         throw new Error("upsertPlayerRating no disponible en apiClient");
@@ -58,6 +73,7 @@
 
     return {
       getOrCreateVoterKey,
+      getCurrentUserRatingForPlayer,
       savePlayerRating,
     };
   }

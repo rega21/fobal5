@@ -1,3 +1,31 @@
+/* Ya votaste label */
+.ya-votaste-label {
+  background: #e0f2fe;
+  color: #0c4a6e;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 15px;
+  display: inline-block;
+  animation: ya-votaste-fade-in 180ms ease-out 70ms both;
+}
+
+@keyframes ya-votaste-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ya-votaste-label {
+    animation: none;
+  }
+}
 /* List cards */
 .list{
   display:flex;
@@ -39,8 +67,23 @@
 .btn-edit:hover{
   background:#e0f2fe;
 }
+.btn-edit--voted{
+  font-size:25px;
+  line-height:1;
+}
+.btn-edit.is-fading-out{
+  opacity: 0;
+  transform: translateY(-2px) scale(0.96);
+  transition: opacity 160ms ease-out, transform 160ms ease-out;
+}
 .btn-delete:hover{
   background:#fee2e2;
+}
+
+.edit-vote-hint{
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .card-selectable{

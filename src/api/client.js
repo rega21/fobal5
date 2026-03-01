@@ -200,6 +200,28 @@
 
       return summary;
     },
+    async getPlayerRatingByPlayerAndVoter({ playerId, voterKey } = {}) {
+      const normalizedPlayerId = String(playerId || "").trim();
+      const normalizedVoterKey = String(voterKey || "").trim();
+      if (!normalizedPlayerId || !normalizedVoterKey) return null;
+
+      const rows = await requestSupabase(
+        `/rest/v1/player_ratings?select=attack,defense,midfield&player_id=eq.${encodeURIComponent(normalizedPlayerId)}&voter_key=eq.${encodeURIComponent(normalizedVoterKey)}&limit=1`,
+        {
+          method: "GET",
+          headers: buildSupabaseHeaders(),
+        }
+      );
+
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      if (!row || typeof row !== "object") return null;
+
+      return {
+        attack: toNumber(row.attack),
+        defense: toNumber(row.defense),
+        midfield: toNumber(row.midfield),
+      };
+    },
     async upsertPlayerRating(payload) {
       return requestSupabase("/rest/v1/player_ratings?on_conflict=player_id,voter_key", {
         method: "POST",

@@ -1,5 +1,6 @@
 const HISTORY_KEY = "fobal5_history";
 const COMMUNITY_MIN_VOTES = 3;
+const VOTED_PLAYERS_STORAGE_KEY = "fobal5_voted_players";
 const ADMIN_PIN = "";
 let adminAuthenticated = false;
 let currentEditingPlayerId = null;
@@ -8,6 +9,9 @@ let players = [];
 let selectedPlayers = [];
 let currentTeams = null;
 let playerSearchTerm = "";
+let playersListVisualOrderIds = [];
+let playersListVisualOrderSearchTerm = "";
+let preservePlayersOrderOnNextRender = false;
 let playerRatingsSummaryById = {};
 let currentMatchDetails = null;
 let pendingHistoryResultMatchId = "";
@@ -300,6 +304,84 @@ function shufflePlayers(list = []) {
   return items;
 }
 
+function normalizeVotedPlayerId(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function getVotedPlayerIds() {
+  let parsed = [];
+  try {
+    parsed = JSON.parse(localStorage.getItem(VOTED_PLAYERS_STORAGE_KEY) || "[]");
+  } catch (_error) {
+    parsed = [];
+  }
+
+  if (!Array.isArray(parsed)) return [];
+
+  const normalized = parsed
+    .map((id) => normalizeVotedPlayerId(id))
+    .filter(Boolean);
+
+  return Array.from(new Set(normalized));
+}
+
+function hasUserVotedForPlayer(playerId) {
+  const normalizedId = normalizeVotedPlayerId(playerId);
+  if (!normalizedId) return false;
+  return getVotedPlayerIds().includes(normalizedId);
+}
+
+function markPlayerAsVoted(playerId) {
+  const normalizedId = normalizeVotedPlayerId(playerId);
+  if (!normalizedId) return;
+
+  const votedIds = getVotedPlayerIds();
+  if (!votedIds.includes(normalizedId)) {
+    votedIds.push(normalizedId);
+  }
+
+  try {
+    localStorage.setItem(VOTED_PLAYERS_STORAGE_KEY, JSON.stringify(votedIds));
+  } catch (_error) {
+    // ignore storage write failures
+  }
+}
+
+function normalizePlayerId(playerOrId) {
+  if (playerOrId && typeof playerOrId === "object") {
+    return String(playerOrId.id ?? "").trim();
+  }
+  return String(playerOrId ?? "").trim();
+}
+
+function areCurrentIdsSubsetOfPrevious(previousIds, currentIds) {
+  if (!Array.isArray(previousIds) || !Array.isArray(currentIds)) return false;
+  if (currentIds.length === 0 || previousIds.length === 0) return false;
+  const previousSet = new Set(previousIds);
+  return currentIds.every((id) => previousSet.has(id));
+}
+
+function getVisualPlayersForRender(filteredPlayers, term, preserveOrder = false) {
+  const normalizedTerm = String(term || "");
+  const currentIds = filteredPlayers.map((player) => normalizePlayerId(player));
+  const canReuseOrder =
+    preserveOrder &&
+    normalizedTerm === playersListVisualOrderSearchTerm &&
+    areCurrentIdsSubsetOfPrevious(playersListVisualOrderIds, currentIds);
+
+  if (canReuseOrder) {
+    const playersById = new Map(filteredPlayers.map((player) => [normalizePlayerId(player), player]));
+    return playersListVisualOrderIds
+      .map((id) => playersById.get(id))
+      .filter(Boolean);
+  }
+
+  const shuffledPlayers = shufflePlayers(filteredPlayers);
+  playersListVisualOrderIds = shuffledPlayers.map((player) => normalizePlayerId(player));
+  playersListVisualOrderSearchTerm = normalizedTerm;
+  return shuffledPlayers;
+}
+
 function parseValidatedScore(inputId, teamLabel = "") {
   const input = document.getElementById(inputId);
   const rawValue = String(input?.value ?? "").trim();
@@ -327,6 +409,7 @@ function parseValidatedScore(inputId, teamLabel = "") {
 }
 
 let toastTimeoutId = null;
+let editVoteHintTimeoutId = null;
 function showToast(message = "", duration = 2000, variant = "default") {
   const text = String(message || "").trim();
   if (!text) return;
@@ -387,6 +470,21 @@ function showToast(message = "", duration = 2000, variant = "default") {
   toastTimeoutId = setTimeout(() => {
     toastEl.style.opacity = "0";
   }, Math.max(900, Number(duration) || 2200));
+}
+
+function animateEditButtonFadeOut(playerId) {
+  return new Promise((resolve) => {
+    const normalizedId = normalizePlayerId(playerId);
+    const editButton = document.querySelector(`#playersList .btn-edit[data-id="${normalizedId}"]`);
+
+    if (!editButton) {
+      resolve();
+      return;
+    }
+
+    editButton.classList.add("is-fading-out");
+    setTimeout(resolve, 170);
+  });
 }
 
 function normalizePlayerId(value) {
@@ -506,6 +604,7 @@ async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0) 
 
 async function deletePlayer(id) {
   if (adminPlayersController) {
+    preservePlayersOrderOnNextRender = true;
     await adminPlayersController.deletePlayer(id);
     return;
   }
@@ -517,15 +616,20 @@ async function deletePlayer(id) {
   try {
     await apiClient.deletePlayer(id);
     players = players.filter(p => p.id !== id);
-    renderPlayers();
+    renderPlayers({ preserveOrder: true });
     renderAdminPlayers();
   } catch (e) {
     console.error("Error deleting player:", e);
   }
 }
 
-async function updatePlayer(id, name, nickname, attack, defense, midfield) {
+async function updatePlayer(id, name, nickname, attack, defense, midfield, options = {}) {
+  const { preserveOrder = false } = options;
+
   if (adminPlayersController) {
+    if (preserveOrder) {
+      preservePlayersOrderOnNextRender = true;
+    }
     await adminPlayersController.updatePlayer(id, name, nickname, attack, defense, midfield);
     return;
   }
@@ -546,7 +650,7 @@ async function updatePlayer(id, name, nickname, attack, defense, midfield) {
       player.defense = defense || 0;
       player.midfield = midfield || 0;
     }
-    renderPlayers();
+    renderPlayers({ preserveOrder });
     renderAdminPlayers();
   } catch (e) {
     console.error("Error updating player:", e);
@@ -554,7 +658,10 @@ async function updatePlayer(id, name, nickname, attack, defense, midfield) {
 }
 
 /* Players view */
-function renderPlayers() {
+function renderPlayers(options = {}) {
+  const { preserveOrder = false } = options;
+  const shouldPreserveOrder = preserveOrder || preservePlayersOrderOnNextRender;
+  preservePlayersOrderOnNextRender = false;
   const playersForView = getPlayersForDisplay(players);
 
   if (window.PlayersView?.renderPlayersList) {
@@ -564,6 +671,7 @@ function renderPlayers() {
       adminAuthenticated,
       onEdit: (id) => editPlayer(id),
       onDelete: (id) => deletePlayer(id),
+      preserveOrder: shouldPreserveOrder,
     });
     return;
   }
@@ -588,7 +696,7 @@ function renderPlayers() {
     return;
   }
 
-  const visualPlayers = shufflePlayers(filteredPlayers);
+  const visualPlayers = getVisualPlayersForRender(filteredPlayers, term, shouldPreserveOrder);
 
   playersList.innerHTML = visualPlayers.map(p => {
     const nick = p.nickname?.trim()
@@ -609,8 +717,14 @@ function renderPlayers() {
       ? `<button class="btn-delete" data-id="${p.id}" title="Eliminar">🗑️</button>`
       : "";
 
+    const yaVotaste = !adminAuthenticated && hasUserVotedForPlayer(p.id);
+    const editButtonClass = yaVotaste ? "btn-edit btn-edit--voted" : "btn-edit";
+    const editButtonTitle = yaVotaste ? "Actualizar voto" : "Calificar";
+    const editButtonIcon = yaVotaste ? "📝" : "✏️";
+    const editControl = `<button class="${editButtonClass}" data-id="${p.id}" title="${editButtonTitle}">${editButtonIcon}</button>`;
+
     const adminControls = `<div class="admin-controls">
-          <button class="btn-edit" data-id="${p.id}" title="Calificar">✏️</button>
+          ${editControl}
           ${deleteControl}
         </div>`;
 
@@ -1284,49 +1398,105 @@ function renderHistory() {
 }
 
 /* Admin modal */
-function editPlayer(id) {
+async function editPlayer(id) {
   const player = players.find(p => p.id == id);
   if (!player) return;
 
   const playerForEdit = enrichPlayerWithCommunityState(player);
+  const hasVotedBefore = !adminAuthenticated && hasUserVotedForPlayer(id);
+  let userPreviousRating = null;
+
+  if (hasVotedBefore && playerRatingsService?.getCurrentUserRatingForPlayer) {
+    try {
+      userPreviousRating = await playerRatingsService.getCurrentUserRatingForPlayer(id);
+    } catch (error) {
+      console.warn("No se pudo cargar el voto previo del usuario:", error);
+      userPreviousRating = null;
+    }
+  }
 
   currentEditingPlayerId = id;
   document.getElementById("editPlayerName").value = playerForEdit.name;
   document.getElementById("editPlayerNickname").value = playerForEdit.nickname || "";
   const shouldPrefillCommunityAverage = playerForEdit.communityStatus === "validated";
+  const fallbackAttack = shouldPrefillCommunityAverage ? (playerForEdit.effectiveAttack || 0) : 0;
+  const fallbackDefense = shouldPrefillCommunityAverage ? (playerForEdit.effectiveDefense || 0) : 0;
+  const fallbackMidfield = shouldPrefillCommunityAverage ? (playerForEdit.effectiveMidfield || 0) : 0;
   const initialAttack = adminAuthenticated
     ? (playerForEdit.effectiveAttack || 0)
-    : (shouldPrefillCommunityAverage ? (playerForEdit.effectiveAttack || 0) : 0);
+    : Number(userPreviousRating?.attack ?? fallbackAttack);
   const initialDefense = adminAuthenticated
     ? (playerForEdit.effectiveDefense || 0)
-    : (shouldPrefillCommunityAverage ? (playerForEdit.effectiveDefense || 0) : 0);
+    : Number(userPreviousRating?.defense ?? fallbackDefense);
   const initialMidfield = adminAuthenticated
     ? (playerForEdit.effectiveMidfield || 0)
-    : (shouldPrefillCommunityAverage ? (playerForEdit.effectiveMidfield || 0) : 0);
+    : Number(userPreviousRating?.midfield ?? fallbackMidfield);
   document.getElementById("editPlayerAttack").value = initialAttack;
   document.getElementById("editPlayerDefense").value = initialDefense;
   document.getElementById("editPlayerMidfield").value = initialMidfield;
   
   updateSliderValues();
-  openEditModal(playerForEdit.communityStatus === "validated");
+  openEditModal(
+    playerForEdit.communityStatus === "validated",
+    hasVotedBefore,
+    Boolean(userPreviousRating),
+    playerForEdit.name
+  );
 }
 
-function openEditModal(isValidatedPlayer = false) {
+function openEditModal(
+  isValidatedPlayer = false,
+  hasVotedBefore = false,
+  hasPrefilledPreviousVote = false,
+  playerName = ""
+) {
   const title = document.getElementById("editPlayerModalTitle");
   const saveBtn = document.getElementById("updatePlayerBtn");
   const nameInput = document.getElementById("editPlayerName");
   const nicknameInput = document.getElementById("editPlayerNickname");
+  const voteHint = document.getElementById("editPlayerVoteHint");
+  const normalizedPlayerName = String(playerName || "").trim();
+  const personalizedUpdateText = normalizedPlayerName
+    ? `Actualizar ${normalizedPlayerName}`
+    : "Actualizar voto";
 
   if (adminAuthenticated) {
     if (title) title.textContent = "Editar jugador";
     if (saveBtn) saveBtn.textContent = "Guardar cambios";
     if (nameInput) nameInput.disabled = false;
     if (nicknameInput) nicknameInput.disabled = false;
+    if (voteHint) voteHint.classList.add("hidden");
+    if (editVoteHintTimeoutId) {
+      clearTimeout(editVoteHintTimeoutId);
+      editVoteHintTimeoutId = null;
+    }
   } else {
-    if (title) title.textContent = isValidatedPlayer ? "Actualizar jugador" : "Calificar jugador";
-    if (saveBtn) saveBtn.textContent = "Guardar calificación";
+    if (title) {
+      title.textContent = hasVotedBefore
+        ? personalizedUpdateText
+        : (isValidatedPlayer ? "Actualizar jugador" : "Calificar jugador");
+    }
+    if (saveBtn) {
+      saveBtn.textContent = hasVotedBefore ? personalizedUpdateText : "Guardar calificación";
+    }
     if (nameInput) nameInput.disabled = true;
     if (nicknameInput) nicknameInput.disabled = true;
+    if (voteHint) {
+      const shouldShowHint = hasVotedBefore && hasPrefilledPreviousVote;
+      voteHint.classList.toggle("hidden", !shouldShowHint);
+
+      if (editVoteHintTimeoutId) {
+        clearTimeout(editVoteHintTimeoutId);
+        editVoteHintTimeoutId = null;
+      }
+
+      if (shouldShowHint) {
+        editVoteHintTimeoutId = setTimeout(() => {
+          voteHint.classList.add("hidden");
+          editVoteHintTimeoutId = null;
+        }, 2600);
+      }
+    }
   }
 
   document.getElementById("editPlayerModal").classList.remove("hidden");
@@ -1334,6 +1504,12 @@ function openEditModal(isValidatedPlayer = false) {
 
 function closeEditModal() {
   document.getElementById("editPlayerModal").classList.add("hidden");
+  const voteHint = document.getElementById("editPlayerVoteHint");
+  if (voteHint) voteHint.classList.add("hidden");
+  if (editVoteHintTimeoutId) {
+    clearTimeout(editVoteHintTimeoutId);
+    editVoteHintTimeoutId = null;
+  }
   currentEditingPlayerId = null;
 }
 
@@ -1356,6 +1532,8 @@ async function saveEditPlayer() {
   }
 
   if (!adminAuthenticated) {
+    const hasVotedBefore = hasUserVotedForPlayer(editPlayerId);
+
     if (!/^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i.test(editPlayerId)) {
       alert("Este jugador todavía usa ID de MockAPI. Para calificar en comunidad, primero migra players a Supabase (UUID).");
       return;
@@ -1373,10 +1551,12 @@ async function saveEditPlayer() {
         defense,
         midfield,
       });
+      markPlayerAsVoted(editPlayerId);
       await refreshPlayerRatingsSummary();
-      renderPlayers();
+      await animateEditButtonFadeOut(editPlayerId);
+      renderPlayers({ preserveOrder: true });
       closeEditModal();
-      showToast("Calificación guardada", 2200, "success");
+      showToast(hasVotedBefore ? "Voto actualizado" : "Calificación guardada", 2200, "success");
     } catch (error) {
       console.error("Error guardando calificación:", error);
       showToast("No se pudo guardar la calificación", 2600, "error");
@@ -1389,7 +1569,7 @@ async function saveEditPlayer() {
     return;
   }
 
-  await updatePlayer(editPlayerId, name, nickname, attack, defense, midfield);
+  await updatePlayer(editPlayerId, name, nickname, attack, defense, midfield, { preserveOrder: true });
   closeEditModal();
 }
 

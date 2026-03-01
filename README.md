@@ -30,6 +30,3 @@ App web para organizar partidos y equipos de fútbol 5.
 
 - Persistir promedio validado en `players` cuando un jugador alcance `>= 3` votos.
 - Cuando vuelvas, arrancamos con lo siguiente que prefieras (persistir promedio en - players o pulido final de demo).
-
-
-
