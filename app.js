@@ -1456,9 +1456,11 @@ function openEditModal(
   const nicknameInput = document.getElementById("editPlayerNickname");
   const voteHint = document.getElementById("editPlayerVoteHint");
   const normalizedPlayerName = String(playerName || "").trim();
+  const displayName = normalizedPlayerName || "jugador";
+  const personalizedCalificarText = `Calificar ${displayName}`;
   const personalizedUpdateText = normalizedPlayerName
     ? `Actualizar ${normalizedPlayerName}`
-    : "Actualizar voto";
+    : "Actualizar jugador";
 
   if (adminAuthenticated) {
     if (title) title.textContent = "Editar jugador";
@@ -1472,15 +1474,13 @@ function openEditModal(
     }
   } else {
     if (title) {
-      title.textContent = hasVotedBefore
-        ? personalizedUpdateText
-        : (isValidatedPlayer ? "Actualizar jugador" : "Calificar jugador");
+      title.textContent = hasVotedBefore ? personalizedUpdateText : personalizedCalificarText;
     }
     if (saveBtn) {
-      saveBtn.textContent = hasVotedBefore ? personalizedUpdateText : "Guardar calificación";
+      saveBtn.textContent = hasVotedBefore ? personalizedUpdateText : personalizedCalificarText;
     }
-    if (nameInput) nameInput.disabled = true;
-    if (nicknameInput) nicknameInput.disabled = true;
+    if (nameInput) nameInput.disabled = false;
+    if (nicknameInput) nicknameInput.disabled = false;
     if (voteHint) {
       const shouldShowHint = hasVotedBefore && hasPrefilledPreviousVote;
       voteHint.classList.toggle("hidden", !shouldShowHint);
@@ -1533,6 +1533,12 @@ async function saveEditPlayer() {
 
   if (!adminAuthenticated) {
     const hasVotedBefore = hasUserVotedForPlayer(editPlayerId);
+    const player = players.find((item) => String(item.id) === editPlayerId);
+
+    if (!name) {
+      alert("El nombre no puede estar vacío");
+      return;
+    }
 
     if (!/^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i.test(editPlayerId)) {
       alert("Este jugador todavía usa ID de MockAPI. Para calificar en comunidad, primero migra players a Supabase (UUID).");
@@ -1545,6 +1551,26 @@ async function saveEditPlayer() {
     }
 
     try {
+      const originalName = String(player?.name || "").trim();
+      const originalNickname = String(player?.nickname || "").trim();
+      const nextNickname = nickname || "";
+      const shouldUpdateIdentity = name !== originalName || nextNickname !== originalNickname;
+
+      if (shouldUpdateIdentity) {
+        await apiClient.updatePlayer(editPlayerId, {
+          name,
+          nickname: nextNickname,
+          attack: toScoreNumber(player?.attack),
+          defense: toScoreNumber(player?.defense),
+          midfield: toScoreNumber(player?.midfield),
+        });
+
+        if (player) {
+          player.name = name;
+          player.nickname = nextNickname;
+        }
+      }
+
       await playerRatingsService.savePlayerRating({
         playerId: editPlayerId,
         attack,
