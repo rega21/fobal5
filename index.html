@@ -192,25 +192,35 @@
           <button class="close-btn" id="closeEditBtn">&times;</button>
         </div>
         <div class="modal-body">
-          <div class="form-group">
-            <label>Nombre</label>
-            <input type="text" id="editPlayerName" placeholder="Nombre">
+          <div id="editActionSelector" class="segmented edit-action-selector hidden" style="margin-bottom:12px;">
+            <button class="seg-btn" type="button" id="editIdentityModeBtn">Identidad</button>
+            <button class="seg-btn active" type="button" id="editRatingModeBtn">Puntos</button>
           </div>
-          <div class="form-group">
-            <label>Apodo</label>
-            <input type="text" id="editPlayerNickname" placeholder="Apodo">
+
+          <div id="editIdentityFields">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" id="editPlayerName" placeholder="Nombre">
+            </div>
+            <div class="form-group">
+              <label>Apodo</label>
+              <input type="text" id="editPlayerNickname" placeholder="Apodo">
+            </div>
           </div>
-          <div class="slider-group">
-            <label>Ataque: <span id="attackValue">0</span></label>
-            <input type="range" id="editPlayerAttack" min="0" max="10" value="0" class="slider">
-          </div>
-          <div class="slider-group">
-            <label>Defensa: <span id="defenseValue">0</span></label>
-            <input type="range" id="editPlayerDefense" min="0" max="10" value="0" class="slider">
-          </div>
-          <div class="slider-group">
-            <label>Medio: <span id="midfieldValue">0</span></label>
-            <input type="range" id="editPlayerMidfield" min="0" max="10" value="0" class="slider">
+
+          <div id="editRatingFields">
+            <div class="slider-group">
+              <label>Ataque: <span id="attackValue">0</span></label>
+              <input type="range" id="editPlayerAttack" min="0" max="10" value="0" class="slider">
+            </div>
+            <div class="slider-group">
+              <label>Defensa: <span id="defenseValue">0</span></label>
+              <input type="range" id="editPlayerDefense" min="0" max="10" value="0" class="slider">
+            </div>
+            <div class="slider-group">
+              <label>Medio: <span id="midfieldValue">0</span></label>
+              <input type="range" id="editPlayerMidfield" min="0" max="10" value="0" class="slider">
+            </div>
           </div>
           <button class="btn btn-success" id="updatePlayerBtn">Guardar calificación</button>
         </div>

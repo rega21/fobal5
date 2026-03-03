@@ -8,6 +8,10 @@ let currentEditingPlayerId = null;
 let feedbackSubmitting = false;
 let currentAdminPin = "";
 let adminReportsLoading = false;
+let currentEditAction = "rating";
+let currentEditPlayerName = "";
+let currentEditHasVotedBefore = false;
+let currentEditHasPrefilledVote = false;
 
 let players = [];
 let selectedPlayers = [];
@@ -367,6 +371,67 @@ function markPlayerAsVoted(playerId) {
   }
 }
 
+function unmarkPlayerAsVoted(playerId) {
+  const normalizedId = normalizeVotedPlayerId(playerId);
+  if (!normalizedId) return;
+
+  const votedIds = getVotedPlayerIds().filter((id) => id !== normalizedId);
+  try {
+    localStorage.setItem(VOTED_PLAYERS_STORAGE_KEY, JSON.stringify(votedIds));
+  } catch (_error) {
+    // ignore storage write failures
+  }
+}
+
+async function reconcileLocalVotesWithServer() {
+  if (adminAuthenticated || !playerRatingsService?.getCurrentUserRatingForPlayer) {
+    return false;
+  }
+
+  const votedIds = getVotedPlayerIds();
+  if (votedIds.length === 0) return false;
+
+  const existingPlayerIds = new Set(
+    (players || [])
+      .map((player) => normalizeVotedPlayerId(player?.id))
+      .filter(Boolean)
+  );
+
+  const nextVotedIds = [];
+
+  const checks = votedIds.map(async (playerId) => {
+    if (!existingPlayerIds.has(playerId)) {
+      return { playerId, keep: false };
+    }
+
+    try {
+      const rating = await playerRatingsService.getCurrentUserRatingForPlayer(playerId);
+      return { playerId, keep: Boolean(rating) };
+    } catch (_error) {
+      return { playerId, keep: true };
+    }
+  });
+
+  const results = await Promise.all(checks);
+  results.forEach((result) => {
+    if (result.keep) nextVotedIds.push(result.playerId);
+  });
+
+  const changed =
+    nextVotedIds.length !== votedIds.length ||
+    nextVotedIds.some((id) => !votedIds.includes(id));
+
+  if (!changed) return false;
+
+  try {
+    localStorage.setItem(VOTED_PLAYERS_STORAGE_KEY, JSON.stringify(nextVotedIds));
+  } catch (_error) {
+    // ignore storage write failures
+  }
+
+  return true;
+}
+
 function normalizePlayerId(playerOrId) {
   if (playerOrId && typeof playerOrId === "object") {
     return String(playerOrId.id ?? "").trim();
@@ -652,6 +717,7 @@ async function fetchPlayers() {
   }
 
   await refreshPlayerRatingsSummary();
+  await reconcileLocalVotesWithServer();
   renderPlayers();
 }
 
@@ -1484,12 +1550,17 @@ async function editPlayer(id) {
   if (!player) return;
 
   const playerForEdit = enrichPlayerWithCommunityState(player);
-  const hasVotedBefore = !adminAuthenticated && hasUserVotedForPlayer(id);
+  let hasVotedBefore = !adminAuthenticated && hasUserVotedForPlayer(id);
   let userPreviousRating = null;
 
   if (hasVotedBefore && playerRatingsService?.getCurrentUserRatingForPlayer) {
     try {
       userPreviousRating = await playerRatingsService.getCurrentUserRatingForPlayer(id);
+      if (!userPreviousRating) {
+        hasVotedBefore = false;
+        unmarkPlayerAsVoted(id);
+        renderPlayers({ preserveOrder: true });
+      }
     } catch (error) {
       console.warn("No se pudo cargar el voto previo del usuario:", error);
       userPreviousRating = null;
@@ -1533,6 +1604,11 @@ function openEditModal(
 ) {
   const title = document.getElementById("editPlayerModalTitle");
   const saveBtn = document.getElementById("updatePlayerBtn");
+  const actionSelector = document.getElementById("editActionSelector");
+  const identityFields = document.getElementById("editIdentityFields");
+  const ratingFields = document.getElementById("editRatingFields");
+  const identityModeBtn = document.getElementById("editIdentityModeBtn");
+  const ratingModeBtn = document.getElementById("editRatingModeBtn");
   const nameInput = document.getElementById("editPlayerName");
   const nicknameInput = document.getElementById("editPlayerNickname");
   const voteHint = document.getElementById("editPlayerVoteHint");
@@ -1543,42 +1619,73 @@ function openEditModal(
     ? `Actualizar ${normalizedPlayerName}`
     : "Actualizar jugador";
 
-  if (adminAuthenticated) {
-    if (title) title.textContent = "Editar jugador";
-    if (saveBtn) saveBtn.textContent = "Guardar cambios";
-    if (nameInput) nameInput.disabled = false;
-    if (nicknameInput) nicknameInput.disabled = false;
-    if (voteHint) voteHint.classList.add("hidden");
-    if (editVoteHintTimeoutId) {
-      clearTimeout(editVoteHintTimeoutId);
-      editVoteHintTimeoutId = null;
-    }
-  } else {
-    if (title) {
-      title.textContent = hasVotedBefore ? personalizedUpdateText : personalizedCalificarText;
-    }
-    if (saveBtn) {
-      saveBtn.textContent = hasVotedBefore ? personalizedUpdateText : personalizedCalificarText;
-    }
-    if (nameInput) nameInput.disabled = false;
-    if (nicknameInput) nicknameInput.disabled = false;
-    if (voteHint) {
-      const shouldShowHint = hasVotedBefore && hasPrefilledPreviousVote;
-      voteHint.classList.toggle("hidden", !shouldShowHint);
+  currentEditPlayerName = normalizedPlayerName;
+  currentEditHasVotedBefore = hasVotedBefore;
+  currentEditHasPrefilledVote = hasPrefilledPreviousVote;
 
-      if (editVoteHintTimeoutId) {
-        clearTimeout(editVoteHintTimeoutId);
-        editVoteHintTimeoutId = null;
+  function applyEditActionMode(nextAction = "rating") {
+    const action = nextAction === "identity" ? "identity" : "rating";
+    currentEditAction = action;
+
+    if (actionSelector) actionSelector.classList.toggle("hidden", adminAuthenticated);
+
+    if (identityModeBtn) identityModeBtn.classList.toggle("active", action === "identity");
+    if (ratingModeBtn) ratingModeBtn.classList.toggle("active", action === "rating");
+
+    if (adminAuthenticated) {
+      if (identityFields) identityFields.classList.remove("hidden");
+      if (ratingFields) ratingFields.classList.remove("hidden");
+      if (title) title.textContent = "Editar jugador";
+      if (saveBtn) saveBtn.textContent = "Guardar cambios";
+      if (nameInput) nameInput.disabled = false;
+      if (nicknameInput) nicknameInput.disabled = false;
+      if (voteHint) voteHint.classList.add("hidden");
+      return;
+    }
+
+    if (identityFields) identityFields.classList.toggle("hidden", action !== "identity");
+    if (ratingFields) ratingFields.classList.toggle("hidden", action !== "rating");
+
+    if (action === "identity") {
+      if (title) title.textContent = `Editar ${displayName}`;
+      if (saveBtn) saveBtn.textContent = "Guardar identidad";
+      if (nameInput) nameInput.disabled = false;
+      if (nicknameInput) nicknameInput.disabled = false;
+      if (voteHint) voteHint.classList.add("hidden");
+    } else {
+      if (title) {
+        title.textContent = hasVotedBefore ? personalizedUpdateText : personalizedCalificarText;
       }
+      if (saveBtn) {
+        saveBtn.textContent = hasVotedBefore ? personalizedUpdateText : personalizedCalificarText;
+      }
+      if (nameInput) nameInput.disabled = true;
+      if (nicknameInput) nicknameInput.disabled = true;
+      if (voteHint) {
+        const shouldShowHint = hasVotedBefore && hasPrefilledPreviousVote;
+        voteHint.classList.toggle("hidden", !shouldShowHint);
 
-      if (shouldShowHint) {
-        editVoteHintTimeoutId = setTimeout(() => {
-          voteHint.classList.add("hidden");
+        if (editVoteHintTimeoutId) {
+          clearTimeout(editVoteHintTimeoutId);
           editVoteHintTimeoutId = null;
-        }, 2600);
+        }
+
+        if (shouldShowHint) {
+          editVoteHintTimeoutId = setTimeout(() => {
+            voteHint.classList.add("hidden");
+            editVoteHintTimeoutId = null;
+          }, 2600);
+        }
       }
     }
   }
+
+  if (editVoteHintTimeoutId) {
+    clearTimeout(editVoteHintTimeoutId);
+    editVoteHintTimeoutId = null;
+  }
+
+  applyEditActionMode(adminAuthenticated ? "identity" : "rating");
 
   document.getElementById("editPlayerModal").classList.remove("hidden");
 }
@@ -1592,6 +1699,10 @@ function closeEditModal() {
     editVoteHintTimeoutId = null;
   }
   currentEditingPlayerId = null;
+  currentEditAction = "rating";
+  currentEditPlayerName = "";
+  currentEditHasVotedBefore = false;
+  currentEditHasPrefilledVote = false;
 }
 
 async function saveEditPlayer() {
@@ -1603,12 +1714,15 @@ async function saveEditPlayer() {
   const attack = parseInt(document.getElementById("editPlayerAttack").value) || 0;
   const defense = parseInt(document.getElementById("editPlayerDefense").value) || 0;
   const midfield = parseInt(document.getElementById("editPlayerMidfield").value) || 0;
-  const allRatingsZero = attack === 0 && defense === 0 && midfield === 0;
+  const isIdentityAction = !adminAuthenticated && currentEditAction === "identity";
 
-  if (allRatingsZero) {
-    const confirmed = confirm("Vas a guardar ataque, defensa y medio en 0. ¿Querés continuar?");
-    if (!confirmed) {
-      return;
+  if (!isIdentityAction) {
+    const allRatingsZero = attack === 0 && defense === 0 && midfield === 0;
+    if (allRatingsZero) {
+      const confirmed = confirm("Vas a guardar ataque, defensa y medio en 0. ¿Querés continuar?");
+      if (!confirmed) {
+        return;
+      }
     }
   }
 
@@ -1621,23 +1735,13 @@ async function saveEditPlayer() {
       return;
     }
 
-    if (!/^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i.test(editPlayerId)) {
-      alert("Este jugador todavía usa ID de MockAPI. Para calificar en comunidad, primero migra players a Supabase (UUID).");
-      return;
-    }
-
-    if (!playerRatingsService) {
-      alert("No se pudo inicializar el servicio de calificaciones");
-      return;
-    }
-
     try {
       const originalName = String(player?.name || "").trim();
       const originalNickname = String(player?.nickname || "").trim();
       const nextNickname = nickname || "";
       const shouldUpdateIdentity = name !== originalName || nextNickname !== originalNickname;
 
-      if (shouldUpdateIdentity) {
+      if (isIdentityAction && shouldUpdateIdentity) {
         await apiClient.updatePlayer(editPlayerId, {
           name,
           nickname: nextNickname,
@@ -1650,6 +1754,27 @@ async function saveEditPlayer() {
           player.name = name;
           player.nickname = nextNickname;
         }
+
+        renderPlayers({ preserveOrder: true });
+        closeEditModal();
+        showToast("Identidad actualizada", 2200, "success");
+        return;
+      }
+
+      if (isIdentityAction) {
+        closeEditModal();
+        showToast("Sin cambios de identidad", 1800);
+        return;
+      }
+
+      if (!/^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i.test(editPlayerId)) {
+        alert("Este jugador todavía usa ID de MockAPI. Para calificar en comunidad, primero migra players a Supabase (UUID).");
+        return;
+      }
+
+      if (!playerRatingsService) {
+        alert("No se pudo inicializar el servicio de calificaciones");
+        return;
       }
 
       await playerRatingsService.savePlayerRating({
@@ -2257,6 +2382,59 @@ document.getElementById("updatePlayerBtn")?.addEventListener("click", saveEditPl
 document.getElementById("editPlayerAttack")?.addEventListener("input", updateSliderValues);
 document.getElementById("editPlayerDefense")?.addEventListener("input", updateSliderValues);
 document.getElementById("editPlayerMidfield")?.addEventListener("input", updateSliderValues);
+document.getElementById("editIdentityModeBtn")?.addEventListener("click", () => {
+  if (adminAuthenticated) return;
+  const title = document.getElementById("editPlayerModalTitle");
+  const saveBtn = document.getElementById("updatePlayerBtn");
+  const identityFields = document.getElementById("editIdentityFields");
+  const ratingFields = document.getElementById("editRatingFields");
+  const identityModeBtn = document.getElementById("editIdentityModeBtn");
+  const ratingModeBtn = document.getElementById("editRatingModeBtn");
+  const voteHint = document.getElementById("editPlayerVoteHint");
+  const nameInput = document.getElementById("editPlayerName");
+  const nicknameInput = document.getElementById("editPlayerNickname");
+  const displayName = currentEditPlayerName || "jugador";
+
+  currentEditAction = "identity";
+  identityFields?.classList.remove("hidden");
+  ratingFields?.classList.add("hidden");
+  identityModeBtn?.classList.add("active");
+  ratingModeBtn?.classList.remove("active");
+  if (title) title.textContent = `Editar ${displayName}`;
+  if (saveBtn) saveBtn.textContent = "Guardar identidad";
+  if (nameInput) nameInput.disabled = false;
+  if (nicknameInput) nicknameInput.disabled = false;
+  if (voteHint) voteHint.classList.add("hidden");
+});
+document.getElementById("editRatingModeBtn")?.addEventListener("click", () => {
+  if (adminAuthenticated) return;
+  const title = document.getElementById("editPlayerModalTitle");
+  const saveBtn = document.getElementById("updatePlayerBtn");
+  const identityFields = document.getElementById("editIdentityFields");
+  const ratingFields = document.getElementById("editRatingFields");
+  const identityModeBtn = document.getElementById("editIdentityModeBtn");
+  const ratingModeBtn = document.getElementById("editRatingModeBtn");
+  const voteHint = document.getElementById("editPlayerVoteHint");
+  const nameInput = document.getElementById("editPlayerName");
+  const nicknameInput = document.getElementById("editPlayerNickname");
+  const displayName = currentEditPlayerName || "jugador";
+  const calificarText = `Calificar ${displayName}`;
+  const updateText = currentEditPlayerName ? `Actualizar ${currentEditPlayerName}` : "Actualizar jugador";
+
+  currentEditAction = "rating";
+  identityFields?.classList.add("hidden");
+  ratingFields?.classList.remove("hidden");
+  identityModeBtn?.classList.remove("active");
+  ratingModeBtn?.classList.add("active");
+  if (title) title.textContent = currentEditHasVotedBefore ? updateText : calificarText;
+  if (saveBtn) saveBtn.textContent = currentEditHasVotedBefore ? updateText : calificarText;
+  if (nameInput) nameInput.disabled = true;
+  if (nicknameInput) nicknameInput.disabled = true;
+  if (voteHint) {
+    const shouldShowHint = currentEditHasVotedBefore && currentEditHasPrefilledVote;
+    voteHint.classList.toggle("hidden", !shouldShowHint);
+  }
+});
 
 document.getElementById("editPlayerModal").addEventListener("click", (e) => {
   if (e.target.id === "editPlayerModal") {
