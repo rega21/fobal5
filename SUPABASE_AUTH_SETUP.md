@@ -15,12 +15,16 @@ supabase link --project-ref TU_PROJECT_REF
 
 ```bash
 supabase secrets set ADMIN_PIN=1989
+supabase secrets set SUPABASE_SERVICE_ROLE_KEY=TU_SERVICE_ROLE_KEY
 ```
+
+`SUPABASE_SERVICE_ROLE_KEY` se usa solo en `admin-feedback-list` para leer `feedback` de forma segura desde backend.
 
 ## 4) Deploy de la función
 
 ```bash
 supabase functions deploy admin-login --no-verify-jwt
+supabase functions deploy admin-feedback-list --no-verify-jwt
 ```
 
 ## 5) URL final para el frontend
@@ -34,10 +38,12 @@ Copia esa URL en [src/api/authClient.js](src/api/authClient.js) en la constante 
 ## 6) Probar
 
 - Abre la app y entra como admin con tu PIN.
+- Desde el menú, entra en `Reportes o Mejoras` para ver el listado de reportes como admin.
 - Si falla, revisa logs:
 
 ```bash
 supabase functions logs admin-login
+supabase functions logs admin-feedback-list
 ```
 
 ## Nota de seguridad

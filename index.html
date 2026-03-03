@@ -169,7 +169,7 @@
         <div class="modal-body">
           <div class="form-group">
             <label>PIN</label>
-            <input type="password" id="adminPin" placeholder="Ingresa PIN" maxlength="6">
+            <input type="password" id="adminPin" placeholder="Ingresa PIN" maxlength="10">
           </div>
           <div id="loginError" class="error-msg hidden"></div>
           <div id="loginSpinner" class="login-spinner hidden">
@@ -306,6 +306,19 @@
         <input type="text" id="feedbackHoney" class="hidden" tabindex="-1" autocomplete="off" />
         <p class="muted" style="margin:8px 0 0; font-size:12px;">Canal de sugerencias: no tiene respuesta directa.</p>
         <button class="btn btn-success" id="sendFeedbackBtn">Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reportsModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📋 Reportes</h2>
+        <button class="close-btn" id="closeReportsBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="reportsLoading" class="muted">Cargando reportes...</p>
+        <div id="reportsList" class="reports-list"></div>
       </div>
     </div>
   </div>

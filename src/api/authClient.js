@@ -10,6 +10,10 @@
     };
   }
 
+  function buildFunctionUrl(authLoginUrl, functionName) {
+    return String(authLoginUrl || "").replace(/\/admin-login$/i, `/${functionName}`);
+  }
+
   async function loginAdmin(pin) {
     const { authLoginUrl, supabaseAnonKey } = getAuthConfig();
 
@@ -66,7 +70,69 @@
     }
   }
 
+  async function listAdminFeedback({ pin, limit = 50 } = {}) {
+    const { authLoginUrl, supabaseAnonKey } = getAuthConfig();
+    const feedbackListUrl = buildFunctionUrl(authLoginUrl, "admin-feedback-list");
+
+    if (!feedbackListUrl) {
+      return {
+        ok: false,
+        message: "Configura AUTH_LOGIN_URL en src/api/authClient.js",
+        items: [],
+      };
+    }
+
+    if (!supabaseAnonKey) {
+      return {
+        ok: false,
+        message: "Configura SUPABASE_ANON_KEY en src/api/authClient.js",
+        items: [],
+      };
+    }
+
+    try {
+      const response = await fetch(feedbackListUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: supabaseAnonKey,
+          Authorization: `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({ pin: String(pin || ""), limit }),
+      });
+
+      let payload = {};
+      try {
+        payload = await response.json();
+      } catch (_error) {
+        payload = {};
+      }
+
+      if (!response.ok) {
+        return {
+          ok: false,
+          message: payload?.message || "No se pudieron cargar reportes",
+          items: [],
+        };
+      }
+
+      return {
+        ok: payload?.ok !== false,
+        message: payload?.message || "OK",
+        items: Array.isArray(payload?.items) ? payload.items : [],
+      };
+    } catch (error) {
+      console.error("Error listando feedback admin:", error);
+      return {
+        ok: false,
+        message: "No se pudo conectar con reportes",
+        items: [],
+      };
+    }
+  }
+
   global.AuthApi = {
     loginAdmin,
+    listAdminFeedback,
   };
 })(window);

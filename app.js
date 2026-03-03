@@ -6,6 +6,8 @@ const ADMIN_PIN = "";
 let adminAuthenticated = false;
 let currentEditingPlayerId = null;
 let feedbackSubmitting = false;
+let currentAdminPin = "";
+let adminReportsLoading = false;
 
 let players = [];
 let selectedPlayers = [];
@@ -1726,12 +1728,104 @@ function openFeedbackModal() {
   setTimeout(() => message?.focus(), 30);
 }
 
+function closeReportsModal() {
+  document.getElementById("reportsModal")?.classList.add("hidden");
+}
+
+function formatReportDatetime(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "Sin fecha";
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return raw;
+  return date.toLocaleString();
+}
+
+function renderAdminReports(items = []) {
+  const container = document.getElementById("reportsList");
+  if (!container) return;
+
+  if (!Array.isArray(items) || items.length === 0) {
+    container.innerHTML = '<p class="muted">Sin reportes por ahora</p>';
+    return;
+  }
+
+  container.innerHTML = items
+    .map((item) => {
+      const kind = String(item?.kind || "sugerencia");
+      const badge = kind === "bug" ? "🐞 Error" : "💡 Sugerencia";
+      const alias = String(item?.alias || "").trim() || "Anónimo";
+      const message = String(item?.message || "").trim() || "(sin mensaje)";
+      const page = String(item?.page || "").trim() || "-";
+      const createdAt = formatReportDatetime(item?.created_at);
+
+      return `
+        <article class="report-item">
+          <div class="report-meta">
+            <span class="report-kind">${escapeHtml(badge)}</span>
+            <span class="report-date">${escapeHtml(createdAt)}</span>
+          </div>
+          <p class="report-message">${escapeHtml(message)}</p>
+          <div class="report-foot">
+            <span>👤 ${escapeHtml(alias)}</span>
+            <span>📍 ${escapeHtml(page)}</span>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+async function openAdminReportsModal() {
+  if (!adminAuthenticated) {
+    openFeedbackModal();
+    closeTopbarMenu();
+    return;
+  }
+
+  if (!authClient?.listAdminFeedback) {
+    showToast("Reportes no disponible en este entorno", 2600, "error");
+    closeTopbarMenu();
+    return;
+  }
+
+  if (!currentAdminPin) {
+    showToast("Volvé a iniciar sesión como admin", 2400, "error");
+    closeTopbarMenu();
+    return;
+  }
+
+  const modal = document.getElementById("reportsModal");
+  const list = document.getElementById("reportsList");
+  const loading = document.getElementById("reportsLoading");
+  if (!modal || !list || !loading) return;
+  if (adminReportsLoading) return;
+
+  adminReportsLoading = true;
+  modal.classList.remove("hidden");
+  loading.classList.remove("hidden");
+  list.innerHTML = "";
+  closeTopbarMenu();
+
+  const result = await authClient.listAdminFeedback({ pin: currentAdminPin, limit: 50 });
+
+  loading.classList.add("hidden");
+  adminReportsLoading = false;
+
+  if (!result?.ok) {
+    renderAdminReports([]);
+    showToast(result?.message || "No se pudieron cargar reportes", 2800, "error");
+    return;
+  }
+
+  renderAdminReports(result.items || []);
+}
+
 function closeFeedbackModal() {
   document.getElementById("feedbackModal")?.classList.add("hidden");
 }
 
 function openInfoApp() {
-  showToast("Futbol Foca · app de gestión de jugadores y partidos", 2400);
+  showToast("Calificación de jugadores: N/3 mínimo para validar", 2400);
   closeTopbarMenu();
 }
 
@@ -1822,6 +1916,7 @@ async function handleLogin() {
       spinner.classList.add("hidden");
       
       if (result.ok) {
+        currentAdminPin = pin;
         closeLoginModal();
       } else {
         errorMsg.textContent = result.message || "PIN incorrecto";
@@ -1837,6 +1932,7 @@ async function handleLogin() {
 
   if (pin === ADMIN_PIN) {
     adminAuthenticated = true;
+    currentAdminPin = pin;
     closeLoginModal();
     updateAdminUI();
     renderPlayers();
@@ -1851,10 +1947,12 @@ async function handleLogin() {
 function handleLogout() {
   if (adminPlayersController) {
     adminPlayersController.logout();
+    currentAdminPin = "";
     return;
   }
 
   adminAuthenticated = false;
+  currentAdminPin = "";
   updateAdminUI();
   renderPlayers();
 }
@@ -1909,8 +2007,9 @@ tabs.forEach(btn => {
 });
 
 document.getElementById("adminBtn")?.addEventListener("click", openAdmin);
-document.getElementById("feedbackBtn")?.addEventListener("click", openFeedbackModal);
-document.getElementById("feedbackBtn")?.addEventListener("click", closeTopbarMenu);
+document.getElementById("feedbackBtn")?.addEventListener("click", () => {
+  void openAdminReportsModal();
+});
 document.getElementById("infoAppBtn")?.addEventListener("click", openInfoApp);
 document.getElementById("menuToggleBtn")?.addEventListener("click", (e) => {
   e.stopPropagation();
@@ -1920,6 +2019,7 @@ document.getElementById("topbarMenu")?.addEventListener("click", (e) => e.stopPr
 document.getElementById("closeLoginBtn")?.addEventListener("click", closeLoginModal);
 document.getElementById("loginBtn")?.addEventListener("click", handleLogin);
 document.getElementById("closeFeedbackBtn")?.addEventListener("click", closeFeedbackModal);
+document.getElementById("closeReportsBtn")?.addEventListener("click", closeReportsModal);
 document.getElementById("sendFeedbackBtn")?.addEventListener("click", () => {
   void submitFeedbackFromModal();
 });
@@ -2177,6 +2277,12 @@ document.getElementById("historyResultModal")?.addEventListener("click", (e) => 
 document.getElementById("feedbackModal")?.addEventListener("click", (e) => {
   if (e.target.id === "feedbackModal") {
     closeFeedbackModal();
+  }
+});
+
+document.getElementById("reportsModal")?.addEventListener("click", (e) => {
+  if (e.target.id === "reportsModal") {
+    closeReportsModal();
   }
 });
 
