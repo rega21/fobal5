@@ -15,11 +15,15 @@
       
     </div>
 
-    <div class="topbar-actions">
-      <button class="admin" type="button" id="adminBtn" aria-label="Admin">
-        <span class="shield" aria-hidden="true">🛡️</span>
-        <span id="adminBtnText">Admin</span>
-      </button>
+    <div class="topbar-actions" id="topbarActions">
+      <button class="menu-toggle" type="button" id="menuToggleBtn" aria-label="Abrir menú" aria-expanded="false" aria-controls="topbarMenu">☰</button>
+      <div class="topbar-menu" id="topbarMenu" role="menu" aria-label="Menú principal">
+        <button class="topbar-menu-item" type="button" id="adminBtn" role="menuitem" aria-label="Admin">
+          <span id="adminBtnText">Admin</span>
+        </button>
+        <button class="topbar-menu-item" type="button" id="feedbackBtn" role="menuitem" aria-label="Reportes o mejoras">Reportes o Mejoras</button>
+        <button class="topbar-menu-item" type="button" id="infoAppBtn" role="menuitem" aria-label="Info App">Info App</button>
+      </div>
     </div>
   </header>
 
@@ -277,6 +281,35 @@
     </div>
   </div>
 
+  <div id="feedbackModal" class="modal hidden">
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h2>💡 Sugerencias</h2>
+        <button class="close-btn" id="closeFeedbackBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="feedbackKind">Tipo</label>
+          <select id="feedbackKind">
+            <option value="sugerencia">Sugerencia</option>
+            <option value="bug">Reportar error</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="feedbackMessage">Mensaje</label>
+          <textarea id="feedbackMessage" rows="4" maxlength="1000" placeholder="Contanos tu idea o qué error viste"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="feedbackAlias">Alias (opcional)</label>
+          <input type="text" id="feedbackAlias" maxlength="120" placeholder="Ej: Mati de los martes" />
+        </div>
+        <input type="text" id="feedbackHoney" class="hidden" tabindex="-1" autocomplete="off" />
+        <p class="muted" style="margin:8px 0 0; font-size:12px;">Canal de sugerencias: no tiene respuesta directa.</p>
+        <button class="btn btn-success" id="sendFeedbackBtn">Enviar</button>
+      </div>
+    </div>
+  </div>
+
   <button class="match-song-icon-btn global-song-fab" id="matchSongToggleBtn" type="button" aria-label="Reproducir música" title="Reproducir música" aria-pressed="false">🔊</button>
 
   <nav class="bottomnav" role="navigation" aria-label="Bottom Navigation">
@@ -309,6 +342,7 @@
   <script src="src/controllers/adminPlayersController.js"></script>
   <script src="src/services/whatsappShareService.js"></script>
   <script src="src/services/playerRatingsService.js"></script>
+  <script src="src/services/feedbackService.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

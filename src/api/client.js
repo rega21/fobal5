@@ -69,6 +69,16 @@
     };
   }
 
+  function buildFeedbackPayload(body = {}) {
+    return {
+      kind: String(body?.kind || "sugerencia").trim().toLowerCase() === "bug" ? "bug" : "sugerencia",
+      message: String(body?.message || "").trim(),
+      alias: String(body?.alias || "").trim() || null,
+      page: String(body?.page || "").trim() || null,
+      user_agent: String(body?.user_agent || "").trim() || null,
+    };
+  }
+
   global.FobalApi = {
     urls: {
       players: HAS_SUPABASE ? `${SUPABASE_BASE_URL}/rest/v1/players` : PLAYERS_URL,
@@ -230,6 +240,25 @@
           Prefer: "resolution=merge-duplicates,return=representation",
         }),
         body: JSON.stringify([payload]),
+      });
+    },
+    async createFeedback(payload) {
+      if (!HAS_SUPABASE) {
+        throw new Error("Feedback requires Supabase config");
+      }
+
+      const normalizedPayload = buildFeedbackPayload(payload);
+      if (!normalizedPayload.message) {
+        throw new Error("Feedback message required");
+      }
+
+      return requestSupabase("/rest/v1/feedback", {
+        method: "POST",
+        headers: buildSupabaseHeaders({
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        }),
+        body: JSON.stringify([normalizedPayload]),
       });
     },
   };

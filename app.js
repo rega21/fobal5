@@ -1,9 +1,11 @@
 const HISTORY_KEY = "fobal5_history";
 const COMMUNITY_MIN_VOTES = 3;
 const VOTED_PLAYERS_STORAGE_KEY = "fobal5_voted_players";
+const FEEDBACK_COOLDOWN_MS = 30000;
 const ADMIN_PIN = "";
 let adminAuthenticated = false;
 let currentEditingPlayerId = null;
+let feedbackSubmitting = false;
 
 let players = [];
 let selectedPlayers = [];
@@ -268,6 +270,13 @@ const whatsappShareService = window.createWhatsAppShareService
 
 const playerRatingsService = window.createPlayerRatingsService
   ? window.createPlayerRatingsService({ apiClient })
+  : null;
+
+const feedbackService = window.createFeedbackService
+  ? window.createFeedbackService({
+      apiClient,
+      cooldownMs: FEEDBACK_COOLDOWN_MS,
+    })
   : null;
 
 const adminPlayersController = window.createAdminPlayersController
@@ -1684,6 +1693,8 @@ function openAdmin() {
   } else {
     handleLogout();
   }
+
+  closeTopbarMenu();
 }
 
 function openLoginModal() {
@@ -1695,6 +1706,103 @@ function openLoginModal() {
 
 function closeLoginModal() {
   document.getElementById("adminLoginModal").classList.add("hidden");
+}
+
+function openFeedbackModal() {
+  const modal = document.getElementById("feedbackModal");
+  if (!modal) return;
+
+  const kind = document.getElementById("feedbackKind");
+  const message = document.getElementById("feedbackMessage");
+  const alias = document.getElementById("feedbackAlias");
+  const honey = document.getElementById("feedbackHoney");
+
+  if (kind) kind.value = "sugerencia";
+  if (message) message.value = "";
+  if (alias) alias.value = "";
+  if (honey) honey.value = "";
+
+  modal.classList.remove("hidden");
+  setTimeout(() => message?.focus(), 30);
+}
+
+function closeFeedbackModal() {
+  document.getElementById("feedbackModal")?.classList.add("hidden");
+}
+
+function openInfoApp() {
+  showToast("Futbol Foca · app de gestión de jugadores y partidos", 2400);
+  closeTopbarMenu();
+}
+
+function toggleTopbarMenu() {
+  const menu = document.getElementById("topbarMenu");
+  const toggleBtn = document.getElementById("menuToggleBtn");
+  if (!menu || !toggleBtn) return;
+
+  const isOpen = menu.classList.contains("is-open");
+  menu.classList.toggle("is-open", !isOpen);
+  toggleBtn.setAttribute("aria-expanded", String(!isOpen));
+}
+
+function closeTopbarMenu() {
+  const menu = document.getElementById("topbarMenu");
+  const toggleBtn = document.getElementById("menuToggleBtn");
+  if (!menu || !toggleBtn) return;
+
+  menu.classList.remove("is-open");
+  toggleBtn.setAttribute("aria-expanded", "false");
+}
+
+async function submitFeedbackFromModal() {
+  if (feedbackSubmitting) return;
+
+  if (!feedbackService?.submitFeedback) {
+    showToast("Feedback no disponible en este entorno", 2600, "error");
+    return;
+  }
+
+  const kindEl = document.getElementById("feedbackKind");
+  const messageEl = document.getElementById("feedbackMessage");
+  const aliasEl = document.getElementById("feedbackAlias");
+  const honeyEl = document.getElementById("feedbackHoney");
+  const sendBtn = document.getElementById("sendFeedbackBtn");
+
+  const message = String(messageEl?.value || "").trim();
+  if (message.length < 8) {
+    showToast("Escribí al menos 8 caracteres", 2200, "error");
+    return;
+  }
+
+  feedbackSubmitting = true;
+  if (sendBtn) sendBtn.disabled = true;
+
+  try {
+    await feedbackService.submitFeedback({
+      kind: kindEl?.value || "sugerencia",
+      message,
+      alias: aliasEl?.value || "",
+      page: window.location?.pathname || "",
+      userAgent: navigator?.userAgent || "",
+      honeypot: honeyEl?.value || "",
+    });
+
+    closeFeedbackModal();
+    showToast("¡Gracias! Recibimos tu sugerencia 🙌", 2600, "success");
+  } catch (error) {
+    if (error?.code === "cooldown") {
+      const seconds = Math.max(1, Math.ceil((Number(error.remainingMs) || 0) / 1000));
+      showToast(`Esperá ${seconds}s para volver a enviar`, 2600, "error");
+    } else if (error?.code === "message_too_short") {
+      showToast("Escribí un poco más de detalle", 2200, "error");
+    } else {
+      console.error("Error enviando feedback:", error);
+      showToast("No se pudo enviar ahora", 2600, "error");
+    }
+  } finally {
+    feedbackSubmitting = false;
+    if (sendBtn) sendBtn.disabled = false;
+  }
 }
 
 async function handleLogin() {
@@ -1763,11 +1871,11 @@ function updateAdminUI() {
 
   if (adminAuthenticated) {
     btnText.textContent = "Admin ✓";
-    adminBtn.classList.add("authenticated");
+    adminBtn.classList.add("admin-authenticated");
     body.classList.add("admin-active");
   } else {
     btnText.textContent = "Admin";
-    adminBtn.classList.remove("authenticated");
+    adminBtn.classList.remove("admin-authenticated");
     body.classList.remove("admin-active");
   }
 
@@ -1801,8 +1909,20 @@ tabs.forEach(btn => {
 });
 
 document.getElementById("adminBtn")?.addEventListener("click", openAdmin);
+document.getElementById("feedbackBtn")?.addEventListener("click", openFeedbackModal);
+document.getElementById("feedbackBtn")?.addEventListener("click", closeTopbarMenu);
+document.getElementById("infoAppBtn")?.addEventListener("click", openInfoApp);
+document.getElementById("menuToggleBtn")?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  toggleTopbarMenu();
+});
+document.getElementById("topbarMenu")?.addEventListener("click", (e) => e.stopPropagation());
 document.getElementById("closeLoginBtn")?.addEventListener("click", closeLoginModal);
 document.getElementById("loginBtn")?.addEventListener("click", handleLogin);
+document.getElementById("closeFeedbackBtn")?.addEventListener("click", closeFeedbackModal);
+document.getElementById("sendFeedbackBtn")?.addEventListener("click", () => {
+  void submitFeedbackFromModal();
+});
 
 document.getElementById("adminPin")?.addEventListener("keypress", (e) => {
   if (e.key === "Enter") void handleLogin();
@@ -2051,6 +2171,33 @@ document.getElementById("saveHistoryResultBtn")?.addEventListener("click", () =>
 document.getElementById("historyResultModal")?.addEventListener("click", (e) => {
   if (e.target.id === "historyResultModal") {
     closePendingResultModal();
+  }
+});
+
+document.getElementById("feedbackModal")?.addEventListener("click", (e) => {
+  if (e.target.id === "feedbackModal") {
+    closeFeedbackModal();
+  }
+});
+
+document.getElementById("feedbackMessage")?.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    e.preventDefault();
+    void submitFeedbackFromModal();
+  }
+});
+
+document.addEventListener("click", (e) => {
+  const menu = document.getElementById("topbarMenu");
+  const actions = document.getElementById("topbarActions");
+  if (!menu || !menu.classList.contains("is-open")) return;
+  if (actions?.contains(e.target)) return;
+  closeTopbarMenu();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeTopbarMenu();
   }
 });
 

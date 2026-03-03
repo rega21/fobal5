@@ -22,9 +22,104 @@ body.admin-active .topbar{
 .ball{ font-size:20px; }
 
 .topbar-actions{
+  position: relative;
   display:flex;
   align-items:center;
   gap:8px;
+}
+
+.menu-toggle{
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  width: 40px;
+  height: 36px;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, transform 0.15s ease;
+}
+
+.menu-toggle:hover{
+  color: var(--text);
+}
+
+.menu-toggle:focus-visible{
+  outline: 2px solid #cbd5e1;
+  outline-offset: 2px;
+}
+
+.menu-toggle:active{
+  transform: scale(0.97);
+}
+
+.topbar-menu{
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 190px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(17, 24, 39, 0.08);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 40;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 180ms;
+}
+
+.topbar-menu.is-open{
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  visibility: visible;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.topbar-menu-item{
+  border: 1px solid #edf0f2;
+  background: #ffffff;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 180ms ease, color 180ms ease, transform 150ms ease, border-color 180ms ease;
+}
+
+.topbar-menu-item:active{
+  transform: scale(0.98);
+}
+
+@media (any-hover: hover){
+  .topbar-menu-item:hover{
+    background: #e8eaed;
+    transform: translateX(1px);
+    border-color: #d1d5db;
+  }
+}
+
+.topbar-menu-item:focus-visible{
+  outline: 2px solid #d1d5db;
+  outline-offset: -1px;
+}
+
+.topbar-menu-item.admin-authenticated{
+  background: #ecfdf5;
+  color: #047857;
 }
 
 .btn-add{
@@ -68,4 +163,10 @@ body.admin-active .topbar{
 }
 .admin.authenticated:hover{
   background: #059669;
+}
+
+@media (max-width: 420px){
+  .topbar-menu{
+    min-width: 176px;
+  }
 }

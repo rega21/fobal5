@@ -115,6 +115,29 @@
   box-shadow:0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+.form-group select,
+.form-group textarea{
+  width:100%;
+  padding:10px 12px;
+  border: 1px solid var(--line);
+  border-radius:8px;
+  font-size:14px;
+  font-family:inherit;
+  background:white;
+}
+
+.form-group select:focus,
+.form-group textarea:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group textarea{
+  resize: vertical;
+  min-height:96px;
+}
+
 .error-msg{
   color: var(--danger);
   font-size:13px;
