@@ -58,6 +58,7 @@
 .btn-edit{
   border:1px solid var(--line);
   background:#f9fafb;
+  color: var(--text);
   cursor:pointer;
   font-size:12px;
   font-weight:700;
