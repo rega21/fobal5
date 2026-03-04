@@ -55,7 +55,36 @@
   margin-left:12px;
 }
 
-.btn-edit, .btn-delete{
+.btn-edit{
+  border:1px solid var(--line);
+  background:#f9fafb;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:700;
+  transition: all 0.2s;
+  padding:6px 10px;
+  border-radius:999px;
+  letter-spacing:.2px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:112px;
+  white-space:nowrap;
+}
+.btn-edit:hover{
+  background:#f3f4f6;
+  border-color:#d1d5db;
+}
+.btn-edit--voted{
+  border-color: var(--line);
+  color: inherit;
+}
+.btn-edit.is-fading-out{
+  opacity: 0;
+  transform: translateY(-2px) scale(0.96);
+  transition: opacity 160ms ease-out, transform 160ms ease-out;
+}
+.btn-delete{
   border:0;
   background:transparent;
   cursor:pointer;
@@ -63,18 +92,6 @@
   transition: all 0.2s;
   padding:4px;
   border-radius:6px;
-}
-.btn-edit:hover{
-  background:#e0f2fe;
-}
-.btn-edit--voted{
-  font-size:25px;
-  line-height:1;
-}
-.btn-edit.is-fading-out{
-  opacity: 0;
-  transform: translateY(-2px) scale(0.96);
-  transition: opacity 160ms ease-out, transform 160ms ease-out;
 }
 .btn-delete:hover{
   background:#fee2e2;

@@ -86,8 +86,6 @@
         const nick = player.nickname?.trim()
           ? `<span class="player-nick">"${escapeHtml(player.nickname)}"</span>`
           : "";
-        const votes = Number(player.communityVotes) || 0;
-        const minVotes = Number(player.communityMinVotes) || 3;
         // Verificar si el usuario ya votó a este jugador
         let votedPlayers = [];
         try {
@@ -99,16 +97,9 @@
         const yaVotaste = !adminAuthenticated && votedPlayers
           .map((id) => String(id).trim().toLowerCase())
           .includes(playerIdNormalized);
-        const statusClass = player.communityStatus === "validated"
-          ? "player-community player-community--ok"
-          : (yaVotaste
-            ? "player-community player-community--pending"
-            : "player-community player-community--pending");
-        const statusText = player.communityStatus === "validated"
-          ? "✔ Validado"
-          : (yaVotaste
-            ? "✓ Voto pueblo"
-            : (adminAuthenticated ? `🗳️ Voto pueblo (${votes}/${minVotes})` : "🗳️ Voto pueblo"));
+        const statusMarkup = player.communityStatus === "validated"
+          ? '<span class="player-community player-community--ok">✔ Validado</span>'
+          : "";
         const effectiveAttack = Number(player.effectiveAttack ?? player.attack ?? 0);
         const effectiveDefense = Number(player.effectiveDefense ?? player.defense ?? 0);
         const effectiveMidfield = Number(player.effectiveMidfield ?? player.midfield ?? 0);
@@ -121,11 +112,11 @@
           ? `<button class="btn-delete" data-id="${player.id}" title="Eliminar">🗑️</button>`
           : "";
         const editButtonClass = yaVotaste ? "btn-edit btn-edit--voted" : "btn-edit";
-        const editButtonTitle = yaVotaste ? "Actualizar voto" : "Calificar";
-        const editButtonIcon = yaVotaste ? "📝" : "✏️";
+        const editButtonTitle = yaVotaste ? "Editar voto" : "Votar";
+        const editButtonLabel = yaVotaste ? "✏️ EDITAR" : "🗳️ VOTAR";
 
         const adminControls = `<div class="admin-controls">
-          <button class="${editButtonClass}" data-id="${player.id}" title="${editButtonTitle}">${editButtonIcon}</button>
+          <button class="${editButtonClass}" data-id="${player.id}" title="${editButtonTitle}">${editButtonLabel}</button>
           ${deleteControl}
         </div>`;
 
@@ -136,7 +127,7 @@
                 ${escapeHtml(player.name)} ${nick}
               </div>
               <div class="player-meta">
-                <span class="${statusClass}">${statusText}</span>
+                ${statusMarkup}
                 ${statsMarkup}
               </div>
             </div>

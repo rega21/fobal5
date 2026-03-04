@@ -844,18 +844,9 @@ function renderPlayers(options = {}) {
     const nick = p.nickname?.trim()
       ? `<span class="player-nick">"${escapeHtml(p.nickname)}"</span>`
       : "";
-    const votes = Number(p.communityVotes) || 0;
-    const minVotes = Number(p.communityMinVotes) || COMMUNITY_MIN_VOTES;
-    const statusClass = p.communityStatus === "validated"
-      ? "player-community player-community--ok"
-      : (yaVotaste
-        ? "player-community player-community--pending"
-        : "player-community player-community--pending");
-    const statusText = p.communityStatus === "validated"
-      ? "✔ Validado"
-      : (yaVotaste
-        ? "✓ Voto pueblo"
-        : (adminAuthenticated ? `🗳️ Voto pueblo (${votes}/${minVotes})` : "🗳️ Voto pueblo"));
+    const statusMarkup = p.communityStatus === "validated"
+      ? '<span class="player-community player-community--ok">✔ Validado</span>'
+      : "";
     const scoreText = `A ${toScoreNumber(p.effectiveAttack)} · D ${toScoreNumber(p.effectiveDefense)} · M ${toScoreNumber(p.effectiveMidfield)}`;
     const scoreMarkup = adminAuthenticated
       ? `<span class="player-stats">${scoreText}</span>`
@@ -866,9 +857,9 @@ function renderPlayers(options = {}) {
       : "";
 
     const editButtonClass = yaVotaste ? "btn-edit btn-edit--voted" : "btn-edit";
-    const editButtonTitle = yaVotaste ? "Actualizar voto" : "Calificar";
-    const editButtonIcon = yaVotaste ? "📝" : "✏️";
-    const editControl = `<button class="${editButtonClass}" data-id="${p.id}" title="${editButtonTitle}">${editButtonIcon}</button>`;
+    const editButtonTitle = yaVotaste ? "Editar voto" : "Votar";
+    const editButtonLabel = yaVotaste ? "✏️ EDITAR" : "🗳️ VOTAR";
+    const editControl = `<button class="${editButtonClass}" data-id="${p.id}" title="${editButtonTitle}">${editButtonLabel}</button>`;
 
     const adminControls = `<div class="admin-controls">
           ${editControl}
@@ -882,7 +873,7 @@ function renderPlayers(options = {}) {
             ${escapeHtml(p.name)} ${nick}
           </div>
           <div class="player-meta">
-            <span class="${statusClass}">${statusText}</span>
+            ${statusMarkup}
             ${scoreMarkup}
           </div>
         </div>
@@ -1570,10 +1561,9 @@ async function editPlayer(id) {
   currentEditingPlayerId = id;
   document.getElementById("editPlayerName").value = playerForEdit.name;
   document.getElementById("editPlayerNickname").value = playerForEdit.nickname || "";
-  const shouldPrefillCommunityAverage = playerForEdit.communityStatus === "validated";
-  const fallbackAttack = shouldPrefillCommunityAverage ? (playerForEdit.effectiveAttack || 0) : 0;
-  const fallbackDefense = shouldPrefillCommunityAverage ? (playerForEdit.effectiveDefense || 0) : 0;
-  const fallbackMidfield = shouldPrefillCommunityAverage ? (playerForEdit.effectiveMidfield || 0) : 0;
+  const fallbackAttack = 0;
+  const fallbackDefense = 0;
+  const fallbackMidfield = 0;
   const initialAttack = adminAuthenticated
     ? (playerForEdit.effectiveAttack || 0)
     : Number(userPreviousRating?.attack ?? fallbackAttack);
@@ -1588,16 +1578,10 @@ async function editPlayer(id) {
   document.getElementById("editPlayerMidfield").value = initialMidfield;
   
   updateSliderValues();
-  openEditModal(
-    playerForEdit.communityStatus === "validated",
-    hasVotedBefore,
-    Boolean(userPreviousRating),
-    playerForEdit.name
-  );
+  openEditModal(hasVotedBefore, Boolean(userPreviousRating), playerForEdit.name);
 }
 
 function openEditModal(
-  isValidatedPlayer = false,
   hasVotedBefore = false,
   hasPrefilledPreviousVote = false,
   playerName = ""
