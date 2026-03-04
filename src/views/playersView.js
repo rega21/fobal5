@@ -61,6 +61,7 @@
     adminAuthenticated,
     onEdit,
     onDelete,
+    onRatingClick,
     preserveOrder = false,
   }) {
     const playersTitle = document.getElementById("playersTitle");
@@ -97,12 +98,23 @@
         const yaVotaste = !adminAuthenticated && votedPlayers
           .map((id) => String(id).trim().toLowerCase())
           .includes(playerIdNormalized);
-        const statusMarkup = player.communityStatus === "validated"
-          ? '<span class="player-community player-community--ok">✔ Validado</span>'
-          : "";
         const effectiveAttack = Number(player.effectiveAttack ?? player.attack ?? 0);
         const effectiveDefense = Number(player.effectiveDefense ?? player.defense ?? 0);
         const effectiveMidfield = Number(player.effectiveMidfield ?? player.midfield ?? 0);
+        const ratingAverage = (
+          (effectiveAttack + effectiveDefense + effectiveMidfield) / 3
+        ).toFixed(1);
+        const ratingIcon = player.communityStatus === "validated" ? "⭐" : "⏳";
+        const ratingValue = player.communityStatus === "validated"
+          ? ratingAverage
+          : "XX";
+        const canOpenRating = player.communityStatus === "validated";
+        const ratingDisabledAttr = canOpenRating ? "" : " disabled aria-disabled=\"true\"";
+        const ratingTitle = canOpenRating ? "Ver rating" : "Disponible con más votos";
+        const ratingClass = player.communityStatus === "validated"
+          ? "player-community player-community--ok player-community--rating"
+          : "player-community player-community--pending player-community--rating";
+        const statusMarkup = `<button type="button" class="${ratingClass}" data-rating-id="${player.id}" title="${ratingTitle}"${ratingDisabledAttr}>${ratingIcon} <span class="rating-value">${ratingValue}</span></button>`;
         const statsText = `A ${effectiveAttack} · D ${effectiveDefense} · M ${effectiveMidfield}`;
         const statsMarkup = adminAuthenticated
           ? `<span class="player-stats">${escapeHtml(statsText)}</span>`
@@ -146,6 +158,9 @@
           onDelete?.(button.dataset.id);
         }
       });
+    });
+    playersList.querySelectorAll(".player-community--rating").forEach((button) => {
+      button.addEventListener("click", () => onRatingClick?.(button.dataset.ratingId));
     });
   }
 

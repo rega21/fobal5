@@ -581,6 +581,59 @@ function toScoreNumber(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function buildRatingBar(value) {
+  const rounded = Math.round(toScoreNumber(value));
+  const blocks = Math.max(0, Math.min(10, rounded));
+  return blocks > 0 ? "█".repeat(blocks) : "▁";
+}
+
+function openRatingDetailsByPlayerId(playerId) {
+  const normalizedId = normalizePlayerId(playerId);
+  if (!normalizedId) return;
+
+  const playerForView = getPlayersForDisplay(players).find(
+    (player) => normalizePlayerId(player?.id) === normalizedId
+  );
+  if (!playerForView) return;
+  if (playerForView.communityStatus !== "validated") return;
+
+  const modal = document.getElementById("ratingDetailsModal");
+  if (!modal) return;
+
+  const title = document.getElementById("ratingDetailsTitle");
+  const status = document.getElementById("ratingDetailsStatus");
+  const attackBar = document.getElementById("ratingBarAttack");
+  const midfieldBar = document.getElementById("ratingBarMidfield");
+  const defenseBar = document.getElementById("ratingBarDefense");
+  const ratingAverage = (
+    (
+      toScoreNumber(playerForView.effectiveAttack) +
+      toScoreNumber(playerForView.effectiveDefense) +
+      toScoreNumber(playerForView.effectiveMidfield)
+    ) / 3
+  ).toFixed(1);
+  const ratingIcon = playerForView.communityStatus === "validated" ? "⭐" : "⏳";
+  const ratingStatusValue = playerForView.communityStatus === "validated"
+    ? ratingAverage
+    : "XX";
+
+  const preferredDisplayName = String(playerForView.nickname || "").trim()
+    || String(playerForView.name || "").trim()
+    || "Jugador";
+
+  if (title) title.textContent = `Rating de ${preferredDisplayName}`;
+  if (status) status.innerHTML = `${ratingIcon} <span class="rating-value">${ratingStatusValue}</span>`;
+  if (attackBar) attackBar.textContent = buildRatingBar(playerForView.effectiveAttack);
+  if (midfieldBar) midfieldBar.textContent = buildRatingBar(playerForView.effectiveMidfield);
+  if (defenseBar) defenseBar.textContent = buildRatingBar(playerForView.effectiveDefense);
+
+  modal.classList.remove("hidden");
+}
+
+function closeRatingDetailsModal() {
+  document.getElementById("ratingDetailsModal")?.classList.add("hidden");
+}
+
 function getHistoryEntryName(entry) {
   if (entry && typeof entry === "object") {
     return String(entry.name || "").trim();
@@ -812,6 +865,7 @@ function renderPlayers(options = {}) {
       adminAuthenticated,
       onEdit: (id) => editPlayer(id),
       onDelete: (id) => deletePlayer(id),
+      onRatingClick: (id) => openRatingDetailsByPlayerId(id),
       preserveOrder: shouldPreserveOrder,
     });
     return;
@@ -844,9 +898,24 @@ function renderPlayers(options = {}) {
     const nick = p.nickname?.trim()
       ? `<span class="player-nick">"${escapeHtml(p.nickname)}"</span>`
       : "";
-    const statusMarkup = p.communityStatus === "validated"
-      ? '<span class="player-community player-community--ok">✔ Validado</span>'
-      : "";
+    const ratingAverage = (
+      (
+        toScoreNumber(p.effectiveAttack) +
+        toScoreNumber(p.effectiveDefense) +
+        toScoreNumber(p.effectiveMidfield)
+      ) / 3
+    ).toFixed(1);
+    const ratingIcon = p.communityStatus === "validated" ? "⭐" : "⏳";
+    const ratingValue = p.communityStatus === "validated"
+      ? ratingAverage
+      : "XX";
+    const canOpenRating = p.communityStatus === "validated";
+    const ratingDisabledAttr = canOpenRating ? "" : " disabled aria-disabled=\"true\"";
+    const ratingTitle = canOpenRating ? "Ver rating" : "Disponible con más votos";
+    const ratingClass = p.communityStatus === "validated"
+      ? "player-community player-community--ok player-community--rating"
+      : "player-community player-community--pending player-community--rating";
+    const statusMarkup = `<button type="button" class="${ratingClass}" data-rating-id="${p.id}" title="${ratingTitle}"${ratingDisabledAttr}>${ratingIcon} <span class="rating-value">${ratingValue}</span></button>`;
     const scoreText = `A ${toScoreNumber(p.effectiveAttack)} · D ${toScoreNumber(p.effectiveDefense)} · M ${toScoreNumber(p.effectiveMidfield)}`;
     const scoreMarkup = adminAuthenticated
       ? `<span class="player-stats">${scoreText}</span>`
@@ -893,6 +962,9 @@ function renderPlayers(options = {}) {
         deletePlayer(btn.dataset.id);
       }
     });
+  });
+  document.querySelectorAll(".player-community--rating").forEach((button) => {
+    button.addEventListener("click", () => openRatingDetailsByPlayerId(button.dataset.ratingId));
   });
 }
 
@@ -2423,6 +2495,13 @@ document.getElementById("editRatingModeBtn")?.addEventListener("click", () => {
 document.getElementById("editPlayerModal").addEventListener("click", (e) => {
   if (e.target.id === "editPlayerModal") {
     closeEditModal();
+  }
+});
+
+document.getElementById("closeRatingDetailsBtn")?.addEventListener("click", closeRatingDetailsModal);
+document.getElementById("ratingDetailsModal")?.addEventListener("click", (e) => {
+  if (e.target.id === "ratingDetailsModal") {
+    closeRatingDetailsModal();
   }
 });
 

@@ -157,6 +157,38 @@
   padding:3px 8px;
   color: var(--muted);
 }
+.player-community--rating{
+  border:0;
+  border-radius:0;
+  padding:0;
+  background:transparent;
+  color: var(--text);
+  -webkit-appearance:none;
+  appearance:none;
+  cursor:pointer;
+  transition: color 0.2s;
+}
+.player-community--rating:hover{
+  background:transparent;
+  border-color:transparent;
+  color: var(--muted);
+}
+.player-community--rating:disabled,
+.player-community--rating[aria-disabled="true"]{
+  cursor:default;
+}
+.player-community--rating:disabled:hover,
+.player-community--rating[aria-disabled="true"]:hover{
+  color: var(--text);
+}
+.player-community--rating.player-community--pending,
+.player-community--rating.player-community--ok{
+  color: var(--text);
+  border-color:transparent;
+}
+.rating-value{
+  color: var(--muted);
+}
 .player-community--pending{
   color: var(--muted);
 }
