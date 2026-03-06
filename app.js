@@ -1,5 +1,10 @@
 const HISTORY_KEY = "fobal5_history";
-const COMMUNITY_MIN_VOTES = 3;
+const DEFAULT_COMMUNITY_MIN_VOTES = 5;
+const configuredCommunityMinVotes = Number(window.APP_CONFIG?.COMMUNITY_MIN_VOTES);
+const COMMUNITY_MIN_VOTES =
+  Number.isFinite(configuredCommunityMinVotes) && configuredCommunityMinVotes > 0
+    ? Math.floor(configuredCommunityMinVotes)
+    : DEFAULT_COMMUNITY_MIN_VOTES;
 const VOTED_PLAYERS_STORAGE_KEY = "fobal5_voted_players";
 const FEEDBACK_COOLDOWN_MS = 30000;
 const ADMIN_PIN = "";
@@ -2006,7 +2011,7 @@ function closeFeedbackModal() {
 }
 
 function openInfoApp() {
-  showToast("Calificación de jugadores: N/3 mínimo para validar", 2400);
+  showToast(`Calificación de jugadores: N/${COMMUNITY_MIN_VOTES} mínimo para validar`, 2400);
   closeTopbarMenu();
 }
 

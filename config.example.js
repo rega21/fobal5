@@ -13,4 +13,7 @@ window.APP_CONFIG = {
   // Google Maps JavaScript API Key (con Places API habilitada)
   // Restringe esta key por dominio para mayor seguridad
   GOOGLE_MAPS_API_KEY: "YOUR_GOOGLE_MAPS_API_KEY_HERE",
+
+  // Cantidad minima de votos comunitarios para validar rating de un jugador
+  COMMUNITY_MIN_VOTES: 5,
 };

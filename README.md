@@ -6,7 +6,7 @@ App web para organizar partidos y equipos de fútbol 5.
 
 - Se implementó calificación comunitaria de jugadores con tabla `player_ratings` en Supabase.
 - Cada usuario vota por dispositivo (`voter_key`) con `upsert` para evitar duplicados por jugador.
-- Estado visual por jugador: `🗳️ Voto pueblo (N/3)` y `✔ Validado`.
+- Estado visual por jugador: `🗳️ Voto pueblo (N/5)` y `✔ Validado` (configurable con `COMMUNITY_MIN_VOTES`).
 - Modal adaptado por contexto:
   - Usuario comunidad: `Calificar jugador`.
   - Jugador ya validado: `Actualizar jugador`.
@@ -27,10 +27,10 @@ App web para organizar partidos y equipos de fútbol 5.
 - `players`: fuente base (atributos iniciales).
 - `player_ratings`: votos comunitarios por jugador/usuario-dispositivo.
 - El promedio comunitario se calcula al vuelo en frontend.
-- `N/3` representa solo votos comunitarios (no reemplaza ni borra los stats base del jugador).
+- `N/5` representa solo votos comunitarios (no reemplaza ni borra los stats base del jugador).
 - `feedback`: creación en Supabase vía `createFeedback` + servicio cliente con control de envío.
 
 ## Próximo paso recomendado
 
-- Persistir promedio validado en `players` cuando un jugador alcance `>= 3` votos.
+- Persistir promedio validado en `players` cuando un jugador alcance `>= COMMUNITY_MIN_VOTES` votos.
 - Agregar una sección breve de "Parámetros y enlaces de Maps" con ejemplos de entrada/salida para facilitar mantenimiento.
