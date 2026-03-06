@@ -5,6 +5,7 @@ const COMMUNITY_MIN_VOTES =
   Number.isFinite(configuredCommunityMinVotes) && configuredCommunityMinVotes > 0
     ? Math.floor(configuredCommunityMinVotes)
     : DEFAULT_COMMUNITY_MIN_VOTES;
+const RATING_TREND_DELTA_MIN = 0.05;
 const VOTED_PLAYERS_STORAGE_KEY = "fobal5_voted_players";
 const FEEDBACK_COOLDOWN_MS = 30000;
 const ADMIN_PIN = "";
@@ -586,6 +587,31 @@ function toScoreNumber(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function calculateAverageRating(attack, defense, midfield) {
+  return (
+    toScoreNumber(attack) +
+    toScoreNumber(defense) +
+    toScoreNumber(midfield)
+  ) / 3;
+}
+
+function getCommunityTrendDirection(baseAverage, communityAverage) {
+  const delta = toScoreNumber(communityAverage) - toScoreNumber(baseAverage);
+  if (delta > RATING_TREND_DELTA_MIN) return "up";
+  if (delta < -RATING_TREND_DELTA_MIN) return "down";
+  return "flat";
+}
+
+function getCommunityTrendMeta(direction) {
+  if (direction === "up") {
+    return { symbol: "▲", className: "rating-trend rating-trend--up", label: "en alza" };
+  }
+  if (direction === "down") {
+    return { symbol: "▼", className: "rating-trend rating-trend--down", label: "en baja" };
+  }
+  return { symbol: "", className: "rating-trend", label: "estable" };
+}
+
 function buildRatingBar(value) {
   const rounded = Math.round(toScoreNumber(value));
   const blocks = Math.max(0, Math.min(10, rounded));
@@ -621,13 +647,17 @@ function openRatingDetailsByPlayerId(playerId) {
   const ratingStatusValue = playerForView.communityStatus === "validated"
     ? ratingAverage
     : "XX";
+  const trendMeta = getCommunityTrendMeta(playerForView.communityTrendDirection || "flat");
+  const trendMarkup = trendMeta.symbol
+    ? ` <span class="${trendMeta.className}" aria-hidden="true">${trendMeta.symbol}</span>`
+    : "";
 
   const preferredDisplayName = String(playerForView.nickname || "").trim()
     || String(playerForView.name || "").trim()
     || "Jugador";
 
   if (title) title.textContent = `Rating de ${preferredDisplayName}`;
-  if (status) status.innerHTML = `${ratingIcon} <span class="rating-value">${ratingStatusValue}</span>`;
+  if (status) status.innerHTML = `${ratingIcon} <span class="rating-value">${ratingStatusValue}</span>${trendMarkup}`;
   if (attackBar) attackBar.textContent = buildRatingBar(playerForView.effectiveAttack);
   if (midfieldBar) midfieldBar.textContent = buildRatingBar(playerForView.effectiveMidfield);
   if (defenseBar) defenseBar.textContent = buildRatingBar(playerForView.effectiveDefense);
@@ -707,16 +737,31 @@ function enrichPlayerWithCommunityState(player) {
   const baseAttack = toScoreNumber(player?.attack);
   const baseDefense = toScoreNumber(player?.defense);
   const baseMidfield = toScoreNumber(player?.midfield);
+  const baseAverage = calculateAverageRating(baseAttack, baseDefense, baseMidfield);
 
-  const effectiveAttack = isValidated ? toScoreNumber(summary?.avgAttack) : baseAttack;
-  const effectiveDefense = isValidated ? toScoreNumber(summary?.avgDefense) : baseDefense;
-  const effectiveMidfield = isValidated ? toScoreNumber(summary?.avgMidfield) : baseMidfield;
+  const communityAttack = toScoreNumber(summary?.avgAttack);
+  const communityDefense = toScoreNumber(summary?.avgDefense);
+  const communityMidfield = toScoreNumber(summary?.avgMidfield);
+  const communityAverage = calculateAverageRating(communityAttack, communityDefense, communityMidfield);
+  const trendDirection = votes > 0
+    ? getCommunityTrendDirection(baseAverage, communityAverage)
+    : "flat";
+  const trendMeta = getCommunityTrendMeta(trendDirection);
+
+  const effectiveAttack = isValidated ? communityAttack : baseAttack;
+  const effectiveDefense = isValidated ? communityDefense : baseDefense;
+  const effectiveMidfield = isValidated ? communityMidfield : baseMidfield;
 
   return {
     ...player,
     communityVotes: votes,
     communityMinVotes: COMMUNITY_MIN_VOTES,
     communityStatus: isValidated ? "validated" : "pending",
+    communityAverage,
+    communityAverageDelta: communityAverage - baseAverage,
+    communityTrendDirection: trendDirection,
+    communityTrendSymbol: trendMeta.symbol,
+    communityTrendLabel: trendMeta.label,
     effectiveAttack,
     effectiveDefense,
     effectiveMidfield,
@@ -916,11 +961,18 @@ function renderPlayers(options = {}) {
       : "XX";
     const canOpenRating = p.communityStatus === "validated";
     const ratingDisabledAttr = canOpenRating ? "" : " disabled aria-disabled=\"true\"";
-    const ratingTitle = canOpenRating ? "Ver rating" : "Disponible con más votos";
+    const trendDirection = canOpenRating ? String(p.communityTrendDirection || "flat") : "flat";
+    const trendMeta = getCommunityTrendMeta(trendDirection);
+    const trendMarkup = trendMeta.symbol
+      ? ` <span class="${trendMeta.className}" aria-hidden="true">${trendMeta.symbol}</span>`
+      : "";
+    const ratingTitle = canOpenRating
+      ? `Ver rating (${trendMeta.label})`
+      : "Disponible con más votos";
     const ratingClass = p.communityStatus === "validated"
       ? "player-community player-community--ok player-community--rating"
       : "player-community player-community--pending player-community--rating";
-    const statusMarkup = `<button type="button" class="${ratingClass}" data-rating-id="${p.id}" title="${ratingTitle}"${ratingDisabledAttr}>${ratingIcon} <span class="rating-value">${ratingValue}</span></button>`;
+    const statusMarkup = `<button type="button" class="${ratingClass}" data-rating-id="${p.id}" title="${ratingTitle}"${ratingDisabledAttr}>${ratingIcon} <span class="rating-value">${ratingValue}</span>${trendMarkup}</button>`;
     const scoreText = `A ${toScoreNumber(p.effectiveAttack)} · D ${toScoreNumber(p.effectiveDefense)} · M ${toScoreNumber(p.effectiveMidfield)}`;
     const scoreMarkup = adminAuthenticated
       ? `<span class="player-stats">${scoreText}</span>`

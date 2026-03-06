@@ -189,6 +189,20 @@
 .rating-value{
   color: var(--muted);
 }
+.rating-trend{
+  display:inline-flex;
+  align-items:center;
+  margin-left:var(--rating-trend-gap, 4px);
+  font-size:12px;
+  font-weight:800;
+  line-height:1;
+}
+.rating-trend--up{
+  color:#16a34a;
+}
+.rating-trend--down{
+  color:#dc2626;
+}
 .player-community--pending{
   color: var(--muted);
 }

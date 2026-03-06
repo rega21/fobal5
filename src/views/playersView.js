@@ -55,6 +55,16 @@
     return shuffledPlayers;
   }
 
+  function getTrendMeta(direction) {
+    if (direction === "up") {
+      return { symbol: "▲", className: "rating-trend rating-trend--up", label: "en alza" };
+    }
+    if (direction === "down") {
+      return { symbol: "▼", className: "rating-trend rating-trend--down", label: "en baja" };
+    }
+    return { symbol: "", className: "rating-trend", label: "estable" };
+  }
+
   function renderPlayersList({
     players,
     playerSearchTerm,
@@ -110,11 +120,18 @@
           : "XX";
         const canOpenRating = player.communityStatus === "validated";
         const ratingDisabledAttr = canOpenRating ? "" : " disabled aria-disabled=\"true\"";
-        const ratingTitle = canOpenRating ? "Ver rating" : "Disponible con más votos";
+        const trendDirection = canOpenRating ? String(player.communityTrendDirection || "flat") : "flat";
+        const trendMeta = getTrendMeta(trendDirection);
+        const trendMarkup = trendMeta.symbol
+          ? ` <span class="${trendMeta.className}" aria-hidden="true">${trendMeta.symbol}</span>`
+          : "";
+        const ratingTitle = canOpenRating
+          ? `Ver rating (${trendMeta.label})`
+          : "Disponible con más votos";
         const ratingClass = player.communityStatus === "validated"
           ? "player-community player-community--ok player-community--rating"
           : "player-community player-community--pending player-community--rating";
-        const statusMarkup = `<button type="button" class="${ratingClass}" data-rating-id="${player.id}" title="${ratingTitle}"${ratingDisabledAttr}>${ratingIcon} <span class="rating-value">${ratingValue}</span></button>`;
+        const statusMarkup = `<button type="button" class="${ratingClass}" data-rating-id="${player.id}" title="${ratingTitle}"${ratingDisabledAttr}>${ratingIcon} <span class="rating-value">${ratingValue}</span>${trendMarkup}</button>`;
         const statsText = `A ${effectiveAttack} · D ${effectiveDefense} · M ${effectiveMidfield}`;
         const statsMarkup = adminAuthenticated
           ? `<span class="player-stats">${escapeHtml(statsText)}</span>`
