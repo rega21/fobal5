@@ -38,6 +38,35 @@
     return entryName || "Jugador";
   }
 
+  function formatRemainingLabel(match) {
+    const rawScheduledAt = String(match?.scheduledAt || "").trim();
+    const rawDate = String(match?.date || "").trim();
+    const candidate = rawScheduledAt || rawDate;
+    if (!candidate) return "";
+
+    const targetDate = new Date(candidate);
+    const targetMs = targetDate.getTime();
+    if (Number.isNaN(targetMs)) return "";
+
+    const diffMs = targetMs - Date.now();
+    if (diffMs <= 0) return "Tiempo restante: 0m";
+
+    const totalMinutes = Math.ceil(diffMs / 60000);
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+    const minutes = totalMinutes % 60;
+
+    if (days > 0) {
+      return `Tiempo restante: ${days}d ${hours}h`;
+    }
+
+    if (hours > 0) {
+      return `Tiempo restante: ${hours}h ${minutes}m`;
+    }
+
+    return `Tiempo restante: ${Math.max(1, minutes)}m`;
+  }
+
   function renderHistoryList({ history, adminAuthenticated, onDelete, onResolveResult, resolvePlayerDisplay }) {
     const historyList = document.getElementById("historyList");
     if (!historyList) return;
@@ -96,6 +125,7 @@
         const matchLocation = String(m.location || m.matchLocation || m.place || "").trim();
         const matchStatus = String(m.status || "played").trim().toLowerCase();
         const mapsLink = buildMobileFriendlyMapsLink(m.mapsUrl, matchLocation);
+        const remainingLabel = matchStatus === "scheduled" ? formatRemainingLabel(m) : "";
 
         const renderMatchPlayer = (entry) => {
           const label = getHistoryPlayerLabel(entry, resolvePlayerDisplay);
@@ -109,7 +139,10 @@
           ? `<button class="match-delete-btn" data-match-id="${matchId}" data-match-date="${matchDate}" style="position:absolute; top:8px; right:8px; background:#ef4444; color:white; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-weight:600; font-size:14px;">✕</button>`
           : ""
       }
-      <div class="match-date">${m.date}</div>
+      <div class="match-entry-top">
+        <div class="match-date">${escapeHtml(String(m.date || ""))}</div>
+        ${remainingLabel ? `<div class="match-remaining">${escapeHtml(remainingLabel)}</div>` : ""}
+      </div>
       ${matchStatus === "scheduled"
         ? `<div class="muted" style="margin:4px 0 10px 0; font-weight:600;">⏳ Pendiente</div>`
         : ""}
