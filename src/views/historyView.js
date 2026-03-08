@@ -133,7 +133,7 @@
         };
 
         return `
-    <article class="card match-entry" style="position:relative;">
+    <article class="card match-entry${adminAuthenticated ? " has-delete" : ""}" style="position:relative;">
       ${
         adminAuthenticated
           ? `<button class="match-delete-btn" data-match-id="${matchId}" data-match-date="${matchDate}" style="position:absolute; top:8px; right:8px; background:#ef4444; color:white; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-weight:600; font-size:14px;">✕</button>`

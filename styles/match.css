@@ -193,6 +193,9 @@
   align-items:center;
   justify-content:space-between;
   gap:10px;
+  padding-right:0;
+}
+.card.match-entry.has-delete .match-entry-top{
   padding-right:42px;
 }
 .card.match-entry .match-entry-top .match-date{
@@ -261,8 +264,12 @@
 
 @media (max-width: 640px){
   .card.match-entry .match-entry-top{
-    padding-right:38px;
+    padding-right:0;
     gap:8px;
+  }
+
+  .card.match-entry.has-delete .match-entry-top{
+    padding-right:38px;
   }
 
   .card.match-entry .match-remaining{
