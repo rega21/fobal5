@@ -123,28 +123,116 @@ const matchController = window.createMatchController
         return { a: shuffled.slice(0, 5), b: shuffled.slice(5, 10) };
       },
       createBalancedTeams(selectedPlayers) {
-        const withScore = selectedPlayers.map((player) => ({
-          ...player,
-          score:
-            (Number(player.attack) || 0) +
-            (Number(player.defense) || 0) +
-            (Number(player.midfield) || 0),
-        }));
-        withScore.sort((left, right) => right.score - left.score);
-        const teamA = [];
-        const teamB = [];
-        let sumA = 0;
-        let sumB = 0;
-        for (const player of withScore) {
-          if (teamA.length < 5 && (sumA <= sumB || teamB.length >= 5)) {
-            teamA.push(player);
-            sumA += player.score;
-          } else {
-            teamB.push(player);
-            sumB += player.score;
+        const players = (selectedPlayers || []).map((player) => {
+          const attack = Number(player.attack) || 0;
+          const midfield = Number(player.midfield) || 0;
+          const defense = Number(player.defense) || 0;
+
+          return {
+            ...player,
+            attack,
+            midfield,
+            defense,
+            score: attack * 0.45 + midfield * 0.3 + defense * 0.25,
+          };
+        });
+
+        const totalPlayers = players.length;
+        const teamSize = Math.floor(totalPlayers / 2);
+
+        if (totalPlayers === 0) return { a: [], b: [] };
+        if (teamSize === 0) return { a: [...players], b: [] };
+
+        const summarizeTeam = (team) =>
+          team.reduce(
+            (acc, player) => {
+              acc.score += player.score;
+              acc.attack += player.attack;
+              acc.midfield += player.midfield;
+              acc.defense += player.defense;
+              return acc;
+            },
+            { score: 0, attack: 0, midfield: 0, defense: 0 }
+          );
+
+        let best = null;
+        const pickedIndexes = [];
+
+        const isBetterCandidate = (candidate, currentBest) => {
+          if (!currentBest) return true;
+          if (candidate.cost < currentBest.cost - 1e-9) return true;
+          if (candidate.cost > currentBest.cost + 1e-9) return false;
+          if (candidate.scoreDiff < currentBest.scoreDiff - 1e-9) return true;
+          if (candidate.scoreDiff > currentBest.scoreDiff + 1e-9) return false;
+          if (candidate.defenseDiff < currentBest.defenseDiff - 1e-9) return true;
+          if (candidate.defenseDiff > currentBest.defenseDiff + 1e-9) return false;
+          return candidate.key < currentBest.key;
+        };
+
+        const evaluatePickedIndexes = () => {
+          const picked = new Set(pickedIndexes);
+          const teamA = [];
+          const teamB = [];
+
+          players.forEach((player, index) => {
+            if (picked.has(index)) teamA.push(player);
+            else teamB.push(player);
+          });
+
+          if (teamA.length !== teamSize || teamB.length !== teamSize) return;
+
+          const summaryA = summarizeTeam(teamA);
+          const summaryB = summarizeTeam(teamB);
+
+          const scoreDiff = Math.abs(summaryA.score - summaryB.score);
+          const attackDiff = Math.abs(summaryA.attack - summaryB.attack);
+          const midfieldDiff = Math.abs(summaryA.midfield - summaryB.midfield);
+          const defenseDiff = Math.abs(summaryA.defense - summaryB.defense);
+
+          const cost =
+            scoreDiff * 2 +
+            attackDiff * 1.25 +
+            midfieldDiff +
+            defenseDiff * 1.5;
+
+          const candidate = {
+            cost,
+            key: pickedIndexes.join("-"),
+            scoreDiff,
+            defenseDiff,
+            teamA,
+            teamB,
+          };
+
+          if (isBetterCandidate(candidate, best)) {
+            best = candidate;
           }
+        };
+
+        const pickTeamA = (startIndex, remaining) => {
+          if (remaining === 0) {
+            evaluatePickedIndexes();
+            return;
+          }
+
+          for (let index = startIndex; index <= totalPlayers - remaining; index += 1) {
+            pickedIndexes.push(index);
+            pickTeamA(index + 1, remaining - 1);
+            pickedIndexes.pop();
+          }
+        };
+
+        pickTeamA(0, teamSize);
+
+        if (!best) {
+          const shuffled = [...players].sort(() => Math.random() - 0.5);
+          return {
+            a: shuffled.slice(0, teamSize),
+            b: shuffled.slice(teamSize, teamSize * 2),
+          };
         }
-        return { a: teamA, b: teamB };
+
+        return { a: best.teamA, b: best.teamB };
       },
       buildWhatsAppText(currentTeams) {
         if (!currentTeams) return "";

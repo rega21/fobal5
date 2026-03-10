@@ -21,6 +21,7 @@ App web para organizar partidos y equipos de fútbol 5.
 - Animaciones e interacción del menú mejoradas (apertura con `opacity/translateY`, hover sutil en desktop y `active` con ligera compresión).
 - Feedback desacoplado en `feedbackService` con validaciones (mínimo de mensaje), cooldown local y honeypot anti-spam.
 - Manejo de links de Maps robustecido para historial: se parsea `query` en URL para generar enlaces compatibles móviles cuando aplica.
+- Balanceo de equipos actualizado: se reemplazó el greedy por evaluación exhaustiva `5v5` (todas las combinaciones), con score ponderado por rol (`Ataque 0.45`, `Medio 0.30`, `Defensa 0.25`) y costo de balance por línea para reducir acumulación de perfiles similares en un mismo equipo.
 
 ## Estado actual
 
