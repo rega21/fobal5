@@ -209,21 +209,21 @@
 
   function buildMvpBadgeLabel(match, mvpSummary, isAdmin, votingOpen) {
     const icon = votingOpen ? "⏳" : "⭐";
-    if (mvpSummary.winners.length === 1) {
+    // Si la votación está abierta y hay votos, mostrar pendiente
+    if (votingOpen && mvpSummary.totalVotes > 0) {
+      return `${icon} MVP: Pendiente`;
+    }
+
+    // Si hay ganador, mostrarlo
+    if (mvpSummary.winners.length > 0) {
+      // En caso de empate, gana el primero votado
       const winner = mvpSummary.winners[0];
       const pct = isAdmin ? ` (${winner.percentage}%)` : "";
       return `${icon} MVP: ${winner.label}${pct}`;
     }
 
-    if (mvpSummary.winners.length > 1) {
-      const winnersLabel = mvpSummary.winners
-        .map((winner) => isAdmin ? `${winner.label} (${winner.percentage}%)` : winner.label)
-        .join(" / ");
-      return `${icon} Empate MVP: ${winnersLabel}`;
-    }
-
-    const fallbackMvp = String(match?.mvp || "").trim();
-    return fallbackMvp ? `${icon} MVP: ${fallbackMvp}` : "";
+    // Si no hay votos ni ganador, mostrar vacío
+    return "";
   }
 
   function renderHistoryList({
