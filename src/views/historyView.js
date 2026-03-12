@@ -349,7 +349,7 @@
           ${canVote
             ? `<div class="match-mvp-vote-wrap">
                 <select class="match-mvp-select" data-match-id="${matchId}">
-                  <option value="">⭐ MVP</option>
+                  <option value="">⭐ MVP Player</option>
                   ${mvpSummary.candidates
                     .map((candidate) => {
                       const label = adminAuthenticated ? `${candidate.label} (${candidate.percentage}%)` : candidate.label;
