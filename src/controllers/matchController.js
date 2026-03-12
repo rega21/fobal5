@@ -130,8 +130,9 @@
         .replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
         .replace(/[\*_~`]/g, "")
         .trim();
-      const teamANames = currentTeams.a.map((player) => `- ${cleanShareToken(player.name)}`).join("\n");
-      const teamBNames = currentTeams.b.map((player) => `- ${cleanShareToken(player.name)}`).join("\n");
+        const displayName = (player) => cleanShareToken(player.nickname?.trim() || player.name);
+        const teamANames = currentTeams.a.map((player) => `- ${displayName(player)}`).join("\n");
+        const teamBNames = currentTeams.b.map((player) => `- ${displayName(player)}`).join("\n");
       return `Team A:\n${teamANames}\n\nTeam B:\n${teamBNames}`;
     }
 

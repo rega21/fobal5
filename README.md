@@ -35,3 +35,24 @@ App web para organizar partidos y equipos de fútbol 5.
 
 - Persistir promedio validado en `players` cuando un jugador alcance `>= COMMUNITY_MIN_VOTES` votos.
 - Agregar una sección breve de "Parámetros y enlaces de Maps" con ejemplos de entrada/salida para facilitar mantenimiento.
+
+## Roadmap: Escalabilidad multi-grupo
+
+La app está pensada actualmente como grupo único (FutbolFoca). Para escalar a múltiples grupos independientes, se contemplan dos etapas:
+
+### Etapa 1: Multi-grupo administrado (grupos creados manualmente)
+- Crear tabla `groups` en Supabase con: id, nombre, slug/código, admin_pin, created_at.
+- Agregar columna `group_id` a: `players`, `matches`, `player_ratings`, `feedback`.
+- Implementar selector de grupo al inicio de la app (dropdown o búsqueda).
+- Login por grupo: seleccionar grupo → ingresar PIN del grupo → acceder a datos del grupo.
+- Filtrar todas las queries por `group_id` en [src/api/client.js](src/api/client.js).
+- Alcance: vos creas los grupos manualmente en Supabase; usuarios eligen grupo + PIN para operar.
+
+### Etapa 2: Crear grupo (auto-creación por usuario)
+- Pantalla inicial con opciones: "Crear mi grupo" o "Unirme a un grupo existente".
+- Crear grupo: usuario elige nombre + PIN propio → se genera entrada en `groups` → accede a grupo vacío.
+- Unirse a grupo: elegir grupo + ingresar PIN → acceder a datos del grupo.
+- Permisos iguales para todos los usuarios dentro de un grupo; solo admin (con PIN) puede borrar historial.
+- No requiere tabla de membresías ni permisos por rol; el PIN del grupo actúa como credencial.
+
+**Nota**: La etapa 1 valida que el modelo de datos aisle correctamente; la etapa 2 agrega creación autónoma sin cambios arquitectónicos mayores.

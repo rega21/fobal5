@@ -31,12 +31,11 @@
         const isSelected = selectedIds.has(playerId);
         const disabled = selectedIds.size >= 10 && !isSelected ? "disabled" : "";
         const hasNickname = Boolean(player.nickname?.trim());
-        const displayName = hasNickname ? player.nickname.trim() : player.name;
 
         return `
           <article class="card card-selectable ${isSelected ? "selected" : ""}" data-id="${playerId}">
             <div class="player-name">
-              ${escapeHtml(displayName)}
+              ${escapeHtml(player.name)}${hasNickname ? `<span class="player-nick">${escapeHtml(player.nickname.trim())}</span>` : ""}
             </div>
             <label class="checkbox">
               <input type="checkbox" ${isSelected ? "checked" : ""} ${disabled} data-id="${playerId}">
@@ -272,11 +271,11 @@
     if (!teamA || !teamB || !teams) return;
 
     teamA.innerHTML = (teams.a || [])
-      .map((player) => `<div class="team-player">${escapeHtml(player.name)}</div>`)
+      .map((player) => `<div class="team-player">${escapeHtml(player.nickname?.trim() || player.name)}</div>`)
       .join("");
 
     teamB.innerHTML = (teams.b || [])
-      .map((player) => `<div class="team-player">${escapeHtml(player.name)}</div>`)
+      .map((player) => `<div class="team-player">${escapeHtml(player.nickname?.trim() || player.name)}</div>`)
       .join("");
   }
 
@@ -286,11 +285,11 @@
     if (!teamA || !teamB || !teams) return;
 
     teamA.innerHTML = (teams.a || [])
-      .map((player) => `<div class="team-player">${escapeHtml(player.name)}</div>`)
+      .map((player) => `<div class="team-player">${escapeHtml(player.nickname?.trim() || player.name)}</div>`)
       .join("");
 
     teamB.innerHTML = (teams.b || [])
-      .map((player) => `<div class="team-player">${escapeHtml(player.name)}</div>`)
+      .map((player) => `<div class="team-player">${escapeHtml(player.nickname?.trim() || player.name)}</div>`)
       .join("");
   }
 
@@ -300,7 +299,7 @@
 
     const allPlayers = [...(teams.a || []), ...(teams.b || [])];
     mvpSelect.innerHTML = '<option value="">Select MVP</option>'
-      + allPlayers.map((player) => `<option value="${player.id}">${escapeHtml(player.name)}</option>`).join("");
+      + allPlayers.map((player) => `<option value="${player.id}">${escapeHtml(player.nickname?.trim() || player.name)}</option>`).join("");
   }
 
   function showSetupState() {

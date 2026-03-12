@@ -1,5 +1,13 @@
 (function (global) {
-  function createHistoryController({ historyKey, apiClient, isAdmin, onResolveResult, resolvePlayerDisplay }) {
+  function createHistoryController({
+    historyKey,
+    apiClient,
+    isAdmin,
+    onResolveResult,
+    onVoteMvp,
+    getCurrentMvpVoteForMatch,
+    resolvePlayerDisplay,
+  }) {
     let history = getLocalHistory();
 
     function getLocalHistory() {
@@ -25,6 +33,8 @@
         adminAuthenticated: Boolean(isAdmin?.()),
         onDelete: deleteMatch,
         onResolveResult,
+        onVoteMvp,
+        getCurrentMvpVoteForMatch,
         resolvePlayerDisplay,
       });
     }

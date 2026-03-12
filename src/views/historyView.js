@@ -1,4 +1,6 @@
 (function (global) {
+  const MVP_VOTING_WINDOW_MS = 8 * 60 * 60 * 1000;
+
   function escapeHtml(value) {
     return String(value)
       .replaceAll("&", "&amp;")
@@ -67,7 +69,172 @@
     return `Restante: ${Math.max(1, minutes)}m`;
   }
 
-  function renderHistoryList({ history, adminAuthenticated, onDelete, onResolveResult, resolvePlayerDisplay }) {
+  function buildMvpCandidateId(entry, label) {
+    const entryId = entry && typeof entry === "object"
+      ? String(entry.id || "").trim()
+      : "";
+    if (entryId) return entryId;
+
+    const normalizedLabel = String(label || "").trim().toLowerCase();
+    return normalizedLabel ? `name:${normalizedLabel}` : "";
+  }
+
+  function getMatchMvpCandidates(match, resolvePlayerDisplay) {
+    const entries = [...(match?.teamA || []), ...(match?.teamB || [])];
+    const candidatesById = new Map();
+
+    entries.forEach((entry) => {
+      const label = getHistoryPlayerLabel(entry, resolvePlayerDisplay);
+      const id = buildMvpCandidateId(entry, label);
+      if (!id || !label || candidatesById.has(id)) return;
+      candidatesById.set(id, { id, label });
+    });
+
+    if (candidatesById.size === 0) {
+      const fallbackMvp = String(match?.mvp || "").trim();
+      const fallbackId = buildMvpCandidateId(null, fallbackMvp);
+      if (fallbackId && fallbackMvp) {
+        candidatesById.set(fallbackId, { id: fallbackId, label: fallbackMvp });
+      }
+    }
+
+    return Array.from(candidatesById.values());
+  }
+
+  function normalizeMvpVotesMap(rawVotes) {
+    if (!rawVotes || typeof rawVotes !== "object" || Array.isArray(rawVotes)) {
+      return {};
+    }
+
+    const normalized = {};
+    Object.entries(rawVotes).forEach(([candidateId, votes]) => {
+      const normalizedCandidateId = String(candidateId || "").trim();
+      const normalizedVotes = Math.floor(Number(votes));
+      if (!normalizedCandidateId || !Number.isFinite(normalizedVotes) || normalizedVotes <= 0) {
+        return;
+      }
+      normalized[normalizedCandidateId] = normalizedVotes;
+    });
+
+    return normalized;
+  }
+
+  function resolveFallbackMvpCandidateId(match, candidates = []) {
+    const mvpLabel = String(match?.mvp || "").trim().toLowerCase();
+    if (!mvpLabel) return "";
+
+    const byLabel = candidates.find((candidate) => String(candidate.label || "").trim().toLowerCase() === mvpLabel);
+    if (byLabel) return byLabel.id;
+
+    const byId = candidates.find((candidate) => String(candidate.id || "").trim() === String(match?.mvp || "").trim());
+    return byId ? byId.id : "";
+  }
+
+  function getNormalizedMatchMvpVotes(match, candidates = []) {
+    const normalizedVotes = normalizeMvpVotesMap(match?.mvpVotes);
+    const totalVotes = Object.values(normalizedVotes).reduce((total, votes) => total + votes, 0);
+    if (totalVotes > 0) return normalizedVotes;
+
+    const fallbackCandidateId = resolveFallbackMvpCandidateId(match, candidates);
+    if (!fallbackCandidateId) return {};
+    return { [fallbackCandidateId]: 1 };
+  }
+
+  function getMatchMvpSummary(match, resolvePlayerDisplay) {
+    const candidates = getMatchMvpCandidates(match, resolvePlayerDisplay);
+    const normalizedVotes = getNormalizedMatchMvpVotes(match, candidates);
+    const totalVotes = Object.values(normalizedVotes).reduce((total, votes) => total + votes, 0);
+
+    const candidatesWithPercent = candidates.map((candidate) => {
+      const votes = normalizedVotes[candidate.id] || 0;
+      const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+      return {
+        ...candidate,
+        votes,
+        percentage,
+      };
+    });
+
+    const maxVotes = candidatesWithPercent.reduce((maxValue, candidate) => Math.max(maxValue, candidate.votes), 0);
+    const winners = maxVotes > 0
+      ? candidatesWithPercent.filter((candidate) => candidate.votes === maxVotes)
+      : [];
+
+    return {
+      candidates: candidatesWithPercent,
+      normalizedVotes,
+      totalVotes,
+      winners,
+    };
+  }
+
+  function getMatchPlayedTimestampMs(match) {
+    const candidates = [
+      match?.playedAt,
+      match?.updatedAt,
+      match?.createdAt,
+      match?.scheduledAt,
+      match?.date,
+    ];
+
+    for (const rawValue of candidates) {
+      const parsedMs = new Date(String(rawValue || "")).getTime();
+      if (Number.isFinite(parsedMs) && parsedMs > 0) {
+        return parsedMs;
+      }
+    }
+
+    return 0;
+  }
+
+  function getMatchMvpVotingEndsAtMs(match) {
+    const explicitEndsAtMs = new Date(String(match?.mvpVotingEndsAt || "")).getTime();
+    if (Number.isFinite(explicitEndsAtMs) && explicitEndsAtMs > 0) {
+      return explicitEndsAtMs;
+    }
+
+    const playedAtMs = getMatchPlayedTimestampMs(match);
+    if (!playedAtMs) return 0;
+    return playedAtMs + MVP_VOTING_WINDOW_MS;
+  }
+
+  function isMatchMvpVotingOpen(match) {
+    const status = String(match?.status || "played").trim().toLowerCase();
+    if (status !== "played") return false;
+
+    const votingEndsAtMs = getMatchMvpVotingEndsAtMs(match);
+    if (!votingEndsAtMs) return true;
+    return Date.now() <= votingEndsAtMs;
+  }
+
+  function buildMvpBadgeLabel(match, mvpSummary, isAdmin, votingOpen) {
+    const icon = votingOpen ? "⏳" : "⭐";
+    if (mvpSummary.winners.length === 1) {
+      const winner = mvpSummary.winners[0];
+      const pct = isAdmin ? ` (${winner.percentage}%)` : "";
+      return `${icon} MVP: ${winner.label}${pct}`;
+    }
+
+    if (mvpSummary.winners.length > 1) {
+      const winnersLabel = mvpSummary.winners
+        .map((winner) => isAdmin ? `${winner.label} (${winner.percentage}%)` : winner.label)
+        .join(" / ");
+      return `${icon} Empate MVP: ${winnersLabel}`;
+    }
+
+    const fallbackMvp = String(match?.mvp || "").trim();
+    return fallbackMvp ? `${icon} MVP: ${fallbackMvp}` : "";
+  }
+
+  function renderHistoryList({
+    history,
+    adminAuthenticated,
+    onDelete,
+    onResolveResult,
+    onVoteMvp,
+    getCurrentMvpVoteForMatch,
+    resolvePlayerDisplay,
+  }) {
     const historyList = document.getElementById("historyList");
     if (!historyList) return;
 
@@ -126,6 +293,20 @@
         const matchStatus = String(m.status || "played").trim().toLowerCase();
         const mapsLink = buildMobileFriendlyMapsLink(m.mapsUrl, matchLocation);
         const remainingLabel = matchStatus === "scheduled" ? formatRemainingLabel(m) : "";
+        const mvpSummary = getMatchMvpSummary(m, resolvePlayerDisplay);
+        const hasMatchId = String(m.id ?? "").trim() !== "";
+        const votingOpen = isMatchMvpVotingOpen(m);
+        const currentVote = hasMatchId && typeof getCurrentMvpVoteForMatch === "function"
+          ? String(getCurrentMvpVoteForMatch(String(m.id)) || "").trim()
+          : "";
+        const mvpBadgeLabel = buildMvpBadgeLabel(m, mvpSummary, adminAuthenticated, votingOpen);
+        const canVote =
+          matchStatus === "played"
+          && hasMatchId
+          && mvpSummary.candidates.length > 0
+          && votingOpen
+          && !currentVote
+          && typeof onVoteMvp === "function";
 
         const renderMatchPlayer = (entry) => {
           const label = getHistoryPlayerLabel(entry, resolvePlayerDisplay);
@@ -165,7 +346,19 @@
           ${matchStatus === "scheduled"
             ? `<button class="btn btn-primary match-resolve-btn" data-match-id="${matchId}" style="margin-top:10px; padding:6px 10px; font-size:12px;">Cargar resultado</button>`
             : ""}
-          ${m.mvp ? `<div class="match-mvp">⭐ ${m.mvp}</div>` : ""}
+          ${canVote
+            ? `<div class="match-mvp-vote-wrap">
+                <select class="match-mvp-select" data-match-id="${matchId}">
+                  <option value="">⭐ MVP</option>
+                  ${mvpSummary.candidates
+                    .map((candidate) => {
+                      const label = adminAuthenticated ? `${candidate.label} (${candidate.percentage}%)` : candidate.label;
+                      return `<option value="${escapeHtml(candidate.id)}">${escapeHtml(label)}</option>`;
+                    })
+                    .join("")}
+                </select>
+              </div>`
+            : (mvpBadgeLabel ? `<div class="match-mvp">${escapeHtml(mvpBadgeLabel)}</div>` : "")}
         </div>
 
         <div style="text-align:right;">
@@ -195,6 +388,17 @@
         btn.addEventListener("click", () => {
           const id = decodeURIComponent(btn.dataset.matchId || "");
           onResolveResult(id);
+        });
+      });
+    }
+
+    if (typeof onVoteMvp === "function") {
+      historyList.querySelectorAll(".match-mvp-select").forEach((select) => {
+        select.addEventListener("change", () => {
+          const matchId = decodeURIComponent(select.dataset.matchId || "");
+          const candidateId = String(select.value || "").trim();
+          if (!matchId || !candidateId) return;
+          onVoteMvp(matchId, candidateId);
         });
       });
     }
