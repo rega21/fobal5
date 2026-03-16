@@ -51,8 +51,8 @@
     }
 
     async function savePlayerRating({ playerId, attack, defense, midfield }) {
-      if (!apiClient?.upsertPlayerRating) {
-        throw new Error("upsertPlayerRating no disponible en apiClient");
+      if (!apiClient?.insertPlayerRatingLimited) {
+        throw new Error("insertPlayerRatingLimited no disponible en apiClient");
       }
 
       const voterKey = getOrCreateVoterKey();
@@ -68,7 +68,8 @@
         throw new Error("player_id requerido");
       }
 
-      return apiClient.upsertPlayerRating(payload);
+      // Llama a la función RPC que aplica el límite de votos
+      return apiClient.insertPlayerRatingLimited(payload);
     }
 
     return {

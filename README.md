@@ -56,3 +56,13 @@ La app está pensada actualmente como grupo único (FutbolFoca). Para escalar a 
 - No requiere tabla de membresías ni permisos por rol; el PIN del grupo actúa como credencial.
 
 **Nota**: La etapa 1 valida que el modelo de datos aisle correctamente; la etapa 2 agrega creación autónoma sin cambios arquitectónicos mayores.
+
+
+
+# Límite de votos por jugador
+
+- Implementado en backend (Supabase): máximo 3 votos por jugador cada 24hs por usuario (`voter_key`), via RPC `insert_player_rating_limited`.
+- Al abrir el modal, el frontend consulta `checkVoteLimitReached` en `FobalApi`:
+  - Si el límite fue alcanzado: botón de guardar en pestaña **Puntos** aparece deshabilitado con mensaje informativo.
+  - Pestaña **Identidad**: botón siempre habilitado, independiente del límite.
+- Al cambiar entre pestañas, el estado del botón se recalcula usando `currentEditReachedVoteLimit`.

@@ -222,6 +222,40 @@
   word-break:break-word;
 }
 
+.vote-activity-list{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.vote-activity-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:7px 10px;
+  border-radius:8px;
+  background:#f0f4ff;
+  font-size:13px;
+}
+
+.vote-activity-name{
+  font-weight:600;
+  color:var(--text);
+  min-width:80px;
+}
+
+.vote-activity-scores{
+  flex:1;
+  color:var(--text);
+  text-align:center;
+}
+
+.vote-activity-time{
+  font-size:11px;
+  white-space:nowrap;
+}
+
 .edit-action-selector{
   width:100%;
 }

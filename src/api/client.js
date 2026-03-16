@@ -233,6 +233,7 @@
       };
     },
     async upsertPlayerRating(payload) {
+      // Deprecated: Usar insertPlayerRatingLimited para control de límite de votos
       return requestSupabase("/rest/v1/player_ratings?on_conflict=player_id,voter_key", {
         method: "POST",
         headers: buildSupabaseHeaders({
@@ -241,6 +242,39 @@
         }),
         body: JSON.stringify([payload]),
       });
+    },
+
+    async insertPlayerRatingLimited({ player_id, voter_key, attack, defense, midfield }) {
+      return requestSupabase('/rest/v1/rpc/insert_player_rating_limited', {
+        method: 'POST',
+        headers: buildSupabaseHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          p_player_id: player_id,
+          p_voter_key: voter_key,
+          p_attack: attack,
+          p_defense: defense,
+          p_midfield: midfield
+        })
+      });
+    },
+    async getRecentVoteActivity(limit = 30) {
+      const rows = await requestSupabase(
+        `/rest/v1/player_ratings?select=player_id,attack,defense,midfield,created_at&order=created_at.desc&limit=${Number(limit)}`,
+        { method: "GET", headers: buildSupabaseHeaders() }
+      );
+      return Array.isArray(rows) ? rows : [];
+    },
+    async checkVoteLimitReached({ playerId, voterKey } = {}) {
+      if (!HAS_SUPABASE) return false;
+      const normalizedPlayerId = String(playerId || "").trim();
+      const normalizedVoterKey = String(voterKey || "").trim();
+      if (!normalizedPlayerId || !normalizedVoterKey) return false;
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const rows = await requestSupabase(
+        `/rest/v1/player_ratings?select=id&player_id=eq.${encodeURIComponent(normalizedPlayerId)}&voter_key=eq.${encodeURIComponent(normalizedVoterKey)}&created_at=gte.${encodeURIComponent(since)}`,
+        { method: "GET", headers: buildSupabaseHeaders() }
+      );
+      return Array.isArray(rows) && rows.length >= 3;
     },
     async createFeedback(payload) {
       if (!HAS_SUPABASE) {

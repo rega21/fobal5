@@ -21,6 +21,7 @@
         <button class="topbar-menu-item" type="button" id="adminBtn" role="menuitem" aria-label="Admin">
           <span id="adminBtnText">Admin</span>
         </button>
+        <button class="topbar-menu-item hidden" type="button" id="voteHistoryBtn" role="menuitem" aria-label="Historial de votos">🗳️ Historial de votos</button>
         <button class="topbar-menu-item" type="button" id="feedbackBtn" role="menuitem" aria-label="Reportes o mejoras">Reportes o Mejoras</button>
         <button class="topbar-menu-item" type="button" id="infoAppBtn" role="menuitem" aria-label="Info App">Info App</button>
       </div>
@@ -335,6 +336,19 @@
         <input type="text" id="feedbackHoney" class="hidden" tabindex="-1" autocomplete="off" />
         <p class="muted" style="margin:8px 0 0; font-size:12px;">Canal de sugerencias: no tiene respuesta directa.</p>
         <button class="btn btn-success" id="sendFeedbackBtn">Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="voteHistoryModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🗳️ Historial de votos</h2>
+        <button class="close-btn" id="closeVoteHistoryBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="voteHistoryLoading" class="muted hidden">Cargando...</p>
+        <div id="voteActivityList" class="vote-activity-list"></div>
       </div>
     </div>
   </div>

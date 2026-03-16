@@ -20,6 +20,7 @@ let currentEditAction = "rating";
 let currentEditPlayerName = "";
 let currentEditHasVotedBefore = false;
 let currentEditHasPrefilledVote = false;
+let currentEditReachedVoteLimit = false;
 
 let players = [];
 let selectedPlayers = [];
@@ -2122,13 +2123,14 @@ async function editPlayer(id) {
   document.getElementById("editPlayerMidfield").value = initialMidfield;
   
   updateSliderValues();
-  openEditModal(hasVotedBefore, Boolean(userPreviousRating), playerForEdit.name);
+  openEditModal(hasVotedBefore, Boolean(userPreviousRating), playerForEdit.name, id);
 }
 
-function openEditModal(
+async function openEditModal(
   hasVotedBefore = false,
   hasPrefilledPreviousVote = false,
-  playerName = ""
+  playerName = "",
+  playerId = null
 ) {
   const title = document.getElementById("editPlayerModalTitle");
   const saveBtn = document.getElementById("updatePlayerBtn");
@@ -2150,6 +2152,17 @@ function openEditModal(
   currentEditPlayerName = normalizedPlayerName;
   currentEditHasVotedBefore = hasVotedBefore;
   currentEditHasPrefilledVote = hasPrefilledPreviousVote;
+
+  // Verificar límite de votos para la pestaña Puntos
+  currentEditReachedVoteLimit = false;
+  if (playerId && playerRatingsService?.getOrCreateVoterKey && apiClient?.checkVoteLimitReached) {
+    try {
+      const voterKey = playerRatingsService.getOrCreateVoterKey();
+      currentEditReachedVoteLimit = await apiClient.checkVoteLimitReached({ playerId, voterKey });
+    } catch (_e) {
+      currentEditReachedVoteLimit = false;
+    }
+  }
 
   function applyEditActionMode(nextAction = "rating") {
     const action = nextAction === "identity" ? "identity" : "rating";
@@ -2176,16 +2189,34 @@ function openEditModal(
 
     if (action === "identity") {
       if (title) title.textContent = `Editar ${displayName}`;
-      if (saveBtn) saveBtn.textContent = "Guardar identidad";
+      if (saveBtn) {
+        saveBtn.textContent = "Guardar identidad";
+        saveBtn.disabled = false;
+      }
       if (nameInput) nameInput.disabled = false;
       if (nicknameInput) nicknameInput.disabled = false;
       if (voteHint) voteHint.classList.add("hidden");
+      const limitMsg = document.getElementById("voteLimitMsg");
+      if (limitMsg) limitMsg.style.display = "none";
     } else {
       if (title) {
         title.textContent = hasVotedBefore ? personalizedUpdateText : personalizedCalificarText;
       }
       if (saveBtn) {
         saveBtn.textContent = hasVotedBefore ? personalizedUpdateText : personalizedCalificarText;
+        saveBtn.disabled = currentEditReachedVoteLimit;
+      }
+      // Mensaje informativo si alcanzó el límite
+      let limitMsg = document.getElementById("voteLimitMsg");
+      if (!limitMsg && saveBtn) {
+        limitMsg = document.createElement("div");
+        limitMsg.id = "voteLimitMsg";
+        limitMsg.className = "muted";
+        saveBtn.parentNode.insertBefore(limitMsg, saveBtn.nextSibling);
+      }
+      if (limitMsg) {
+        limitMsg.textContent = currentEditReachedVoteLimit ? "Alcanzaste el límite de 3 votos en 24hs para este jugador." : "";
+        limitMsg.style.display = currentEditReachedVoteLimit ? "block" : "none";
       }
       if (nameInput) nameInput.disabled = true;
       if (nicknameInput) nicknameInput.disabled = true;
@@ -2385,12 +2416,74 @@ function closeReportsModal() {
   document.getElementById("reportsModal")?.classList.add("hidden");
 }
 
+function closeVoteHistoryModal() {
+  document.getElementById("voteHistoryModal")?.classList.add("hidden");
+}
+
+async function openVoteHistoryModal() {
+  if (!adminAuthenticated) return;
+
+  const modal = document.getElementById("voteHistoryModal");
+  const loading = document.getElementById("voteHistoryLoading");
+  const container = document.getElementById("voteActivityList");
+  if (!modal || !container) return;
+
+  modal.classList.remove("hidden");
+  if (loading) loading.classList.remove("hidden");
+  container.innerHTML = "";
+  closeTopbarMenu();
+
+  try {
+    const rows = await apiClient.getRecentVoteActivity(40);
+    renderVoteActivity(rows);
+  } catch (_e) {
+    container.innerHTML = '<p class="muted">No se pudo cargar el historial</p>';
+  } finally {
+    if (loading) loading.classList.add("hidden");
+  }
+}
+
 function formatReportDatetime(value) {
   const raw = String(value || "").trim();
   if (!raw) return "Sin fecha";
   const date = new Date(raw);
   if (Number.isNaN(date.getTime())) return raw;
   return date.toLocaleString();
+}
+
+function formatTimeAgo(ms) {
+  const minutes = Math.floor(ms / 60000);
+  if (minutes < 1) return "ahora";
+  if (minutes < 60) return `hace ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `hace ${hours}hs`;
+  const days = Math.floor(hours / 24);
+  return `hace ${days}d`;
+}
+
+function renderVoteActivity(rows = []) {
+  const container = document.getElementById("voteActivityList");
+  if (!container) return;
+
+  if (!rows.length) {
+    container.innerHTML = '<p class="muted">Sin votos registrados</p>';
+    return;
+  }
+
+  const now = Date.now();
+  container.innerHTML = rows.map((row) => {
+    const player = players.find((p) => String(p.id) === String(row.player_id));
+    const name = player ? (player.nickname || player.name) : "Jugador desconocido";
+    const diffMs = now - new Date(row.created_at).getTime();
+    const timeAgo = formatTimeAgo(diffMs);
+    return `
+      <div class="vote-activity-item">
+        <span class="vote-activity-name">${escapeHtml(name)}</span>
+        <span class="vote-activity-scores">Atk ${Number(row.attack)} / Med ${Number(row.midfield)} / Def ${Number(row.defense)}</span>
+        <span class="vote-activity-time muted">${escapeHtml(timeAgo)}</span>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderAdminReports(items = []) {
@@ -2614,6 +2707,7 @@ function updateAdminUI() {
   const btnText = document.getElementById("adminBtnText");
   const addForm = document.getElementById("addPlayerForm");
   const adminBtn = document.getElementById("adminBtn");
+  const voteHistoryBtn = document.getElementById("voteHistoryBtn");
   const body = document.body;
 
   if (addForm) {
@@ -2624,10 +2718,12 @@ function updateAdminUI() {
     btnText.textContent = "Admin ✓";
     adminBtn.classList.add("admin-authenticated");
     body.classList.add("admin-active");
+    voteHistoryBtn?.classList.remove("hidden");
   } else {
     btnText.textContent = "Admin";
     adminBtn.classList.remove("admin-authenticated");
     body.classList.remove("admin-active");
+    voteHistoryBtn?.classList.add("hidden");
   }
 
   renderHistory();
@@ -2660,6 +2756,9 @@ tabs.forEach(btn => {
 });
 
 document.getElementById("adminBtn")?.addEventListener("click", openAdmin);
+document.getElementById("voteHistoryBtn")?.addEventListener("click", () => {
+  void openVoteHistoryModal();
+});
 document.getElementById("feedbackBtn")?.addEventListener("click", () => {
   void openAdminReportsModal();
 });
@@ -2673,6 +2772,10 @@ document.getElementById("closeLoginBtn")?.addEventListener("click", closeLoginMo
 document.getElementById("loginBtn")?.addEventListener("click", handleLogin);
 document.getElementById("closeFeedbackBtn")?.addEventListener("click", closeFeedbackModal);
 document.getElementById("closeReportsBtn")?.addEventListener("click", closeReportsModal);
+document.getElementById("closeVoteHistoryBtn")?.addEventListener("click", closeVoteHistoryModal);
+document.getElementById("voteHistoryModal")?.addEventListener("click", (e) => {
+  if (e.target.id === "voteHistoryModal") closeVoteHistoryModal();
+});
 document.getElementById("sendFeedbackBtn")?.addEventListener("click", () => {
   void submitFeedbackFromModal();
 });
@@ -2929,10 +3032,15 @@ document.getElementById("editIdentityModeBtn")?.addEventListener("click", () => 
   identityModeBtn?.classList.add("active");
   ratingModeBtn?.classList.remove("active");
   if (title) title.textContent = `Editar ${displayName}`;
-  if (saveBtn) saveBtn.textContent = "Guardar identidad";
+  if (saveBtn) {
+    saveBtn.textContent = "Guardar identidad";
+    saveBtn.disabled = false;
+  }
   if (nameInput) nameInput.disabled = false;
   if (nicknameInput) nicknameInput.disabled = false;
   if (voteHint) voteHint.classList.add("hidden");
+  const limitMsgId = document.getElementById("voteLimitMsg");
+  if (limitMsgId) limitMsgId.style.display = "none";
 });
 document.getElementById("editRatingModeBtn")?.addEventListener("click", () => {
   if (adminAuthenticated) return;
@@ -2955,9 +3063,24 @@ document.getElementById("editRatingModeBtn")?.addEventListener("click", () => {
   identityModeBtn?.classList.remove("active");
   ratingModeBtn?.classList.add("active");
   if (title) title.textContent = currentEditHasVotedBefore ? updateText : calificarText;
-  if (saveBtn) saveBtn.textContent = currentEditHasVotedBefore ? updateText : calificarText;
+  if (saveBtn) {
+    saveBtn.textContent = currentEditHasVotedBefore ? updateText : calificarText;
+    saveBtn.disabled = currentEditReachedVoteLimit;
+  }
   if (nameInput) nameInput.disabled = true;
   if (nicknameInput) nicknameInput.disabled = true;
+  // Mostrar/ocultar mensaje de límite
+  let limitMsg = document.getElementById("voteLimitMsg");
+  if (!limitMsg && saveBtn) {
+    limitMsg = document.createElement("div");
+    limitMsg.id = "voteLimitMsg";
+    limitMsg.className = "muted";
+    saveBtn.parentNode.insertBefore(limitMsg, saveBtn.nextSibling);
+  }
+  if (limitMsg) {
+    limitMsg.textContent = currentEditReachedVoteLimit ? "Alcanzaste el límite de 3 votos en 24hs para este jugador." : "";
+    limitMsg.style.display = currentEditReachedVoteLimit ? "block" : "none";
+  }
   if (voteHint) {
     const shouldShowHint = currentEditHasVotedBefore && currentEditHasPrefilledVote;
     voteHint.classList.toggle("hidden", !shouldShowHint);
