@@ -24,7 +24,29 @@
   box-shadow: 0 20px 25px rgba(0,0,0,0.15);
 }
 .modal-content.modal-small{
-  max-width:350px;
+  max-width:380px;
+}
+.modal-content.modal-dark{
+  background:#1a1a2e;
+  color:#eee;
+  box-shadow:0 20px 40px rgba(0,0,0,0.5);
+}
+.modal-dark .modal-header{
+  border-bottom-color:#333;
+}
+.modal-dark h2,
+.modal-dark .rating-bar-label,
+.modal-dark .rating-bar-value{
+  color:#eee;
+}
+.modal-dark .muted{
+  color:#aaa;
+}
+.modal-dark .close-btn{
+  color:#aaa;
+}
+.modal-dark .close-btn:hover{
+  color:#fff;
 }
 .modal-content.modal-medium{
   max-width:420px;
@@ -157,33 +179,59 @@
   font-weight:700;
 }
 
+.player-role-badge{
+  display:inline-block;
+  padding:4px 14px;
+  border-radius:20px;
+  border:1.5px solid;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:0.5px;
+  margin-bottom:12px;
+}
+
+.radar-chart-container{
+  width:100%;
+  max-width:340px;
+  height:320px;
+  margin:0 auto 16px;
+  position:relative;
+}
+
 .rating-bars{
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:10px;
 }
 
 .rating-bar-row{
   margin:0;
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:10px;
+  gap:8px;
 }
 
 .rating-bar-label{
-  font-size:14px;
+  font-size:13px;
   font-weight:700;
   color:var(--text);
+  min-width:60px;
 }
 
 .rating-bar-value{
-  min-width:120px;
-  font-size:15px;
+  flex:1;
+  font-size:13px;
   font-weight:700;
   color:var(--text);
-  text-align:left;
   letter-spacing:0.5px;
+}
+
+.rating-bar-number{
+  font-size:13px;
+  font-weight:700;
+  color:var(--text-muted, #888);
+  min-width:28px;
+  text-align:right;
 }
 
 .reports-list{

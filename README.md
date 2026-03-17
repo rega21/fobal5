@@ -23,6 +23,16 @@ App web para organizar partidos y equipos de fútbol 5.
 - Manejo de links de Maps robustecido para historial: se parsea `query` en URL para generar enlaces compatibles móviles cuando aplica.
 - Balanceo de equipos actualizado: se reemplazó el greedy por evaluación exhaustiva `5v5` (todas las combinaciones), con score ponderado por rol (`Ataque 0.45`, `Medio 0.30`, `Defensa 0.25`) y costo de balance por línea para reducir acumulación de perfiles similares en un mismo equipo.
 
+## 6 Stats + Radar Chart
+
+- Se agregaron 3 stats nuevos a `player_ratings` en Supabase: `stamina`, `garra`, `technique` (tipo `int2`).
+- La función RPC `insert_player_rating_limited` fue actualizada para aceptar los 6 parámetros y usa `ON CONFLICT (player_id, voter_key) DO UPDATE` (UPSERT), permitiendo actualizar el voto existente.
+- La vista `player_ratings_with_player` usa `COALESCE(stat, 0::smallint)` en todos los campos para compatibilidad con votos anteriores (que tienen `NULL` en los 3 nuevos stats).
+- El cálculo de promedio general (`avgOverall`) aplica **Opción A**: divide solo por la cantidad de stats con votos reales, preservando el rating de votos antiguos que solo tienen 3 stats.
+- Stamina, Garra y Técnica requieren mínimo **3 votos** para mostrarse con valor; si no los alcanzan, aparecen como `(–)` en el radar.
+- Se implementó detección automática de rol por ponderación de stats: **Delantero**, **Defensor**, **Mediocampista**, **Extremo**, **Todoterreno**. El rol se muestra como badge con color en el modal de rating.
+- Modal de rating rediseñado con fondo oscuro (`#1a1a2e`) y radar chart (Chart.js CDN) con etiquetas que incluyen el valor numérico directamente (`Ataque (7.2)`).
+
 ## Estado actual
 
 - `players`: fuente base (atributos iniciales).

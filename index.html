@@ -222,6 +222,18 @@
               <label>Medio: <span id="midfieldValue">0</span></label>
               <input type="range" id="editPlayerMidfield" min="0" max="10" value="0" class="slider">
             </div>
+            <div class="slider-group">
+              <label>Stamina: <span id="staminaValue">0</span></label>
+              <input type="range" id="editPlayerStamina" min="0" max="10" value="0" class="slider">
+            </div>
+            <div class="slider-group">
+              <label>Garra: <span id="garraValue">0</span></label>
+              <input type="range" id="editPlayerGarra" min="0" max="10" value="0" class="slider">
+            </div>
+            <div class="slider-group">
+              <label>Técnica: <span id="techniqueValue">0</span></label>
+              <input type="range" id="editPlayerTechnique" min="0" max="10" value="0" class="slider">
+            </div>
           </div>
           <button class="btn btn-success" id="updatePlayerBtn">Guardar calificación</button>
         </div>
@@ -229,7 +241,7 @@
     </div>
 
     <div id="ratingDetailsModal" class="modal hidden">
-      <div class="modal-content modal-small">
+      <div class="modal-content modal-small modal-dark">
         <div class="modal-header">
           <div class="modal-header-main">
             <h2 id="ratingDetailsTitle">Rating</h2>
@@ -238,10 +250,9 @@
           <button class="close-btn" id="closeRatingDetailsBtn">&times;</button>
         </div>
         <div class="modal-body">
-          <div class="rating-bars">
-            <p class="rating-bar-row"><span class="rating-bar-label">Ataque</span><span class="rating-bar-value" id="ratingBarAttack">█████</span></p>
-            <p class="rating-bar-row"><span class="rating-bar-label">Centro</span><span class="rating-bar-value" id="ratingBarMidfield">█████</span></p>
-            <p class="rating-bar-row"><span class="rating-bar-label">Defensa</span><span class="rating-bar-value" id="ratingBarDefense">█████</span></p>
+          <div id="playerRoleBadge" class="player-role-badge"></div>
+          <div class="radar-chart-container">
+            <canvas id="playerRadarChart"></canvas>
           </div>
         </div>
       </div>
@@ -386,6 +397,7 @@
 
   </nav>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="config.public.js"></script>
   <script src="config.js"></script>
   <script src="src/api/client.js"></script>

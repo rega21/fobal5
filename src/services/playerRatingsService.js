@@ -50,7 +50,7 @@
       });
     }
 
-    async function savePlayerRating({ playerId, attack, defense, midfield }) {
+    async function savePlayerRating({ playerId, attack, defense, midfield, stamina, garra, technique }) {
       if (!apiClient?.insertPlayerRatingLimited) {
         throw new Error("insertPlayerRatingLimited no disponible en apiClient");
       }
@@ -62,6 +62,9 @@
         attack: clampScore(attack),
         defense: clampScore(defense),
         midfield: clampScore(midfield),
+        stamina: clampScore(stamina),
+        garra: clampScore(garra),
+        technique: clampScore(technique),
       };
 
       if (!payload.player_id) {

@@ -713,6 +713,109 @@ function buildRatingBar(value) {
   return blocks > 0 ? "█".repeat(blocks) : "▁";
 }
 
+const PLAYER_ROLES = [
+  {
+    id: "delantero",
+    label: "Delantero",
+    color: "#e85d4a",
+    weights: { attack: 2.0, midfield: 1.2, defense: 0.5, stamina: 1.0, garra: 1.2, technique: 1.5 },
+  },
+  {
+    id: "defensor",
+    label: "Defensor",
+    color: "#2ecc71",
+    weights: { attack: 0.5, midfield: 1.0, defense: 2.0, stamina: 1.5, garra: 1.2, technique: 0.8 },
+  },
+  {
+    id: "mediocampista",
+    label: "Mediocampista",
+    color: "#8e6bbf",
+    weights: { attack: 1.0, midfield: 2.0, defense: 1.0, stamina: 1.2, garra: 1.0, technique: 1.5 },
+  },
+  {
+    id: "extremo",
+    label: "Extremo",
+    color: "#e67e22",
+    weights: { attack: 1.5, midfield: 1.0, defense: 0.5, stamina: 1.5, garra: 1.0, technique: 1.8 },
+  },
+  {
+    id: "todoterreno",
+    label: "Todoterreno",
+    color: "#3498db",
+    weights: { attack: 1.0, midfield: 1.0, defense: 1.0, stamina: 1.5, garra: 1.8, technique: 1.0 },
+  },
+];
+
+function detectPlayerRole(stats) {
+  let bestRole = PLAYER_ROLES[0];
+  let bestScore = -Infinity;
+  for (const role of PLAYER_ROLES) {
+    const score =
+      stats.attack * role.weights.attack +
+      stats.midfield * role.weights.midfield +
+      stats.defense * role.weights.defense +
+      stats.stamina * role.weights.stamina +
+      stats.garra * role.weights.garra +
+      stats.technique * role.weights.technique;
+    if (score > bestScore) {
+      bestScore = score;
+      bestRole = role;
+    }
+  }
+  return bestRole;
+}
+
+let playerRadarChartInstance = null;
+
+function renderPlayerRadarChart(stats, role) {
+  const canvas = document.getElementById("playerRadarChart");
+  if (!canvas || typeof Chart === "undefined") return;
+
+  if (playerRadarChartInstance) {
+    playerRadarChartInstance.destroy();
+    playerRadarChartInstance = null;
+  }
+
+  const color = role.color;
+  const colorFill = color + "33";
+
+  playerRadarChartInstance = new Chart(canvas, {
+    type: "radar",
+    data: {
+      labels: [
+        `Ataque (${Number(stats.attack).toFixed(1)})`,
+        `Centro (${Number(stats.midfield).toFixed(1)})`,
+        `Defensa (${Number(stats.defense).toFixed(1)})`,
+        `Stamina (${stats.stamina != null ? Number(stats.stamina).toFixed(1) : "–"})`,
+        `Garra (${stats.garra != null ? Number(stats.garra).toFixed(1) : "–"})`,
+        `Técnica (${stats.technique != null ? Number(stats.technique).toFixed(1) : "–"})`,
+      ],
+      datasets: [{
+        data: [stats.attack, stats.midfield, stats.defense, stats.stamina ?? 0, stats.garra ?? 0, stats.technique ?? 0],
+        backgroundColor: colorFill,
+        borderColor: color,
+        borderWidth: 2,
+        pointBackgroundColor: color,
+        pointRadius: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          min: 0,
+          max: 10,
+          ticks: { display: false },
+          pointLabels: { color: "#ccc", font: { size: 12 } },
+          grid: { color: "#444" },
+          angleLines: { color: "#444" },
+        },
+      },
+    },
+  });
+}
+
 function openRatingDetailsByPlayerId(playerId) {
   const normalizedId = normalizePlayerId(playerId);
   if (!normalizedId) return;
@@ -728,20 +831,10 @@ function openRatingDetailsByPlayerId(playerId) {
 
   const title = document.getElementById("ratingDetailsTitle");
   const status = document.getElementById("ratingDetailsStatus");
-  const attackBar = document.getElementById("ratingBarAttack");
-  const midfieldBar = document.getElementById("ratingBarMidfield");
-  const defenseBar = document.getElementById("ratingBarDefense");
-  const ratingAverage = (
-    (
-      toScoreNumber(playerForView.effectiveAttack) +
-      toScoreNumber(playerForView.effectiveDefense) +
-      toScoreNumber(playerForView.effectiveMidfield)
-    ) / 3
-  ).toFixed(1);
+  const roleBadge = document.getElementById("playerRoleBadge");
+  const ratingAverage = toScoreNumber(playerForView.communityAverage).toFixed(1);
   const ratingIcon = playerForView.communityStatus === "validated" ? "⭐" : "⏳";
-  const ratingStatusValue = playerForView.communityStatus === "validated"
-    ? ratingAverage
-    : "XX";
+  const ratingStatusValue = playerForView.communityStatus === "validated" ? ratingAverage : "XX";
   const trendMeta = getCommunityTrendMeta(playerForView.communityTrendDirection || "flat");
   const trendMarkup = trendMeta.symbol
     ? ` <span class="${trendMeta.className}" aria-hidden="true">${trendMeta.symbol}</span>`
@@ -751,13 +844,27 @@ function openRatingDetailsByPlayerId(playerId) {
     || String(playerForView.name || "").trim()
     || "Jugador";
 
+  const stats = {
+    attack: playerForView.effectiveAttack,
+    midfield: playerForView.effectiveMidfield,
+    defense: playerForView.effectiveDefense,
+    stamina: playerForView.effectiveStamina,
+    garra: playerForView.effectiveGarra,
+    technique: playerForView.effectiveTechnique,
+  };
+  const role = detectPlayerRole(stats);
+
   if (title) title.textContent = `Rating de ${preferredDisplayName}`;
   if (status) status.innerHTML = `${ratingIcon} <span class="rating-value">${ratingStatusValue}</span>${trendMarkup}`;
-  if (attackBar) attackBar.textContent = buildRatingBar(playerForView.effectiveAttack);
-  if (midfieldBar) midfieldBar.textContent = buildRatingBar(playerForView.effectiveMidfield);
-  if (defenseBar) defenseBar.textContent = buildRatingBar(playerForView.effectiveDefense);
+  if (roleBadge) {
+    roleBadge.textContent = role.label;
+    roleBadge.style.backgroundColor = role.color + "22";
+    roleBadge.style.color = role.color;
+    roleBadge.style.borderColor = role.color;
+  }
 
   modal.classList.remove("hidden");
+  requestAnimationFrame(() => renderPlayerRadarChart(stats, role));
 }
 
 function closeRatingDetailsModal() {
@@ -1088,7 +1195,11 @@ function enrichPlayerWithCommunityState(player) {
   const communityAttack = toScoreNumber(summary?.avgAttack);
   const communityDefense = toScoreNumber(summary?.avgDefense);
   const communityMidfield = toScoreNumber(summary?.avgMidfield);
-  const communityAverage = calculateAverageRating(communityAttack, communityDefense, communityMidfield);
+  const NEW_STAT_MIN_VOTES = 3;
+  const communityStamina = (summary?.countStamina || 0) >= NEW_STAT_MIN_VOTES ? toScoreNumber(summary?.avgStamina) : null;
+  const communityGarra = (summary?.countGarra || 0) >= NEW_STAT_MIN_VOTES ? toScoreNumber(summary?.avgGarra) : null;
+  const communityTechnique = (summary?.countTechnique || 0) >= NEW_STAT_MIN_VOTES ? toScoreNumber(summary?.avgTechnique) : null;
+  const communityAverage = toScoreNumber(summary?.avgOverall) || calculateAverageRating(communityAttack, communityDefense, communityMidfield);
   const trendDirection = votes > 0
     ? getCommunityTrendDirection(baseAverage, communityAverage)
     : "flat";
@@ -1097,6 +1208,9 @@ function enrichPlayerWithCommunityState(player) {
   const effectiveAttack = isValidated ? communityAttack : baseAttack;
   const effectiveDefense = isValidated ? communityDefense : baseDefense;
   const effectiveMidfield = isValidated ? communityMidfield : baseMidfield;
+  const effectiveStamina = isValidated ? communityStamina : null;
+  const effectiveGarra = isValidated ? communityGarra : null;
+  const effectiveTechnique = isValidated ? communityTechnique : null;
 
   return {
     ...player,
@@ -1111,6 +1225,9 @@ function enrichPlayerWithCommunityState(player) {
     effectiveAttack,
     effectiveDefense,
     effectiveMidfield,
+    effectiveStamina,
+    effectiveGarra,
+    effectiveTechnique,
   };
 }
 
@@ -2118,9 +2235,21 @@ async function editPlayer(id) {
   const initialMidfield = adminAuthenticated
     ? (playerForEdit.effectiveMidfield || 0)
     : Number(userPreviousRating?.midfield ?? fallbackMidfield);
+  const initialStamina = adminAuthenticated
+    ? (playerForEdit.effectiveStamina || 0)
+    : Number(userPreviousRating?.stamina ?? 0);
+  const initialGarra = adminAuthenticated
+    ? (playerForEdit.effectiveGarra || 0)
+    : Number(userPreviousRating?.garra ?? 0);
+  const initialTechnique = adminAuthenticated
+    ? (playerForEdit.effectiveTechnique || 0)
+    : Number(userPreviousRating?.technique ?? 0);
   document.getElementById("editPlayerAttack").value = initialAttack;
   document.getElementById("editPlayerDefense").value = initialDefense;
   document.getElementById("editPlayerMidfield").value = initialMidfield;
+  document.getElementById("editPlayerStamina").value = initialStamina;
+  document.getElementById("editPlayerGarra").value = initialGarra;
+  document.getElementById("editPlayerTechnique").value = initialTechnique;
   
   updateSliderValues();
   openEditModal(hasVotedBefore, Boolean(userPreviousRating), playerForEdit.name, id);
@@ -2273,12 +2402,15 @@ async function saveEditPlayer() {
   const attack = parseInt(document.getElementById("editPlayerAttack").value) || 0;
   const defense = parseInt(document.getElementById("editPlayerDefense").value) || 0;
   const midfield = parseInt(document.getElementById("editPlayerMidfield").value) || 0;
+  const stamina = parseInt(document.getElementById("editPlayerStamina").value) || 0;
+  const garra = parseInt(document.getElementById("editPlayerGarra").value) || 0;
+  const technique = parseInt(document.getElementById("editPlayerTechnique").value) || 0;
   const isIdentityAction = !adminAuthenticated && currentEditAction === "identity";
 
   if (!isIdentityAction) {
-    const allRatingsZero = attack === 0 && defense === 0 && midfield === 0;
+    const allRatingsZero = attack === 0 && defense === 0 && midfield === 0 && stamina === 0 && garra === 0 && technique === 0;
     if (allRatingsZero) {
-      const confirmed = confirm("Vas a guardar ataque, defensa y medio en 0. ¿Querés continuar?");
+      const confirmed = confirm("Vas a guardar todos los stats en 0. ¿Querés continuar?");
       if (!confirmed) {
         return;
       }
@@ -2341,6 +2473,9 @@ async function saveEditPlayer() {
         attack,
         defense,
         midfield,
+        stamina,
+        garra,
+        technique,
       });
       markPlayerAsVoted(editPlayerId);
       await refreshPlayerRatingsSummary();
@@ -2368,9 +2503,15 @@ function updateSliderValues() {
   const attack = document.getElementById("editPlayerAttack").value;
   const defense = document.getElementById("editPlayerDefense").value;
   const midfield = document.getElementById("editPlayerMidfield").value;
+  const stamina = document.getElementById("editPlayerStamina").value;
+  const garra = document.getElementById("editPlayerGarra").value;
+  const technique = document.getElementById("editPlayerTechnique").value;
   document.getElementById("attackValue").textContent = attack;
   document.getElementById("defenseValue").textContent = defense;
   document.getElementById("midfieldValue").textContent = midfield;
+  document.getElementById("staminaValue").textContent = stamina;
+  document.getElementById("garraValue").textContent = garra;
+  document.getElementById("techniqueValue").textContent = technique;
 }
 
 function openAdmin() {
@@ -3013,6 +3154,9 @@ document.getElementById("updatePlayerBtn")?.addEventListener("click", saveEditPl
 document.getElementById("editPlayerAttack")?.addEventListener("input", updateSliderValues);
 document.getElementById("editPlayerDefense")?.addEventListener("input", updateSliderValues);
 document.getElementById("editPlayerMidfield")?.addEventListener("input", updateSliderValues);
+document.getElementById("editPlayerStamina")?.addEventListener("input", updateSliderValues);
+document.getElementById("editPlayerGarra")?.addEventListener("input", updateSliderValues);
+document.getElementById("editPlayerTechnique")?.addEventListener("input", updateSliderValues);
 document.getElementById("editIdentityModeBtn")?.addEventListener("click", () => {
   if (adminAuthenticated) return;
   const title = document.getElementById("editPlayerModalTitle");

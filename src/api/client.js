@@ -172,10 +172,12 @@
       return request(`${MATCHES_URL}/${id}`, { method: "DELETE" });
     },
     async getPlayerRatingsSummaryByPlayerId() {
-      const rows = await requestSupabase("/rest/v1/player_ratings?select=player_id,attack,defense,midfield", {
+      const rows = await requestSupabase("/rest/v1/player_ratings?select=player_id,attack,defense,midfield,stamina,garra,technique", {
         method: "GET",
         headers: buildSupabaseHeaders(),
       });
+
+      const STATS = ["attack", "defense", "midfield", "stamina", "garra", "technique"];
 
       const summary = {};
       (rows || []).forEach((row) => {
@@ -183,28 +185,36 @@
         if (!playerId) return;
 
         if (!summary[playerId]) {
-          summary[playerId] = {
-            votes: 0,
-            sumAttack: 0,
-            sumDefense: 0,
-            sumMidfield: 0,
-          };
+          summary[playerId] = { votes: 0 };
+          STATS.forEach((s) => { summary[playerId][`sum_${s}`] = 0; summary[playerId][`count_${s}`] = 0; });
         }
 
         summary[playerId].votes += 1;
-        summary[playerId].sumAttack += toNumber(row.attack);
-        summary[playerId].sumDefense += toNumber(row.defense);
-        summary[playerId].sumMidfield += toNumber(row.midfield);
+        STATS.forEach((s) => {
+          if (row[s] != null) {
+            summary[playerId][`sum_${s}`] += toNumber(row[s]);
+            summary[playerId][`count_${s}`] += 1;
+          }
+        });
       });
 
       Object.keys(summary).forEach((playerId) => {
         const item = summary[playerId];
-        const votes = item.votes || 0;
+        const avg = (s) => item[`count_${s}`] > 0 ? Number((item[`sum_${s}`] / item[`count_${s}`]).toFixed(2)) : 0;
+        const totalSum = STATS.reduce((s, stat) => s + item[`sum_${stat}`], 0);
+        const totalCount = STATS.reduce((s, stat) => s + item[`count_${stat}`], 0);
         summary[playerId] = {
-          votes,
-          avgAttack: votes > 0 ? Number((item.sumAttack / votes).toFixed(2)) : 0,
-          avgDefense: votes > 0 ? Number((item.sumDefense / votes).toFixed(2)) : 0,
-          avgMidfield: votes > 0 ? Number((item.sumMidfield / votes).toFixed(2)) : 0,
+          votes: item.votes,
+          avgAttack: avg("attack"),
+          avgDefense: avg("defense"),
+          avgMidfield: avg("midfield"),
+          avgStamina: avg("stamina"),
+          avgGarra: avg("garra"),
+          avgTechnique: avg("technique"),
+          avgOverall: totalCount > 0 ? Number((totalSum / totalCount).toFixed(2)) : 0,
+          countStamina: item.count_stamina,
+          countGarra: item.count_garra,
+          countTechnique: item.count_technique,
         };
       });
 
@@ -216,7 +226,7 @@
       if (!normalizedPlayerId || !normalizedVoterKey) return null;
 
       const rows = await requestSupabase(
-        `/rest/v1/player_ratings?select=attack,defense,midfield&player_id=eq.${encodeURIComponent(normalizedPlayerId)}&voter_key=eq.${encodeURIComponent(normalizedVoterKey)}&limit=1`,
+        `/rest/v1/player_ratings?select=attack,defense,midfield,stamina,garra,technique&player_id=eq.${encodeURIComponent(normalizedPlayerId)}&voter_key=eq.${encodeURIComponent(normalizedVoterKey)}&limit=1`,
         {
           method: "GET",
           headers: buildSupabaseHeaders(),
@@ -230,6 +240,9 @@
         attack: toNumber(row.attack),
         defense: toNumber(row.defense),
         midfield: toNumber(row.midfield),
+        stamina: row.stamina != null ? toNumber(row.stamina) : null,
+        garra: row.garra != null ? toNumber(row.garra) : null,
+        technique: row.technique != null ? toNumber(row.technique) : null,
       };
     },
     async upsertPlayerRating(payload) {
@@ -244,7 +257,7 @@
       });
     },
 
-    async insertPlayerRatingLimited({ player_id, voter_key, attack, defense, midfield }) {
+    async insertPlayerRatingLimited({ player_id, voter_key, attack, defense, midfield, stamina, garra, technique }) {
       return requestSupabase('/rest/v1/rpc/insert_player_rating_limited', {
         method: 'POST',
         headers: buildSupabaseHeaders({ 'Content-Type': 'application/json' }),
@@ -253,13 +266,16 @@
           p_voter_key: voter_key,
           p_attack: attack,
           p_defense: defense,
-          p_midfield: midfield
+          p_midfield: midfield,
+          p_stamina: stamina,
+          p_garra: garra,
+          p_technique: technique,
         })
       });
     },
     async getRecentVoteActivity(limit = 30) {
       const rows = await requestSupabase(
-        `/rest/v1/player_ratings?select=player_id,attack,defense,midfield,created_at&order=created_at.desc&limit=${Number(limit)}`,
+        `/rest/v1/player_ratings?select=player_id,attack,defense,midfield,stamina,garra,technique,created_at&order=created_at.desc&limit=${Number(limit)}`,
         { method: "GET", headers: buildSupabaseHeaders() }
       );
       return Array.isArray(rows) ? rows : [];
