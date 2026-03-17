@@ -134,6 +134,12 @@
   letter-spacing: 0.2px;
   flex:1;
 }
+.player-name--editable{
+  cursor:pointer;
+}
+.player-name--editable:hover{
+  opacity:0.75;
+}
 .player-nick{
   font-weight: 500;
   color: var(--muted);

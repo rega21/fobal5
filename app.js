@@ -713,6 +713,23 @@ function buildRatingBar(value) {
   return blocks > 0 ? "█".repeat(blocks) : "▁";
 }
 
+const STAT_COLORS = {
+  attack:    "#FF4C4C",
+  midfield:  "#2ECC71",
+  defense:   "#00E5FF",
+  stamina:   "#F1C40F",
+  garra:     "#F1C40F",
+  technique: "#9B59B6",
+};
+const STAT_COLORS_ARRAY = [
+  STAT_COLORS.attack,
+  STAT_COLORS.midfield,
+  STAT_COLORS.defense,
+  STAT_COLORS.stamina,
+  STAT_COLORS.garra,
+  STAT_COLORS.technique,
+];
+
 const PLAYER_ROLES = [
   {
     id: "delantero",
@@ -766,8 +783,22 @@ function detectPlayerRole(stats) {
 }
 
 let playerRadarChartInstance = null;
+let editRadarChartInstance = null;
 
-function renderPlayerRadarChart(stats, role) {
+function getDominantStatColor(stats) {
+  const entries = [
+    ["attack", stats.attack ?? 0],
+    ["midfield", stats.midfield ?? 0],
+    ["defense", stats.defense ?? 0],
+    ["stamina", stats.stamina ?? 0],
+    ["garra", stats.garra ?? 0],
+    ["technique", stats.technique ?? 0],
+  ];
+  const dominant = entries.reduce((a, b) => b[1] > a[1] ? b : a);
+  return STAT_COLORS[dominant[0]];
+}
+
+function renderPlayerRadarChart(stats) {
   const canvas = document.getElementById("playerRadarChart");
   if (!canvas || typeof Chart === "undefined") return;
 
@@ -776,8 +807,7 @@ function renderPlayerRadarChart(stats, role) {
     playerRadarChartInstance = null;
   }
 
-  const color = role.color;
-  const colorFill = color + "33";
+  const color = getDominantStatColor(stats);
 
   playerRadarChartInstance = new Chart(canvas, {
     type: "radar",
@@ -792,7 +822,7 @@ function renderPlayerRadarChart(stats, role) {
       ],
       datasets: [{
         data: [stats.attack, stats.midfield, stats.defense, stats.stamina ?? 0, stats.garra ?? 0, stats.technique ?? 0],
-        backgroundColor: colorFill,
+        backgroundColor: color + "33",
         borderColor: color,
         borderWidth: 2,
         pointBackgroundColor: color,
@@ -863,12 +893,72 @@ function openRatingDetailsByPlayerId(playerId) {
     roleBadge.style.borderColor = role.color;
   }
 
+  const setStatBar = (fillId, numId, value) => {
+    const fill = document.getElementById(fillId);
+    const num = document.getElementById(numId);
+    const pct = value != null ? (Number(value) / 10 * 100).toFixed(0) : 0;
+    if (fill) fill.style.width = pct + "%";
+    if (num) num.textContent = value != null ? Number(value).toFixed(1) : "–";
+  };
+  setStatBar("statBarAttack", "statNumAttack", stats.attack);
+  setStatBar("statBarMidfield", "statNumMidfield", stats.midfield);
+  setStatBar("statBarDefense", "statNumDefense", stats.defense);
+  setStatBar("statBarStamina", "statNumStamina", stats.stamina);
+  setStatBar("statBarGarra", "statNumGarra", stats.garra);
+  setStatBar("statBarTechnique", "statNumTechnique", stats.technique);
+
   modal.classList.remove("hidden");
-  requestAnimationFrame(() => renderPlayerRadarChart(stats, role));
+  requestAnimationFrame(() => renderPlayerRadarChart(stats));
 }
 
 function closeRatingDetailsModal() {
   document.getElementById("ratingDetailsModal")?.classList.add("hidden");
+}
+
+let currentIdentityPlayerId = null;
+
+function openIdentityModal(playerId) {
+  const player = players.find((p) => String(p.id) === String(playerId));
+  if (!player) return;
+  currentIdentityPlayerId = playerId;
+  const modal = document.getElementById("identityModal");
+  const title = document.getElementById("identityModalTitle");
+  const nameInput = document.getElementById("identityName");
+  const nicknameInput = document.getElementById("identityNickname");
+  if (title) title.textContent = `Editar ${player.name}`;
+  if (nameInput) nameInput.value = player.name || "";
+  if (nicknameInput) nicknameInput.value = player.nickname || "";
+  modal?.classList.remove("hidden");
+}
+
+function closeIdentityModal() {
+  document.getElementById("identityModal")?.classList.add("hidden");
+  currentIdentityPlayerId = null;
+}
+
+async function saveIdentity() {
+  if (!currentIdentityPlayerId) return;
+  const player = players.find((p) => String(p.id) === String(currentIdentityPlayerId));
+  if (!player) return;
+  const name = document.getElementById("identityName").value.trim();
+  const nickname = document.getElementById("identityNickname").value.trim();
+  if (!name) { alert("El nombre no puede estar vacío"); return; }
+  try {
+    await apiClient.updatePlayer(currentIdentityPlayerId, {
+      name,
+      nickname,
+      attack: toScoreNumber(player.attack),
+      defense: toScoreNumber(player.defense),
+      midfield: toScoreNumber(player.midfield),
+    });
+    player.name = name;
+    player.nickname = nickname;
+    closeIdentityModal();
+    renderPlayers({ preserveOrder: true });
+    showToast("Identidad actualizada", 2200, "success");
+  } catch (error) {
+    showToast("No se pudo guardar", 2600, "error");
+  }
 }
 
 function getHistoryEntryName(entry) {
@@ -1379,6 +1469,7 @@ function renderPlayers(options = {}) {
       onEdit: (id) => editPlayer(id),
       onDelete: (id) => deletePlayer(id),
       onRatingClick: (id) => openRatingDetailsByPlayerId(id),
+      onNameClick: (id) => openIdentityModal(id),
       preserveOrder: shouldPreserveOrder,
     });
     return;
@@ -2379,6 +2470,12 @@ async function openEditModal(
 }
 
 function closeEditModal() {
+  if (editRadarChartInstance) {
+    editRadarChartInstance.destroy();
+    editRadarChartInstance = null;
+  }
+  const editRadarContainer = document.getElementById("editRadarContainer");
+  if (editRadarContainer) editRadarContainer.style.display = "none";
   document.getElementById("editPlayerModal").classList.add("hidden");
   const voteHint = document.getElementById("editPlayerVoteHint");
   if (voteHint) voteHint.classList.add("hidden");
@@ -2499,19 +2596,83 @@ async function saveEditPlayer() {
   closeEditModal();
 }
 
+function colorSliderTrack(id, color) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const pct = (Number(el.value) / Number(el.max)) * 100;
+  el.style.background = `linear-gradient(to right, ${color} ${pct}%, #444 ${pct}%)`;
+}
+
 function updateSliderValues() {
-  const attack = document.getElementById("editPlayerAttack").value;
-  const defense = document.getElementById("editPlayerDefense").value;
-  const midfield = document.getElementById("editPlayerMidfield").value;
-  const stamina = document.getElementById("editPlayerStamina").value;
-  const garra = document.getElementById("editPlayerGarra").value;
-  const technique = document.getElementById("editPlayerTechnique").value;
+  const attack = Number(document.getElementById("editPlayerAttack").value);
+  const defense = Number(document.getElementById("editPlayerDefense").value);
+  const midfield = Number(document.getElementById("editPlayerMidfield").value);
+  const stamina = Number(document.getElementById("editPlayerStamina").value);
+  const garra = Number(document.getElementById("editPlayerGarra").value);
+  const technique = Number(document.getElementById("editPlayerTechnique").value);
   document.getElementById("attackValue").textContent = attack;
   document.getElementById("defenseValue").textContent = defense;
   document.getElementById("midfieldValue").textContent = midfield;
   document.getElementById("staminaValue").textContent = stamina;
   document.getElementById("garraValue").textContent = garra;
   document.getElementById("techniqueValue").textContent = technique;
+  colorSliderTrack("editPlayerAttack",    "#FF4C4C");
+  colorSliderTrack("editPlayerDefense",   "#00E5FF");
+  colorSliderTrack("editPlayerMidfield",  "#2ECC71");
+  colorSliderTrack("editPlayerStamina",   "#F1C40F");
+  colorSliderTrack("editPlayerGarra",     "#F1C40F");
+  colorSliderTrack("editPlayerTechnique", "#9B59B6");
+  updateEditRadarChart({ attack, midfield, defense, stamina, garra, technique });
+}
+
+function updateEditRadarChart(stats) {
+  const container = document.getElementById("editRadarContainer");
+  const canvas = document.getElementById("editPlayerRadarChart");
+  if (!canvas || typeof Chart === "undefined") return;
+
+  const hasAnyValue = Object.values(stats).some((v) => v > 0);
+  if (container) container.style.display = hasAnyValue ? "block" : "none";
+  if (!hasAnyValue) return;
+
+  const color = getDominantStatColor(stats);
+
+  if (editRadarChartInstance) {
+    editRadarChartInstance.data.datasets[0].data = [stats.attack, stats.midfield, stats.defense, stats.stamina, stats.garra, stats.technique];
+    editRadarChartInstance.data.datasets[0].borderColor = color;
+    editRadarChartInstance.data.datasets[0].backgroundColor = color + "33";
+    editRadarChartInstance.data.datasets[0].pointBackgroundColor = color;
+    editRadarChartInstance.update("none");
+    return;
+  }
+
+  editRadarChartInstance = new Chart(canvas, {
+    type: "radar",
+    data: {
+      labels: ["Ataque", "Centro", "Defensa", "Stamina", "Garra", "Técnica"],
+      datasets: [{
+        data: [stats.attack, stats.midfield, stats.defense, stats.stamina, stats.garra, stats.technique],
+        backgroundColor: color + "33",
+        borderColor: color,
+        borderWidth: 2,
+        pointBackgroundColor: color,
+        pointRadius: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          min: 0,
+          max: 10,
+          ticks: { display: false },
+          pointLabels: { color: "#ccc", font: { size: 11 } },
+          grid: { color: "#444" },
+          angleLines: { color: "#444" },
+        },
+      },
+    },
+  });
 }
 
 function openAdmin() {
@@ -3238,6 +3399,8 @@ document.getElementById("editPlayerModal").addEventListener("click", (e) => {
 });
 
 document.getElementById("closeRatingDetailsBtn")?.addEventListener("click", closeRatingDetailsModal);
+document.getElementById("closeIdentityModalBtn")?.addEventListener("click", closeIdentityModal);
+document.getElementById("saveIdentityBtn")?.addEventListener("click", saveIdentity);
 document.getElementById("ratingDetailsModal")?.addEventListener("click", (e) => {
   if (e.target.id === "ratingDetailsModal") {
     closeRatingDetailsModal();

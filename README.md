@@ -33,6 +33,15 @@ App web para organizar partidos y equipos de fútbol 5.
 - Se implementó detección automática de rol por ponderación de stats: **Delantero**, **Defensor**, **Mediocampista**, **Extremo**, **Todoterreno**. El rol se muestra como badge con color en el modal de rating.
 - Modal de rating rediseñado con fondo oscuro (`#1a1a2e`) y radar chart (Chart.js CDN) con etiquetas que incluyen el valor numérico directamente (`Ataque (7.2)`).
 
+## UX: Modal de votación y rating rediseñados
+
+- Modal de votación (`editPlayerModal`) con fondo oscuro unificado.
+- Radar chart en tiempo real dentro del modal de votación: se actualiza al mover cada slider y cambia de color según el stat dominante.
+- Sliders con color individual por stat (thumb + track): Ataque rojo, Defensa cyan, Medio verde, Stamina/Garra dorado, Técnica violeta.
+- Identidad del jugador separada del modal de votación: click en el nombre de la tarjeta abre un mini modal de edición (`identityModal`).
+- Modal de rating (`ratingDetailsModal`) con barras de colores por stat + radar chart coloreado por stat dominante.
+- Sistema de colores consistente (`STAT_COLORS`) compartido entre radares, sliders y barras.
+
 ## Estado actual
 
 - `players`: fuente base (atributos iniciales).

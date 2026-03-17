@@ -72,6 +72,7 @@
     onEdit,
     onDelete,
     onRatingClick,
+    onNameClick,
     preserveOrder = false,
   }) {
     const playersTitle = document.getElementById("playersTitle");
@@ -152,7 +153,7 @@
         return `
           <article class="card">
             <div class="player-info">
-              <div class="player-name">
+              <div class="player-name player-name--editable" data-id="${player.id}" title="Editar nombre">
                 ${escapeHtml(player.name)} ${nick}
               </div>
               <div class="player-meta">
@@ -178,6 +179,9 @@
     });
     playersList.querySelectorAll(".player-community--rating").forEach((button) => {
       button.addEventListener("click", () => onRatingClick?.(button.dataset.ratingId));
+    });
+    playersList.querySelectorAll(".player-name--editable").forEach((el) => {
+      el.addEventListener("click", () => onNameClick?.(el.dataset.id));
     });
   }
 

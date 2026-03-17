@@ -184,7 +184,7 @@
 
     <!-- Rate Player Modal -->
     <div id="editPlayerModal" class="modal hidden">
-      <div class="modal-content modal-medium">
+      <div class="modal-content modal-medium modal-dark">
         <div class="modal-header">
           <div class="modal-header-main">
             <h2 id="editPlayerModalTitle">Calificar jugador</h2>
@@ -193,12 +193,7 @@
           <button class="close-btn" id="closeEditBtn">&times;</button>
         </div>
         <div class="modal-body">
-          <div id="editActionSelector" class="segmented edit-action-selector hidden" style="margin-bottom:12px;">
-            <button class="seg-btn" type="button" id="editIdentityModeBtn">Identidad</button>
-            <button class="seg-btn active" type="button" id="editRatingModeBtn">Puntos</button>
-          </div>
-
-          <div id="editIdentityFields">
+          <div id="editIdentityFields" class="hidden">
             <div class="form-group">
               <label>Nombre</label>
               <input type="text" id="editPlayerName" placeholder="Nombre">
@@ -210,6 +205,9 @@
           </div>
 
           <div id="editRatingFields">
+            <div class="radar-chart-container radar-chart-container--dark" id="editRadarContainer" style="display:none">
+              <canvas id="editPlayerRadarChart"></canvas>
+            </div>
             <div class="slider-group">
               <label>Ataque: <span id="attackValue">0</span></label>
               <input type="range" id="editPlayerAttack" min="0" max="10" value="0" class="slider">
@@ -254,6 +252,35 @@
           <div class="radar-chart-container">
             <canvas id="playerRadarChart"></canvas>
           </div>
+          <div class="stat-bars">
+            <div class="stat-bar-row"><span class="stat-bar-label">Ataque</span><div class="stat-bar-track"><div class="stat-bar-fill" id="statBarAttack" style="background:#FF4C4C"></div></div><span class="stat-bar-num" id="statNumAttack"></span></div>
+            <div class="stat-bar-row"><span class="stat-bar-label">Centro</span><div class="stat-bar-track"><div class="stat-bar-fill" id="statBarMidfield" style="background:#2ECC71"></div></div><span class="stat-bar-num" id="statNumMidfield"></span></div>
+            <div class="stat-bar-row"><span class="stat-bar-label">Defensa</span><div class="stat-bar-track"><div class="stat-bar-fill" id="statBarDefense" style="background:#00E5FF"></div></div><span class="stat-bar-num" id="statNumDefense"></span></div>
+            <div class="stat-bar-row"><span class="stat-bar-label">Stamina</span><div class="stat-bar-track"><div class="stat-bar-fill" id="statBarStamina" style="background:#F1C40F"></div></div><span class="stat-bar-num" id="statNumStamina"></span></div>
+            <div class="stat-bar-row"><span class="stat-bar-label">Garra</span><div class="stat-bar-track"><div class="stat-bar-fill" id="statBarGarra" style="background:#F1C40F"></div></div><span class="stat-bar-num" id="statNumGarra"></span></div>
+            <div class="stat-bar-row"><span class="stat-bar-label">Técnica</span><div class="stat-bar-track"><div class="stat-bar-fill" id="statBarTechnique" style="background:#9B59B6"></div></div><span class="stat-bar-num" id="statNumTechnique"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Identity Edit Modal -->
+    <div id="identityModal" class="modal hidden">
+      <div class="modal-content modal-small modal-dark">
+        <div class="modal-header">
+          <h2 id="identityModalTitle">Editar jugador</h2>
+          <button class="close-btn" id="closeIdentityModalBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" id="identityName" placeholder="Nombre">
+          </div>
+          <div class="form-group">
+            <label>Apodo</label>
+            <input type="text" id="identityNickname" placeholder="Apodo (opcional)">
+          </div>
+          <button class="btn btn-success" id="saveIdentityBtn" style="width:100%;margin-top:8px">Guardar</button>
         </div>
       </div>
     </div>

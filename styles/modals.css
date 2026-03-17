@@ -48,6 +48,27 @@
 .modal-dark .close-btn:hover{
   color:#fff;
 }
+.modal-dark label,
+.modal-dark .muted,
+.modal-dark p{
+  color:#ccc;
+}
+.modal-dark input[type="text"],
+.modal-dark input[type="password"]{
+  background:#2a2a3e;
+  color:#eee;
+  border-color:#444;
+}
+.modal-dark .action-selector{
+  background:#2a2a3e;
+}
+.modal-dark .tab-btn{
+  color:#aaa;
+}
+.modal-dark .tab-btn.active{
+  background:var(--primary);
+  color:#fff;
+}
 .modal-content.modal-medium{
   max-width:420px;
 }
@@ -194,6 +215,7 @@
   width:100%;
   max-width:340px;
   height:320px;
+  border-radius:12px;
   margin:0 auto 16px;
   position:relative;
 }
@@ -233,6 +255,74 @@
   min-width:28px;
   text-align:right;
 }
+
+/* Radar oscuro dentro del modal de edición */
+.radar-chart-container--dark{
+  background:#1a1a2e;
+  padding:8px;
+  border-radius:12px;
+}
+
+/* Barras de stats con color (modal rating) */
+.stat-bars{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:12px;
+}
+.stat-bar-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.stat-bar-label{
+  font-size:12px;
+  font-weight:700;
+  color:#ccc;
+  min-width:52px;
+}
+.stat-bar-track{
+  flex:1;
+  height:6px;
+  background:#333;
+  border-radius:4px;
+  overflow:hidden;
+}
+.stat-bar-fill{
+  height:100%;
+  border-radius:4px;
+  transition:width 0.3s ease;
+}
+.stat-bar-num{
+  font-size:12px;
+  font-weight:700;
+  color:#ccc;
+  min-width:28px;
+  text-align:right;
+}
+
+/* Colores por stat en sliders — thumb + track */
+#editPlayerAttack::-webkit-slider-thumb   { background: #FF4C4C !important; }
+#editPlayerAttack::-moz-range-thumb       { background: #FF4C4C !important; }
+#editPlayerAttack::-webkit-slider-runnable-track { background: linear-gradient(#FF4C4C, #FF4C4C) no-repeat left/var(--val, 70%) 100%, var(--line) !important; }
+
+#editPlayerMidfield::-webkit-slider-thumb  { background: #2ECC71 !important; }
+#editPlayerMidfield::-moz-range-thumb      { background: #2ECC71 !important; }
+
+#editPlayerDefense::-webkit-slider-thumb  { background: #00E5FF !important; }
+#editPlayerDefense::-moz-range-thumb      { background: #00E5FF !important; }
+
+#editPlayerStamina::-webkit-slider-thumb  { background: #F1C40F !important; }
+#editPlayerStamina::-moz-range-thumb      { background: #F1C40F !important; }
+
+#editPlayerGarra::-webkit-slider-thumb    { background: #F1C40F !important; }
+#editPlayerGarra::-moz-range-thumb        { background: #F1C40F !important; }
+
+#editPlayerTechnique::-webkit-slider-thumb { background: #9B59B6 !important; }
+#editPlayerTechnique::-moz-range-thumb     { background: #9B59B6 !important; }
+
+/* Track coloreado via JS con background inline */
+.slider-group .slider { background: var(--slider-track, var(--line)); }
 
 .reports-list{
   display:flex;
