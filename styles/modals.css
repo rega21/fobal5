@@ -79,6 +79,10 @@
   padding:20px;
   border-bottom: 1px solid var(--line);
 }
+.modal-header--compact{
+  padding:10px 16px;
+  border-bottom:none;
+}
 .modal-header h2{
   margin:0;
   font-size:20px;
@@ -100,7 +104,7 @@
   color:var(--text);
 }
 .modal-body{
-  padding:20px;
+  padding:14px 20px;
 }
 
 /* Loading Spinner */
@@ -213,11 +217,14 @@
 
 .radar-chart-container{
   width:100%;
-  max-width:340px;
-  height:320px;
+  max-width:320px;
+  height:270px;
   border-radius:12px;
   margin:0 auto 16px;
   position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .rating-bars{
@@ -301,25 +308,9 @@
   text-align:right;
 }
 
-/* Colores por stat en sliders — thumb + track */
-#editPlayerAttack::-webkit-slider-thumb   { background: #FF4C4C !important; }
-#editPlayerAttack::-moz-range-thumb       { background: #FF4C4C !important; }
-
-
-#editPlayerMidfield::-webkit-slider-thumb  { background: #2ECC71 !important; }
-#editPlayerMidfield::-moz-range-thumb      { background: #2ECC71 !important; }
-
-#editPlayerDefense::-webkit-slider-thumb  { background: #00E5FF !important; }
-#editPlayerDefense::-moz-range-thumb      { background: #00E5FF !important; }
-
-#editPlayerStamina::-webkit-slider-thumb  { background: #F1C40F !important; }
-#editPlayerStamina::-moz-range-thumb      { background: #F1C40F !important; }
-
-#editPlayerGarra::-webkit-slider-thumb    { background: #F97316 !important; }
-#editPlayerGarra::-moz-range-thumb        { background: #F97316 !important; }
-
-#editPlayerTechnique::-webkit-slider-thumb { background: #9B59B6 !important; }
-#editPlayerTechnique::-moz-range-thumb     { background: #9B59B6 !important; }
+/* Thumb neutro para todos los sliders */
+.slider-group .slider::-webkit-slider-thumb { background: #9a9a9a !important; }
+.slider-group .slider::-moz-range-thumb     { background: #9a9a9a !important; }
 
 /* Track coloreado via JS con background inline */
 .slider-group .slider { background: var(--slider-track, var(--line)); }
@@ -403,13 +394,13 @@
 }
 
 .slider-group{
-  margin-bottom:16px;
+  margin-bottom:8px;
 }
 .slider-group label{
   display:block;
   font-weight:600;
-  font-size:14px;
-  margin-bottom:6px;
+  font-size:13px;
+  margin-bottom:3px;
 }
 .slider-group .slider{
   width:100%;
@@ -447,4 +438,16 @@
 }
 .error-msg.hidden{
   display:none;
+}
+
+#updatePlayerBtn{
+  background: #4a4a5a;
+  color: #e5e7eb;
+}
+#updatePlayerBtn:hover:not(:disabled){
+  background: #5a5a6a;
+}
+#updatePlayerBtn:active{
+  transform: scale(0.96);
+  filter: brightness(1.1);
 }
