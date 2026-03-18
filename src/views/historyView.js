@@ -87,7 +87,11 @@
       const label = getHistoryPlayerLabel(entry, resolvePlayerDisplay);
       const id = buildMvpCandidateId(entry, label);
       if (!id || !label || candidatesById.has(id)) return;
-      candidatesById.set(id, { id, label });
+      // Guardar nombre base para resolución cuando el nickname cambió después de guardar el partido
+      const baseName = typeof resolvePlayerDisplay === "function"
+        ? String(resolvePlayerDisplay(entry)?.name || getEntryName(entry) || "").trim()
+        : getEntryName(entry);
+      candidatesById.set(id, { id, label, name: baseName });
     });
 
     if (candidatesById.size === 0) {
@@ -125,6 +129,10 @@
 
     const byLabel = candidates.find((candidate) => String(candidate.label || "").trim().toLowerCase() === mvpLabel);
     if (byLabel) return byLabel.id;
+
+    // Fallback: match por nombre base (cubre cambio de nickname posterior al guardado del partido)
+    const byName = candidates.find((candidate) => String(candidate.name || "").trim().toLowerCase() === mvpLabel);
+    if (byName) return byName.id;
 
     const byId = candidates.find((candidate) => String(candidate.id || "").trim() === String(match?.mvp || "").trim());
     return byId ? byId.id : "";

@@ -264,11 +264,13 @@
   text-align:right;
 }
 
-/* Radar oscuro dentro del modal de edición */
+/* Radar oscuro dentro del modal de edición — tamaño compacto independiente del radar de rating */
 .radar-chart-container--dark{
   background:#1a1a2e;
   padding:8px;
   border-radius:12px;
+  max-width:100%;
+  height:280px;
 }
 
 /* Barras de stats con color (modal rating) */

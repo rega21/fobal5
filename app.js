@@ -1060,7 +1060,8 @@ function getMatchMvpCandidates(match) {
     const label = getHistoryPlayerDisplayLabel(entry);
     const id = buildMvpCandidateId(entry, label);
     if (!id || !label || candidatesById.has(id)) return;
-    candidatesById.set(id, { id, label });
+    const baseName = String(resolveHistoryPlayerDisplay(entry)?.name || getHistoryEntryName(entry) || "").trim();
+    candidatesById.set(id, { id, label, name: baseName });
   });
 
   if (candidatesById.size === 0) {
@@ -1098,6 +1099,10 @@ function resolveFallbackMvpCandidateId(match, candidates = []) {
 
   const byLabel = candidates.find((candidate) => String(candidate.label || "").trim().toLowerCase() === mvpLabel);
   if (byLabel) return byLabel.id;
+
+  // Fallback: match against base name (handles nickname changes — e.g. mvp:"Seba" after nickname→"Sebita")
+  const byName = candidates.find((candidate) => String(candidate.name || "").trim().toLowerCase() === mvpLabel);
+  if (byName) return byName.id;
 
   const byId = candidates.find((candidate) => String(candidate.id || "").trim() === String(match?.mvp || "").trim());
   return byId ? byId.id : "";
