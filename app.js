@@ -740,7 +740,7 @@ const PLAYER_ROLES = [
   {
     id: "defensor",
     label: "Defensor",
-    color: "#2ecc71",
+    color: "#00E5FF",
     weights: { attack: 0.5, midfield: 1.0, defense: 2.0, stamina: 1.5, garra: 1.2, technique: 0.8 },
   },
   {
