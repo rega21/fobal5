@@ -57,6 +57,18 @@ App web para organizar partidos y equipos de fútbol 5.
 - `N/5` representa solo votos comunitarios (no reemplaza ni borra los stats base del jugador).
 - `feedback`: creación en Supabase vía `createFeedback` + servicio cliente con control de envío.
 
+## Pendiente: promedio con 6 stats
+
+Cuando Stamina, Garra y Técnica tengan suficientes votos consolidados (umbral actual: 4), el promedio general deberá incluir los 6 stats dividiendo solo por los que tienen valor real (no `null`), para mantener compatibilidad con jugadores con votos viejos.
+
+Orden de peso propuesto para fútbol 5 (espacios reducidos):
+1. **Ataque** — lo más visible y valorado
+2. **Garra** — intensidad y cuerpo en cancha chica
+3. **Técnica** — el enganche, la elección, el regate en espacio reducido
+4. **Medio** — distribución y control del partido
+5. **Stamina** — menos determinante en cancha chica que en fútbol 11
+6. **Defensa** — importante pero menos "glamoroso" en el formato
+
 ## Próximo paso recomendado
 
 - Persistir promedio validado en `players` cuando un jugador alcance `>= COMMUNITY_MIN_VOTES` votos.
