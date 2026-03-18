@@ -304,7 +304,7 @@
 /* Colores por stat en sliders — thumb + track */
 #editPlayerAttack::-webkit-slider-thumb   { background: #FF4C4C !important; }
 #editPlayerAttack::-moz-range-thumb       { background: #FF4C4C !important; }
-#editPlayerAttack::-webkit-slider-runnable-track { background: linear-gradient(#FF4C4C, #FF4C4C) no-repeat left/var(--val, 70%) 100%, var(--line) !important; }
+
 
 #editPlayerMidfield::-webkit-slider-thumb  { background: #2ECC71 !important; }
 #editPlayerMidfield::-moz-range-thumb      { background: #2ECC71 !important; }
@@ -315,8 +315,8 @@
 #editPlayerStamina::-webkit-slider-thumb  { background: #F1C40F !important; }
 #editPlayerStamina::-moz-range-thumb      { background: #F1C40F !important; }
 
-#editPlayerGarra::-webkit-slider-thumb    { background: #F1C40F !important; }
-#editPlayerGarra::-moz-range-thumb        { background: #F1C40F !important; }
+#editPlayerGarra::-webkit-slider-thumb    { background: #F97316 !important; }
+#editPlayerGarra::-moz-range-thumb        { background: #F97316 !important; }
 
 #editPlayerTechnique::-webkit-slider-thumb { background: #9B59B6 !important; }
 #editPlayerTechnique::-moz-range-thumb     { background: #9B59B6 !important; }

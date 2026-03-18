@@ -718,7 +718,7 @@ const STAT_COLORS = {
   midfield:  "#2ECC71",
   defense:   "#00E5FF",
   stamina:   "#F1C40F",
-  garra:     "#F1C40F",
+  garra:     "#F97316",
   technique: "#9B59B6",
 };
 const STAT_COLORS_ARRAY = [
@@ -2620,7 +2620,7 @@ function updateSliderValues() {
   colorSliderTrack("editPlayerDefense",   "#00E5FF");
   colorSliderTrack("editPlayerMidfield",  "#2ECC71");
   colorSliderTrack("editPlayerStamina",   "#F1C40F");
-  colorSliderTrack("editPlayerGarra",     "#F1C40F");
+  colorSliderTrack("editPlayerGarra",     "#F97316");
   colorSliderTrack("editPlayerTechnique", "#9B59B6");
   updateEditRadarChart({ attack, midfield, defense, stamina, garra, technique });
 }
@@ -2630,17 +2630,17 @@ function updateEditRadarChart(stats) {
   const canvas = document.getElementById("editPlayerRadarChart");
   if (!canvas || typeof Chart === "undefined") return;
 
-  const hasAnyValue = Object.values(stats).some((v) => v > 0);
-  if (container) container.style.display = hasAnyValue ? "block" : "none";
-  if (!hasAnyValue) return;
+  if (container) container.style.display = "block";
 
-  const color = getDominantStatColor(stats);
+  const hasAnyValue = Object.values(stats).some((v) => v > 0);
+  const color = hasAnyValue ? getDominantStatColor(stats) : "transparent";
+  const pointColor = hasAnyValue ? color : "transparent";
 
   if (editRadarChartInstance) {
     editRadarChartInstance.data.datasets[0].data = [stats.attack, stats.midfield, stats.defense, stats.stamina, stats.garra, stats.technique];
     editRadarChartInstance.data.datasets[0].borderColor = color;
-    editRadarChartInstance.data.datasets[0].backgroundColor = color + "33";
-    editRadarChartInstance.data.datasets[0].pointBackgroundColor = color;
+    editRadarChartInstance.data.datasets[0].backgroundColor = hasAnyValue ? color + "33" : "transparent";
+    editRadarChartInstance.data.datasets[0].pointBackgroundColor = pointColor;
     editRadarChartInstance.update("none");
     return;
   }
@@ -2651,10 +2651,10 @@ function updateEditRadarChart(stats) {
       labels: ["Ataque", "Centro", "Defensa", "Stamina", "Garra", "Técnica"],
       datasets: [{
         data: [stats.attack, stats.midfield, stats.defense, stats.stamina, stats.garra, stats.technique],
-        backgroundColor: color + "33",
+        backgroundColor: hasAnyValue ? color + "33" : "transparent",
         borderColor: color,
         borderWidth: 2,
-        pointBackgroundColor: color,
+        pointBackgroundColor: pointColor,
         pointRadius: 4,
       }],
     },
