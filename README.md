@@ -33,6 +33,13 @@ App web para organizar partidos y equipos de fútbol 5.
 - Se implementó detección automática de rol por ponderación de stats: **Delantero**, **Defensor**, **Mediocampista**, **Extremo**, **Todoterreno**. El rol se muestra como badge con color en el modal de rating.
 - Modal de rating rediseñado con fondo oscuro (`#1a1a2e`) y radar chart (Chart.js CDN) con etiquetas que incluyen el valor numérico directamente (`Ataque (7.2)`).
 
+## UX: Radar como protagonista
+
+- Se eliminó el badge de rol (Mediocampista / Delantero / etc.) del modal de rating; el radar comunica el perfil del jugador visualmente sin necesidad de etiqueta.
+- Se eliminaron las barras de stats (`stat-bars`) del modal de rating; el radar ocupa todo el espacio y es el elemento central. Las barras quedaron comentadas en el código para poder reactivarlas si se quiere retroceder.
+- Se eliminaron los valores numéricos de las etiquetas del radar (`Ataque (7.2)` → `Ataque`): el score global ya aparece en el header del modal con la estrella, y los números sobre el radar distraían de leer la forma del jugador.
+- El radar se agrandó progresivamente al liberar espacio (320→360→400px ancho, 270→320→380px alto).
+
 ## UX: Modal de votación y rating rediseñados
 
 - Modal de votación (`editPlayerModal`) con fondo oscuro unificado.

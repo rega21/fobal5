@@ -812,14 +812,7 @@ function renderPlayerRadarChart(stats) {
   playerRadarChartInstance = new Chart(canvas, {
     type: "radar",
     data: {
-      labels: [
-        `Ataque (${Number(stats.attack).toFixed(1)})`,
-        `Centro (${Number(stats.midfield).toFixed(1)})`,
-        `Defensa (${Number(stats.defense).toFixed(1)})`,
-        `Stamina (${stats.stamina != null ? Number(stats.stamina).toFixed(1) : "–"})`,
-        `Garra (${stats.garra != null ? Number(stats.garra).toFixed(1) : "–"})`,
-        `Técnica (${stats.technique != null ? Number(stats.technique).toFixed(1) : "–"})`,
-      ],
+      labels: ["Ataque", "Centro", "Defensa", "Stamina", "Garra", "Técnica"],
       datasets: [{
         data: [stats.attack, stats.midfield, stats.defense, stats.stamina ?? 0, stats.garra ?? 0, stats.technique ?? 0],
         backgroundColor: color + "33",
@@ -861,7 +854,6 @@ function openRatingDetailsByPlayerId(playerId) {
 
   const title = document.getElementById("ratingDetailsTitle");
   const status = document.getElementById("ratingDetailsStatus");
-  const roleBadge = document.getElementById("playerRoleBadge");
   const ratingAverage = toScoreNumber(playerForView.communityAverage).toFixed(1);
   const ratingIcon = playerForView.communityStatus === "validated" ? "⭐" : "⏳";
   const ratingStatusValue = playerForView.communityStatus === "validated" ? ratingAverage : "XX";
@@ -882,30 +874,23 @@ function openRatingDetailsByPlayerId(playerId) {
     garra: playerForView.effectiveGarra,
     technique: playerForView.effectiveTechnique,
   };
-  const role = detectPlayerRole(stats);
-
   if (title) title.textContent = `Rating de ${preferredDisplayName}`;
   if (status) status.innerHTML = `${ratingIcon} <span class="rating-value">${ratingStatusValue}</span>${trendMarkup}`;
-  if (roleBadge) {
-    roleBadge.textContent = role.label;
-    roleBadge.style.backgroundColor = role.color + "22";
-    roleBadge.style.color = role.color;
-    roleBadge.style.borderColor = role.color;
-  }
 
-  const setStatBar = (fillId, numId, value) => {
-    const fill = document.getElementById(fillId);
-    const num = document.getElementById(numId);
-    const pct = value != null ? (Number(value) / 10 * 100).toFixed(0) : 0;
-    if (fill) fill.style.width = pct + "%";
-    if (num) num.textContent = value != null ? Number(value).toFixed(1) : "–";
-  };
-  setStatBar("statBarAttack", "statNumAttack", stats.attack);
-  setStatBar("statBarMidfield", "statNumMidfield", stats.midfield);
-  setStatBar("statBarDefense", "statNumDefense", stats.defense);
-  setStatBar("statBarStamina", "statNumStamina", stats.stamina);
-  setStatBar("statBarGarra", "statNumGarra", stats.garra);
-  setStatBar("statBarTechnique", "statNumTechnique", stats.technique);
+  // STAT BARS (desactivadas — radar es protagonista; reactivar si se quiere volver)
+  // const setStatBar = (fillId, numId, value) => {
+  //   const fill = document.getElementById(fillId);
+  //   const num = document.getElementById(numId);
+  //   const pct = value != null ? (Number(value) / 10 * 100).toFixed(0) : 0;
+  //   if (fill) fill.style.width = pct + "%";
+  //   if (num) num.textContent = value != null ? Number(value).toFixed(1) : "–";
+  // };
+  // setStatBar("statBarAttack", "statNumAttack", stats.attack);
+  // setStatBar("statBarMidfield", "statNumMidfield", stats.midfield);
+  // setStatBar("statBarDefense", "statNumDefense", stats.defense);
+  // setStatBar("statBarStamina", "statNumStamina", stats.stamina);
+  // setStatBar("statBarGarra", "statNumGarra", stats.garra);
+  // setStatBar("statBarTechnique", "statNumTechnique", stats.technique);
 
   modal.classList.remove("hidden");
   requestAnimationFrame(() => renderPlayerRadarChart(stats));

@@ -218,8 +218,8 @@
 
 .radar-chart-container{
   width:100%;
-  max-width:320px;
-  height:270px;
+  max-width:400px;
+  height:380px;
   border-radius:12px;
   margin:0 auto 16px;
   position:relative;
