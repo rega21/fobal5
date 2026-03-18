@@ -1,5 +1,5 @@
 const HISTORY_KEY = "fobal5_history";
-const DEFAULT_COMMUNITY_MIN_VOTES = 5;
+const DEFAULT_COMMUNITY_MIN_VOTES = 4;
 const configuredCommunityMinVotes = Number(window.APP_CONFIG?.COMMUNITY_MIN_VOTES);
 const COMMUNITY_MIN_VOTES =
   Number.isFinite(configuredCommunityMinVotes) && configuredCommunityMinVotes > 0
@@ -1275,7 +1275,7 @@ function enrichPlayerWithCommunityState(player) {
   const communityAttack = toScoreNumber(summary?.avgAttack);
   const communityDefense = toScoreNumber(summary?.avgDefense);
   const communityMidfield = toScoreNumber(summary?.avgMidfield);
-  const NEW_STAT_MIN_VOTES = 3;
+  const NEW_STAT_MIN_VOTES = DEFAULT_COMMUNITY_MIN_VOTES;
   const communityStamina = (summary?.countStamina || 0) >= NEW_STAT_MIN_VOTES ? toScoreNumber(summary?.avgStamina) : null;
   const communityGarra = (summary?.countGarra || 0) >= NEW_STAT_MIN_VOTES ? toScoreNumber(summary?.avgGarra) : null;
   const communityTechnique = (summary?.countTechnique || 0) >= NEW_STAT_MIN_VOTES ? toScoreNumber(summary?.avgTechnique) : null;
