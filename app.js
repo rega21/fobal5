@@ -3433,13 +3433,22 @@ document.getElementById("ratingNavNext")?.addEventListener("click", () => {
 const _ratingModalContent = document.querySelector("#ratingDetailsModal .modal-content");
 if (_ratingModalContent) {
   let _swipeStartX = null;
+  let _swipeStartY = null;
   _ratingModalContent.addEventListener("touchstart", (e) => {
     _swipeStartX = e.touches[0].clientX;
+    _swipeStartY = e.touches[0].clientY;
   }, { passive: true });
+  _ratingModalContent.addEventListener("touchmove", (e) => {
+    if (_swipeStartX === null) return;
+    const dx = Math.abs(e.touches[0].clientX - _swipeStartX);
+    const dy = Math.abs(e.touches[0].clientY - _swipeStartY);
+    if (dx > dy) e.preventDefault();
+  }, { passive: false });
   _ratingModalContent.addEventListener("touchend", (e) => {
     if (_swipeStartX === null || ratingNavPlayers.length < 2) return;
     const dx = e.changedTouches[0].clientX - _swipeStartX;
     _swipeStartX = null;
+    _swipeStartY = null;
     if (Math.abs(dx) < 50) return;
     if (dx < 0) {
       ratingNavIndex = (ratingNavIndex + 1) % ratingNavPlayers.length;
