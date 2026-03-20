@@ -3456,6 +3456,7 @@ if (_editModalContent) {
   let _editSwipeStartX = null;
   let _editSwipeStartY = null;
   _editModalContent.addEventListener("touchstart", (e) => {
+    if (e.target.type === "range") return;
     _editSwipeStartX = e.touches[0].clientX;
     _editSwipeStartY = e.touches[0].clientY;
   }, { passive: true });
