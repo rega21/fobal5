@@ -802,19 +802,25 @@ function renderPlayerRadarChart(stats) {
   const canvas = document.getElementById("playerRadarChart");
   if (!canvas || typeof Chart === "undefined") return;
 
-  if (playerRadarChartInstance) {
-    playerRadarChartInstance.destroy();
-    playerRadarChartInstance = null;
-  }
-
   const color = getDominantStatColor(stats);
+  const data = [stats.attack, stats.midfield, stats.defense, stats.stamina ?? 0, stats.garra ?? 0, stats.technique ?? 0];
+
+  if (playerRadarChartInstance) {
+    // Morfear al nuevo jugador con animación (funciona en iOS)
+    playerRadarChartInstance.data.datasets[0].data = data;
+    playerRadarChartInstance.data.datasets[0].borderColor = color;
+    playerRadarChartInstance.data.datasets[0].backgroundColor = color + "33";
+    playerRadarChartInstance.data.datasets[0].pointBackgroundColor = color;
+    playerRadarChartInstance.update();
+    return;
+  }
 
   playerRadarChartInstance = new Chart(canvas, {
     type: "radar",
     data: {
       labels: ["Ataque", "Centro", "Defensa", "Stamina", "Garra", "Técnica"],
       datasets: [{
-        data: [stats.attack, stats.midfield, stats.defense, stats.stamina ?? 0, stats.garra ?? 0, stats.technique ?? 0],
+        data,
         backgroundColor: color + "33",
         borderColor: color,
         borderWidth: 2,
