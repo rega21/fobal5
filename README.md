@@ -69,6 +69,11 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 5. **Stamina** — menos determinante en cancha chica que en fútbol 11
 6. **Defensa** — importante pero menos "glamoroso" en el formato
 
+## Pendiente: PWA (Progressive Web App)
+
+- Implementar `manifest.json` + service worker para que la app se pueda instalar en el celular como app nativa.
+- **Requisito previo**: ícono en PNG cuadrado (mínimo 512x512) para generar los tamaños necesarios (192x192, 512x512).
+
 ## Próximo paso recomendado
 
 - Persistir promedio validado en `players` cuando un jugador alcance `>= COMMUNITY_MIN_VOTES` votos.
