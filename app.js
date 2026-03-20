@@ -824,6 +824,7 @@ function renderPlayerRadarChart(stats) {
     },
     options: {
       responsive: true,
+      animation: { duration: 800, easing: "easeOutQuart" },
       plugins: { legend: { display: false } },
       scales: {
         r: {
