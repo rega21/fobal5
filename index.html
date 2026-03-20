@@ -193,11 +193,11 @@
           <div id="editIdentityFields" class="hidden">
             <div class="form-group">
               <label>Nombre</label>
-              <input type="text" id="editPlayerName" placeholder="Nombre">
+              <input type="text" id="editPlayerName" placeholder="Nombre" maxlength="20">
             </div>
             <div class="form-group">
               <label>Apodo</label>
-              <input type="text" id="editPlayerNickname" placeholder="Apodo">
+              <input type="text" id="editPlayerNickname" placeholder="Apodo" maxlength="20">
             </div>
           </div>
 
@@ -239,7 +239,7 @@
       <div class="modal-content modal-small modal-dark">
         <div class="modal-header">
           <div class="modal-header-main">
-            <h2 id="ratingDetailsTitle">Rating</h2>
+            <h2 id="ratingDetailsTitle">Rating Global</h2>
             <p id="ratingDetailsStatus" class="muted rating-details-status">⏳ <span class="rating-value">XX</span></p>
           </div>
           <button class="close-btn" id="closeRatingDetailsBtn">&times;</button>
@@ -258,6 +258,14 @@
             <div class="stat-bar-row"><span class="stat-bar-label">Técnica</span><div class="stat-bar-track"><div class="stat-bar-fill" id="statBarTechnique" style="background:#9B59B6"></div></div><span class="stat-bar-num" id="statNumTechnique"></span></div>
           </div>
           -->
+        </div>
+        <div class="modal-footer rating-nav-footer">
+          <button id="ratingNavPrev" class="rating-nav-btn" aria-label="Jugador anterior">&#8249;</button>
+          <div class="rating-nav-center">
+            <span id="ratingNavName" class="rating-nav-name"></span>
+            <div id="ratingNavDots" class="rating-nav-dots"></div>
+          </div>
+          <button id="ratingNavNext" class="rating-nav-btn" aria-label="Jugador siguiente">&#8250;</button>
         </div>
       </div>
     </div>
@@ -324,7 +332,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label>Nombre</label>
-          <input type="text" id="newPlayerName" placeholder="Nombre">
+          <input type="text" id="newPlayerName" placeholder="Nombre" maxlength="20">
         </div>
         <div class="form-group">
           <label>Apodo (opcional)</label>

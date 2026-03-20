@@ -839,20 +839,29 @@ function renderPlayerRadarChart(stats) {
   });
 }
 
+let ratingNavPlayers = [];
+let ratingNavIndex = -1;
+
 function openRatingDetailsByPlayerId(playerId) {
   const normalizedId = normalizePlayerId(playerId);
   if (!normalizedId) return;
 
-  const playerForView = getPlayersForDisplay(players).find(
-    (player) => normalizePlayerId(player?.id) === normalizedId
+  const allValidated = getPlayersForDisplay(players).filter(
+    (p) => p.communityStatus === "validated"
   );
+  const idx = allValidated.findIndex(
+    (p) => normalizePlayerId(p?.id) === normalizedId
+  );
+
+  const playerForView = idx !== -1 ? allValidated[idx] : null;
   if (!playerForView) return;
-  if (playerForView.communityStatus !== "validated") return;
+
+  ratingNavPlayers = [...allValidated].sort(() => Math.random() - 0.5);
+  ratingNavIndex = ratingNavPlayers.findIndex((p) => normalizePlayerId(p?.id) === normalizedId);
 
   const modal = document.getElementById("ratingDetailsModal");
   if (!modal) return;
 
-  const title = document.getElementById("ratingDetailsTitle");
   const status = document.getElementById("ratingDetailsStatus");
   const ratingAverage = toScoreNumber(playerForView.communityAverage).toFixed(1);
   const ratingIcon = playerForView.communityStatus === "validated" ? "⭐" : "⏳";
@@ -874,8 +883,25 @@ function openRatingDetailsByPlayerId(playerId) {
     garra: playerForView.effectiveGarra,
     technique: playerForView.effectiveTechnique,
   };
-  if (title) title.textContent = `Rating de ${preferredDisplayName}`;
   if (status) status.innerHTML = `${ratingIcon} <span class="rating-value">${ratingStatusValue}</span>${trendMarkup}`;
+
+  const navName = document.getElementById("ratingNavName");
+  if (navName) navName.textContent = preferredDisplayName;
+
+  const dotsContainer = document.getElementById("ratingNavDots");
+  if (dotsContainer) {
+    const total = ratingNavPlayers.length;
+    if (total <= 1) {
+      dotsContainer.innerHTML = "";
+    } else {
+      const count = total <= 6 ? total : 5;
+      const activeDot = total <= 6 ? ratingNavIndex : Math.round(ratingNavIndex * (count - 1) / (total - 1));
+      dotsContainer.innerHTML = Array.from({ length: count }, (_, i) =>
+        `<span class="dot${i === activeDot ? " active" : ""}"></span>`
+      ).join("");
+    }
+  }
+
 
   // STAT BARS (desactivadas — radar es protagonista; reactivar si se quiere volver)
   // const setStatBar = (fillId, numId, value) => {
@@ -928,6 +954,7 @@ async function saveIdentity() {
   const name = document.getElementById("identityName").value.trim();
   const nickname = document.getElementById("identityNickname").value.trim();
   if (!name) { alert("El nombre no puede estar vacío"); return; }
+  if ((name + nickname).length > 14) { alert("Nombre y apodo juntos no pueden superar 14 caracteres"); return; }
   try {
     await apiClient.updatePlayer(currentIdentityPlayerId, {
       name,
@@ -3146,6 +3173,10 @@ document.getElementById('createPlayerBtn')?.addEventListener('click', () => {
     alert('El nombre no puede estar vacío');
     return;
   }
+  if ((name + nickname).length > 14) {
+    alert('Nombre y apodo juntos no pueden superar 14 caracteres');
+    return;
+  }
   addPlayer(name, nickname, attack, defense, midfield);
   closeNewPlayerModal();
 });
@@ -3389,6 +3420,35 @@ document.getElementById("editPlayerModal").addEventListener("click", (e) => {
 });
 
 document.getElementById("closeRatingDetailsBtn")?.addEventListener("click", closeRatingDetailsModal);
+document.getElementById("ratingNavPrev")?.addEventListener("click", () => {
+  if (ratingNavPlayers.length < 2) return;
+  ratingNavIndex = (ratingNavIndex - 1 + ratingNavPlayers.length) % ratingNavPlayers.length;
+  openRatingDetailsByPlayerId(ratingNavPlayers[ratingNavIndex].id);
+});
+document.getElementById("ratingNavNext")?.addEventListener("click", () => {
+  if (ratingNavPlayers.length < 2) return;
+  ratingNavIndex = (ratingNavIndex + 1) % ratingNavPlayers.length;
+  openRatingDetailsByPlayerId(ratingNavPlayers[ratingNavIndex].id);
+});
+const _ratingModalContent = document.querySelector("#ratingDetailsModal .modal-content");
+if (_ratingModalContent) {
+  let _swipeStartX = null;
+  _ratingModalContent.addEventListener("touchstart", (e) => {
+    _swipeStartX = e.touches[0].clientX;
+  }, { passive: true });
+  _ratingModalContent.addEventListener("touchend", (e) => {
+    if (_swipeStartX === null || ratingNavPlayers.length < 2) return;
+    const dx = e.changedTouches[0].clientX - _swipeStartX;
+    _swipeStartX = null;
+    if (Math.abs(dx) < 50) return;
+    if (dx < 0) {
+      ratingNavIndex = (ratingNavIndex + 1) % ratingNavPlayers.length;
+    } else {
+      ratingNavIndex = (ratingNavIndex - 1 + ratingNavPlayers.length) % ratingNavPlayers.length;
+    }
+    openRatingDetailsByPlayerId(ratingNavPlayers[ratingNavIndex].id);
+  }, { passive: true });
+}
 document.getElementById("closeIdentityModalBtn")?.addEventListener("click", closeIdentityModal);
 document.getElementById("saveIdentityBtn")?.addEventListener("click", saveIdentity);
 document.getElementById("ratingDetailsModal")?.addEventListener("click", (e) => {

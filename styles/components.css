@@ -133,6 +133,9 @@
   font-weight: 750;
   letter-spacing: 0.2px;
   flex:1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .player-name--editable{
   cursor:pointer;
