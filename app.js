@@ -3452,11 +3452,11 @@ document.getElementById("editNavNext")?.addEventListener("click", () => {
   editPlayer(editNavPlayers[editNavIndex].id);
 });
 const _editModalContent = document.querySelector("#editPlayerModal .modal-content");
-if (_editModalContent) {
+const _editSwipeZone = document.getElementById("editRadarContainer");
+if (_editModalContent && _editSwipeZone) {
   let _editSwipeStartX = null;
   let _editSwipeStartY = null;
-  _editModalContent.addEventListener("touchstart", (e) => {
-    if (e.target.type === "range") return;
+  _editSwipeZone.addEventListener("touchstart", (e) => {
     _editSwipeStartX = e.touches[0].clientX;
     _editSwipeStartY = e.touches[0].clientY;
   }, { passive: true });
