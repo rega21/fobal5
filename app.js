@@ -2543,12 +2543,24 @@ async function saveEditPlayer() {
   const isIdentityAction = !adminAuthenticated && currentEditAction === "identity";
 
   if (!isIdentityAction) {
-    const allRatingsZero = attack === 0 && defense === 0 && midfield === 0 && stamina === 0 && garra === 0 && technique === 0;
-    if (allRatingsZero) {
-      const confirmed = confirm("Vas a guardar todos los stats en 0. ¿Querés continuar?");
-      if (!confirmed) {
-        return;
-      }
+    const allEqual = (val) => attack === val && defense === val && midfield === val && stamina === val && garra === val && technique === val;
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+    if (allEqual(0)) {
+      if (!confirm(pick([
+        "¿Seguro que no viste nada positivo?",
+        "No puede ser tan malo, ¡es un perro!",
+      ]))) return;
+    } else if (allEqual(1)) {
+      if (!confirm(pick([
+        "El famoso pata de palo.",
+        "¿Puede y debe mejorar, confirmás?",
+      ]))) return;
+    } else if (allEqual(10)) {
+      if (!confirm(pick([
+        "¿Es el mejor del mundo? SIUUU 🐐",
+        "¿Es el mesías?",
+      ]))) return;
     }
   }
 
