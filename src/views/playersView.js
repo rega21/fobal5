@@ -109,6 +109,9 @@
         const yaVotaste = !adminAuthenticated && votedPlayers
           .map((id) => String(id).trim().toLowerCase())
           .includes(playerIdNormalized);
+        const effectiveAttack = Number(player.effectiveAttack ?? player.attack ?? 0);
+        const effectiveDefense = Number(player.effectiveDefense ?? player.defense ?? 0);
+        const effectiveMidfield = Number(player.effectiveMidfield ?? player.midfield ?? 0);
         const ratingAverage = Number(player.communityAverage ?? 0).toFixed(1);
         const ratingIcon = player.communityStatus === "validated" ? "⭐" : "⏳";
         const ratingValue = player.communityStatus === "validated"
