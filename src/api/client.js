@@ -290,7 +290,7 @@
         `/rest/v1/player_ratings?select=id&player_id=eq.${encodeURIComponent(normalizedPlayerId)}&voter_key=eq.${encodeURIComponent(normalizedVoterKey)}&created_at=gte.${encodeURIComponent(since)}`,
         { method: "GET", headers: buildSupabaseHeaders() }
       );
-      return Array.isArray(rows) && rows.length >= 3;
+      return Array.isArray(rows) && rows.length >= 10;
     },
     async createFeedback(payload) {
       if (!HAS_SUPABASE) {
