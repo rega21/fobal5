@@ -841,6 +841,8 @@ function renderPlayerRadarChart(stats) {
 
 let ratingNavPlayers = [];
 let ratingNavIndex = -1;
+let editNavPlayers = [];
+let editNavIndex = -1;
 
 function openRatingDetailsByPlayerId(playerId) {
   const normalizedId = normalizePlayerId(playerId);
@@ -856,7 +858,9 @@ function openRatingDetailsByPlayerId(playerId) {
   const playerForView = idx !== -1 ? allValidated[idx] : null;
   if (!playerForView) return;
 
-  ratingNavPlayers = [...allValidated].sort(() => Math.random() - 0.5);
+  if (ratingNavPlayers.length === 0) {
+    ratingNavPlayers = [...allValidated].sort(() => Math.random() - 0.5);
+  }
   ratingNavIndex = ratingNavPlayers.findIndex((p) => normalizePlayerId(p?.id) === normalizedId);
 
   const modal = document.getElementById("ratingDetailsModal");
@@ -924,6 +928,8 @@ function openRatingDetailsByPlayerId(playerId) {
 
 function closeRatingDetailsModal() {
   document.getElementById("ratingDetailsModal")?.classList.add("hidden");
+  ratingNavPlayers = [];
+  ratingNavIndex = -1;
 }
 
 let currentIdentityPlayerId = null;
@@ -2328,6 +2334,11 @@ async function editPlayer(id) {
     }
   }
 
+  if (editNavPlayers.length === 0) {
+    editNavPlayers = getPlayersForDisplay(players).filter(p => p.communityStatus === "validated");
+  }
+  editNavIndex = editNavPlayers.findIndex(p => String(p.id) === String(id));
+
   currentEditingPlayerId = id;
   document.getElementById("editPlayerName").value = playerForEdit.name;
   document.getElementById("editPlayerNickname").value = playerForEdit.nickname || "";
@@ -2389,6 +2400,7 @@ async function openEditModal(
   currentEditPlayerName = normalizedPlayerName;
   currentEditHasVotedBefore = hasVotedBefore;
   currentEditHasPrefilledVote = hasPrefilledPreviousVote;
+
 
   // Verificar límite de votos para la pestaña Puntos
   currentEditReachedVoteLimit = false;
@@ -2505,6 +2517,8 @@ function closeEditModal() {
   currentEditPlayerName = "";
   currentEditHasVotedBefore = false;
   currentEditHasPrefilledVote = false;
+  editNavPlayers = [];
+  editNavIndex = -1;
 }
 
 async function saveEditPlayer() {
@@ -3419,6 +3433,54 @@ document.getElementById("editPlayerModal").addEventListener("click", (e) => {
   }
 });
 
+
+function resetEditChartForNav() {
+  if (editRadarChartInstance) {
+    editRadarChartInstance.destroy();
+    editRadarChartInstance = null;
+  }
+}
+document.getElementById("editNavPrev")?.addEventListener("click", () => {
+  if (editNavPlayers.length < 2) return;
+  editNavIndex = (editNavIndex - 1 + editNavPlayers.length) % editNavPlayers.length;
+  resetEditChartForNav();
+  editPlayer(editNavPlayers[editNavIndex].id);
+});
+document.getElementById("editNavNext")?.addEventListener("click", () => {
+  if (editNavPlayers.length < 2) return;
+  editNavIndex = (editNavIndex + 1) % editNavPlayers.length;
+  resetEditChartForNav();
+  editPlayer(editNavPlayers[editNavIndex].id);
+});
+const _editModalContent = document.querySelector("#editPlayerModal .modal-content");
+if (_editModalContent) {
+  let _editSwipeStartX = null;
+  let _editSwipeStartY = null;
+  _editModalContent.addEventListener("touchstart", (e) => {
+    _editSwipeStartX = e.touches[0].clientX;
+    _editSwipeStartY = e.touches[0].clientY;
+  }, { passive: true });
+  _editModalContent.addEventListener("touchmove", (e) => {
+    if (_editSwipeStartX === null) return;
+    const dx = Math.abs(e.touches[0].clientX - _editSwipeStartX);
+    const dy = Math.abs(e.touches[0].clientY - _editSwipeStartY);
+    if (dx > dy) e.preventDefault();
+  }, { passive: false });
+  _editModalContent.addEventListener("touchend", (e) => {
+    if (_editSwipeStartX === null || editNavPlayers.length < 2) return;
+    const dx = e.changedTouches[0].clientX - _editSwipeStartX;
+    _editSwipeStartX = null;
+    _editSwipeStartY = null;
+    if (Math.abs(dx) < 50) return;
+    if (dx < 0) {
+      editNavIndex = (editNavIndex + 1) % editNavPlayers.length;
+    } else {
+      editNavIndex = (editNavIndex - 1 + editNavPlayers.length) % editNavPlayers.length;
+    }
+    resetEditChartForNav();
+    editPlayer(editNavPlayers[editNavIndex].id);
+  }, { passive: true });
+}
 document.getElementById("closeRatingDetailsBtn")?.addEventListener("click", closeRatingDetailsModal);
 document.getElementById("ratingNavPrev")?.addEventListener("click", () => {
   if (ratingNavPlayers.length < 2) return;

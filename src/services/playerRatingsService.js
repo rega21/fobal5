@@ -35,6 +35,11 @@
   }
 
   function createPlayerRatingsService({ apiClient }) {
+    // Cache en memoria: playerId → rating del usuario
+    // Se llena la primera vez que se fetchea y se actualiza al guardar.
+    // Dura mientras la sesión esté abierta (se pierde al recargar la página).
+    const ratingsCache = new Map();
+
     async function getCurrentUserRatingForPlayer(playerId) {
       if (!apiClient?.getPlayerRatingByPlayerAndVoter) {
         return null;
@@ -43,11 +48,19 @@
       const normalizedPlayerId = String(playerId || "").trim();
       if (!normalizedPlayerId) return null;
 
+      // Cache hit → devuelve inmediato, sin red
+      if (ratingsCache.has(normalizedPlayerId)) {
+        return ratingsCache.get(normalizedPlayerId);
+      }
+
+      // Cache miss → va a la red y guarda el resultado
       const voterKey = getOrCreateVoterKey();
-      return apiClient.getPlayerRatingByPlayerAndVoter({
+      const result = await apiClient.getPlayerRatingByPlayerAndVoter({
         playerId: normalizedPlayerId,
         voterKey,
       });
+      ratingsCache.set(normalizedPlayerId, result ?? null);
+      return result;
     }
 
     async function savePlayerRating({ playerId, attack, defense, midfield, stamina, garra, technique }) {
@@ -71,8 +84,10 @@
         throw new Error("player_id requerido");
       }
 
-      // Llama a la función RPC que aplica el límite de votos
-      return apiClient.insertPlayerRatingLimited(payload);
+      const result = await apiClient.insertPlayerRatingLimited(payload);
+      // Actualizar cache con el voto recién guardado
+      ratingsCache.set(payload.player_id, payload);
+      return result;
     }
 
     return {
