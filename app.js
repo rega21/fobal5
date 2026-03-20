@@ -923,7 +923,7 @@ function openRatingDetailsByPlayerId(playerId) {
   // setStatBar("statBarTechnique", "statNumTechnique", stats.technique);
 
   modal.classList.remove("hidden");
-  requestAnimationFrame(() => renderPlayerRadarChart(stats));
+  requestAnimationFrame(() => requestAnimationFrame(() => renderPlayerRadarChart(stats)));
 }
 
 function closeRatingDetailsModal() {
