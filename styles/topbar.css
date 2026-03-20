@@ -170,3 +170,22 @@ body.admin-active .topbar{
     min-width: 176px;
   }
 }
+
+[data-theme="dark"] .topbar-menu-item{
+  background: #1f2937;
+  border-color: #374151;
+}
+@media (any-hover: hover){
+  [data-theme="dark"] .topbar-menu-item:hover{
+    background: #374151;
+    border-color: #4b5563;
+  }
+}
+[data-theme="dark"] body.admin-active .topbar{
+  background: linear-gradient(to right, #052e16, #111827);
+  border-bottom-color: #166534;
+}
+[data-theme="dark"] .topbar-menu-item.admin-authenticated{
+  background: #064e3b;
+  color: #6ee7b7;
+}

@@ -12,6 +12,15 @@
   --rating-trend-gap: 4px;
 }
 
+[data-theme="dark"]{
+  --bg: #111827;
+  --text: #f9fafb;
+  --muted: #9ca3af;
+  --line: #374151;
+  --card: #1f2937;
+  --shadow: 0 1px 0 rgba(0,0,0,0.3);
+}
+
 *{ box-sizing:border-box; }
 body{
   margin:0;

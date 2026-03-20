@@ -104,6 +104,16 @@
   cursor:not-allowed;
 }
 
+[data-theme="dark"] .match-song-icon-btn{
+  background: var(--card);
+}
+[data-theme="dark"] .match-song-icon-btn:hover:not(:disabled){
+  background: #374151;
+}
+[data-theme="dark"] .match-song-icon-btn.is-playing{
+  background: #1e3a5f;
+}
+
 /* Scrollable player list in match selection */
 #matchPlayersList{
   max-height: 60vh;
@@ -325,6 +335,26 @@
     margin-bottom:8px !important;
   }
 }
+
+.match-confirm-box{
+  margin-top: 20px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+/* Dark mode overrides */
+[data-theme="dark"] .match-confirm-box{ background: var(--card); }
+[data-theme="dark"] .segmented{ background: #1f2937; }
+[data-theme="dark"] .match-controls{ background: var(--bg); }
+[data-theme="dark"] .match-selection-header{ background: var(--bg); border-bottom-color: var(--line); }
+[data-theme="dark"] .team{ background: var(--card); }
+[data-theme="dark"] .team-player{ background: #374151; color: var(--text); }
+[data-theme="dark"] .match-team{ background: #374151; }
+[data-theme="dark"] .card.match-entry .match-score{ color: var(--text); }
+[data-theme="dark"] .card.match-entry .dash{ color: #6b7280; }
+[data-theme="dark"] .card.match-entry .match-player{ background: #374151; color: var(--text); }
+[data-theme="dark"] .card.match-entry .match-mvp-select:disabled{ background: #374151; color: var(--muted); }
 
 /* Admin player */
 .admin-player{

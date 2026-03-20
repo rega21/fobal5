@@ -1,3 +1,9 @@
+// Dark mode init
+(function(){
+  const saved = localStorage.getItem("fobal5_theme");
+  if (saved === "dark") document.documentElement.setAttribute("data-theme", "dark");
+})();
+
 const HISTORY_KEY = "fobal5_history";
 const DEFAULT_COMMUNITY_MIN_VOTES = 4;
 const configuredCommunityMinVotes = Number(window.APP_CONFIG?.COMMUNITY_MIN_VOTES);
@@ -3114,6 +3120,26 @@ document.getElementById("voteHistoryBtn")?.addEventListener("click", () => {
 document.getElementById("feedbackBtn")?.addEventListener("click", () => {
   void openAdminReportsModal();
 });
+document.getElementById("darkModeBtn")?.addEventListener("click", () => {
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  if (isDark) {
+    document.documentElement.removeAttribute("data-theme");
+    localStorage.setItem("fobal5_theme", "light");
+    document.getElementById("darkModeBtn").textContent = "Modo Oscuro";
+  } else {
+    document.documentElement.setAttribute("data-theme", "dark");
+    localStorage.setItem("fobal5_theme", "dark");
+    document.getElementById("darkModeBtn").textContent = "Modo Claro";
+  }
+});
+if (document.documentElement.getAttribute("data-theme") === "dark") {
+  const btn = document.getElementById("darkModeBtn");
+  if (btn) btn.textContent = "Modo Claro";
+}
+document.getElementById("globalRatingBtn")?.addEventListener("click", () => {
+  const firstPlayer = getPlayersForDisplay(players).find((p) => p.communityStatus === "validated");
+  if (firstPlayer) openRatingDetailsByPlayerId(firstPlayer.id);
+});
 document.getElementById("infoAppBtn")?.addEventListener("click", openInfoApp);
 document.getElementById("menuToggleBtn")?.addEventListener("click", (e) => {
   e.stopPropagation();
@@ -3320,16 +3346,22 @@ function renderManualTeamSelection() {
   const teamBCount = currentTeams?.b?.length || 0;
   teamCount.textContent = `A: ${teamACount}/5 - B: ${teamBCount}/5`;
 
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const rowBg = isDark ? "#1f2937" : "#f9fafb";
+  const rowBorder = isDark ? "#374151" : "#e5e7eb";
+  const rowColor = isDark ? "#f9fafb" : "#111827";
+  const btnInactive = isDark ? "#374151" : "#d1d5db";
+
   const html = selectedPlayers.map((p, idx) => {
     // Always compare IDs as strings
     const inTeamA = currentTeams?.a?.some(t => String(t.id) === String(p.id));
     const inTeamB = currentTeams?.b?.some(t => String(t.id) === String(p.id));
     return `
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:#f9fafb; border-radius:6px; border:1px solid #e5e7eb;">
-        <span style="font-weight:500;">${p.name}${p.nickname ? ' <span style=\"color:#9ca3af;\">"' + p.nickname + '"</span>' : ''}</span>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:${rowBg}; border-radius:6px; border:1px solid ${rowBorder}; color:${rowColor};">
+        <span style="font-weight:500;">${p.name}${p.nickname ? ' <span style="color:#9ca3af;">"' + p.nickname + '"</span>' : ''}</span>
         <div style="display:flex; gap:6px;">
-          <button class="team-btn-a" data-idx="${idx}" style="padding:4px 12px; border-radius:4px; border:none; cursor:pointer; background:${inTeamA ? '#10b981' : '#d1d5db'}; color:white; font-weight:600; font-size:12px;">● A</button>
-          <button class="team-btn-b" data-idx="${idx}" style="padding:4px 12px; border-radius:4px; border:none; cursor:pointer; background:${inTeamB ? '#3b82f6' : '#d1d5db'}; color:white; font-weight:600; font-size:12px;">● B</button>
+          <button class="team-btn-a" data-idx="${idx}" style="padding:4px 12px; border-radius:4px; border:none; cursor:pointer; background:${inTeamA ? '#10b981' : btnInactive}; color:white; font-weight:600; font-size:12px;">● A</button>
+          <button class="team-btn-b" data-idx="${idx}" style="padding:4px 12px; border-radius:4px; border:none; cursor:pointer; background:${inTeamB ? '#3b82f6' : btnInactive}; color:white; font-weight:600; font-size:12px;">● B</button>
         </div>
       </div>
     `;

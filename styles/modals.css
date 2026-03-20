@@ -522,3 +522,16 @@
   transform: scale(0.96);
   filter: brightness(1.1);
 }
+
+/* Dark mode overrides */
+[data-theme="dark"] .modal-content:not(.modal-dark){ background: var(--card); color: var(--text); }
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea{
+  background: #111827;
+  color: var(--text);
+  border-color: var(--line);
+}
+[data-theme="dark"] .error-msg{ background: #3b1515; }
+[data-theme="dark"] .report-item{ background: #374151; }
+[data-theme="dark"] .vote-activity-item{ background: #1e3a5f; }

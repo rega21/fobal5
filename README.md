@@ -97,6 +97,14 @@ La app está pensada actualmente como grupo único (FutbolFoca). Para escalar a 
 
 
 
+# Dark Mode
+
+- Modo oscuro implementado con CSS variables (`[data-theme="dark"]` en `<html>`).
+- Toggle en menú hamburguesa ("Modo Oscuro" / "Modo Claro"), sin iconos.
+- Preferencia persistida en `localStorage` (`fobal5_theme`) y aplicada antes del primer render.
+- Ítem "Rating Global" agregado al menú hamburguesa como punto de entrada alternativo al tap en la estrella.
+- Cobertura de dark mode: topbar, cards, botones, modales, formularios, match setup, historial, asignación manual de equipos y sección de confirmación de partido.
+
 # Límite de votos por jugador
 
 - Implementado en backend (Supabase): máximo 3 votos por jugador cada 24hs por usuario (`voter_key`), via RPC `insert_player_rating_limited`.

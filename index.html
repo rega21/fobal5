@@ -23,6 +23,8 @@
           <span id="adminBtnText">Admin</span>
         </button>
         <button class="topbar-menu-item hidden" type="button" id="voteHistoryBtn" role="menuitem" aria-label="Historial de votos">🗳️ Historial de votos</button>
+        <button class="topbar-menu-item" type="button" id="darkModeBtn" role="menuitem" aria-label="Modo oscuro">Modo Oscuro</button>
+        <button class="topbar-menu-item" type="button" id="globalRatingBtn" role="menuitem" aria-label="Rating global">Rating Global</button>
         <button class="topbar-menu-item" type="button" id="feedbackBtn" role="menuitem" aria-label="Reportes o mejoras">Reportes o Mejoras</button>
         <button class="topbar-menu-item" type="button" id="infoAppBtn" role="menuitem" aria-label="Info App">Info App</button>
       </div>
@@ -91,7 +93,7 @@
             </div>
           </div>
 
-          <div style="margin-top:20px; padding:16px; background:#f9fafb; border-radius:12px;">
+          <div class="match-confirm-box">
             <h4 style="margin:0 0 12px 0; font-size:16px;">Confirmar Partido</h4>
             <div class="form-group">
               <label>Lugar</label>
@@ -111,7 +113,7 @@
         <div id="matchResults" class="hidden">
           <button class="btn-link" id="backToSetupBtn">← Volver a datos del partido</button>
 
-          <div style="margin-top:16px; padding:16px; background:#f9fafb; border-radius:12px;">
+          <div class="match-confirm-box">
             <h4 style="margin:0 0 12px 0; font-size:16px; text-align:center;">✅ Partido confirmado</h4>
             <button class="btn btn-success" id="copyToWhatsAppBtn" style="width:100%;">📋 Compartir en WhatsApp</button>
             <button class="btn btn-secondary" id="copyShareMessageBtn" style="width:100%; margin-top:8px;">📄 Copiar mensaje</button>
