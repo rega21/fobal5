@@ -3434,22 +3434,14 @@ document.getElementById("editPlayerModal").addEventListener("click", (e) => {
 });
 
 
-function resetEditChartForNav() {
-  if (editRadarChartInstance) {
-    editRadarChartInstance.destroy();
-    editRadarChartInstance = null;
-  }
-}
 document.getElementById("editNavPrev")?.addEventListener("click", () => {
   if (editNavPlayers.length < 2) return;
   editNavIndex = (editNavIndex - 1 + editNavPlayers.length) % editNavPlayers.length;
-  resetEditChartForNav();
   editPlayer(editNavPlayers[editNavIndex].id);
 });
 document.getElementById("editNavNext")?.addEventListener("click", () => {
   if (editNavPlayers.length < 2) return;
   editNavIndex = (editNavIndex + 1) % editNavPlayers.length;
-  resetEditChartForNav();
   editPlayer(editNavPlayers[editNavIndex].id);
 });
 const _editModalContent = document.querySelector("#editPlayerModal .modal-content");
@@ -3477,7 +3469,6 @@ if (_editModalContent) {
     } else {
       editNavIndex = (editNavIndex - 1 + editNavPlayers.length) % editNavPlayers.length;
     }
-    resetEditChartForNav();
     editPlayer(editNavPlayers[editNavIndex].id);
   }, { passive: true });
 }
