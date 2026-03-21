@@ -3197,7 +3197,7 @@ if (clearSearchBtn) {
     if (searchInput) searchInput.value = "";
     playerSearchTerm = "";
     renderPlayers();
-    if (searchInput) searchInput.focus();
+    if (searchWrap) searchWrap.classList.add("hidden");
   });
 }
 
