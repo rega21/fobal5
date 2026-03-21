@@ -12,11 +12,12 @@
   <header class="topbar">
     <div class="brand">
       <span class="brand-title">Futbol Foca</span>
-      <span class="ball" aria-hidden="true">🦭</span>
-      
     </div>
 
     <div class="topbar-actions" id="topbarActions">
+      <button class="menu-toggle theme-toggle" type="button" id="darkModeFab" aria-label="Cambiar tema">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
+      </button>
       <button class="menu-toggle" type="button" id="menuToggleBtn" aria-label="Abrir menú" aria-expanded="false" aria-controls="topbarMenu">☰</button>
       <div class="topbar-menu" id="topbarMenu" role="menu" aria-label="Menú principal">
         <button class="topbar-menu-item" type="button" id="adminBtn" role="menuitem" aria-label="Admin">
@@ -416,7 +417,6 @@
     </div>
   </div>
 
-  <button class="match-song-icon-btn global-song-fab" id="matchSongToggleBtn" type="button" aria-label="Reproducir música" title="Reproducir música" aria-pressed="false">🔊</button>
 
   <nav class="bottomnav" role="navigation" aria-label="Bottom Navigation">
     <button class="tab active" data-target="players">

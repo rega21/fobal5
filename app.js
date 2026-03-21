@@ -3120,21 +3120,34 @@ document.getElementById("voteHistoryBtn")?.addEventListener("click", () => {
 document.getElementById("feedbackBtn")?.addEventListener("click", () => {
   void openAdminReportsModal();
 });
-document.getElementById("darkModeBtn")?.addEventListener("click", () => {
+const ICON_MOON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>`;
+const ICON_SUN = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`;
+
+function applyDarkModeToggle() {
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
   if (isDark) {
     document.documentElement.removeAttribute("data-theme");
     localStorage.setItem("fobal5_theme", "light");
-    document.getElementById("darkModeBtn").textContent = "Modo Oscuro";
+    const menuBtn = document.getElementById("darkModeBtn");
+    if (menuBtn) menuBtn.textContent = "Modo Oscuro";
+    const fab = document.getElementById("darkModeFab");
+    if (fab) fab.innerHTML = ICON_MOON;
   } else {
     document.documentElement.setAttribute("data-theme", "dark");
     localStorage.setItem("fobal5_theme", "dark");
-    document.getElementById("darkModeBtn").textContent = "Modo Claro";
+    const menuBtn = document.getElementById("darkModeBtn");
+    if (menuBtn) menuBtn.textContent = "Modo Claro";
+    const fab = document.getElementById("darkModeFab");
+    if (fab) fab.innerHTML = ICON_SUN;
   }
-});
+}
+document.getElementById("darkModeBtn")?.addEventListener("click", applyDarkModeToggle);
+document.getElementById("darkModeFab")?.addEventListener("click", applyDarkModeToggle);
 if (document.documentElement.getAttribute("data-theme") === "dark") {
-  const btn = document.getElementById("darkModeBtn");
-  if (btn) btn.textContent = "Modo Claro";
+  const menuBtn = document.getElementById("darkModeBtn");
+  if (menuBtn) menuBtn.textContent = "Modo Claro";
+  const fab = document.getElementById("darkModeFab");
+  if (fab) fab.innerHTML = ICON_SUN;
 }
 document.getElementById("globalRatingBtn")?.addEventListener("click", () => {
   const firstPlayer = getPlayersForDisplay(players).find((p) => p.communityStatus === "validated");
@@ -3246,7 +3259,6 @@ document.getElementById("backToSelectionBtn")?.addEventListener("click", backToS
 document.getElementById("backToSetupBtn")?.addEventListener("click", backToMatchSetup);
 document.getElementById("confirmMatchInfoBtn")?.addEventListener("click", confirmMatchInfo);
 document.getElementById("openMapsBtn")?.addEventListener("click", openDetectedLocationInMaps);
-document.getElementById("matchSongToggleBtn")?.addEventListener("click", toggleMatchSong);
 document.getElementById("copyToWhatsAppBtn")?.addEventListener("click", copyToWhatsApp);
 document.getElementById("copyShareMessageBtn")?.addEventListener("click", copyShareMessage);
 // Balanced teams
