@@ -3125,27 +3125,20 @@ const ICON_SUN = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
 
 function applyDarkModeToggle() {
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const fab = document.getElementById("darkModeFab");
   if (isDark) {
     document.documentElement.removeAttribute("data-theme");
     localStorage.setItem("fobal5_theme", "light");
-    const menuBtn = document.getElementById("darkModeBtn");
-    if (menuBtn) menuBtn.textContent = "Modo Oscuro";
-    const fab = document.getElementById("darkModeFab");
     if (fab) fab.innerHTML = ICON_MOON;
   } else {
     document.documentElement.setAttribute("data-theme", "dark");
     localStorage.setItem("fobal5_theme", "dark");
-    const menuBtn = document.getElementById("darkModeBtn");
-    if (menuBtn) menuBtn.textContent = "Modo Claro";
-    const fab = document.getElementById("darkModeFab");
     if (fab) fab.innerHTML = ICON_SUN;
   }
 }
-document.getElementById("darkModeBtn")?.addEventListener("click", applyDarkModeToggle);
 document.getElementById("darkModeFab")?.addEventListener("click", applyDarkModeToggle);
+document.getElementById("matchSongToggleBtn")?.addEventListener("click", toggleMatchSong);
 if (document.documentElement.getAttribute("data-theme") === "dark") {
-  const menuBtn = document.getElementById("darkModeBtn");
-  if (menuBtn) menuBtn.textContent = "Modo Claro";
   const fab = document.getElementById("darkModeFab");
   if (fab) fab.innerHTML = ICON_SUN;
 }
