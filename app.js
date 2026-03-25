@@ -2929,8 +2929,8 @@ function closeFeedbackModal() {
 }
 
 function openInfoApp() {
-  showToast(`Calificación de jugadores: N/${COMMUNITY_MIN_VOTES} mínimo para validar`, 2400);
   closeTopbarMenu();
+  document.getElementById("infoAppModal")?.classList.remove("hidden");
 }
 
 function toggleTopbarMenu() {
@@ -3147,6 +3147,9 @@ document.getElementById("globalRatingBtn")?.addEventListener("click", () => {
   if (firstPlayer) openRatingDetailsByPlayerId(firstPlayer.id);
 });
 document.getElementById("infoAppBtn")?.addEventListener("click", openInfoApp);
+document.getElementById("closeInfoAppBtn")?.addEventListener("click", () => {
+  document.getElementById("infoAppModal")?.classList.add("hidden");
+});
 document.getElementById("menuToggleBtn")?.addEventListener("click", (e) => {
   e.stopPropagation();
   toggleTopbarMenu();
