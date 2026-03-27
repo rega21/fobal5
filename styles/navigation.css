@@ -2,13 +2,13 @@
 .bottomnav{
   position: fixed;
   left:0; right:0; bottom:0;
-  height: 74px;
+  height: calc(74px + env(safe-area-inset-bottom));
   background: var(--bg);
   border-top: 1px solid var(--line);
   display:flex;
   justify-content:space-around;
-  align-items:center;
-  padding: 8px 10px env(safe-area-inset-bottom);
+  align-items:flex-start;
+  padding: 12px 10px env(safe-area-inset-bottom);
 }
 .tab{
   border:0;
