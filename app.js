@@ -3123,6 +3123,15 @@ document.getElementById("feedbackBtn")?.addEventListener("click", () => {
 const ICON_MOON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>`;
 const ICON_SUN = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`;
 
+function updateBrandLogo() {
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const logo = document.getElementById("brandLogo");
+  const modalLogo = document.querySelector("#logoModal img");
+  const src = isDark ? "icons/futbolFocapt2.jpg" : "icons/futbolFoca.png";
+  if (logo) logo.src = src;
+  if (modalLogo) modalLogo.src = src;
+}
+
 function applyDarkModeToggle() {
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
   const fab = document.getElementById("darkModeFab");
@@ -3135,6 +3144,7 @@ function applyDarkModeToggle() {
     localStorage.setItem("fobal5_theme", "dark");
     if (fab) fab.innerHTML = ICON_SUN;
   }
+  updateBrandLogo();
 }
 document.getElementById("darkModeFab")?.addEventListener("click", applyDarkModeToggle);
 document.getElementById("matchSongToggleBtn")?.addEventListener("click", toggleMatchSong);
@@ -3142,6 +3152,7 @@ if (document.documentElement.getAttribute("data-theme") === "dark") {
   const fab = document.getElementById("darkModeFab");
   if (fab) fab.innerHTML = ICON_SUN;
 }
+updateBrandLogo();
 document.getElementById("globalRatingBtn")?.addEventListener("click", () => {
   const firstPlayer = getPlayersForDisplay(players).find((p) => p.communityStatus === "validated");
   if (firstPlayer) openRatingDetailsByPlayerId(firstPlayer.id);
