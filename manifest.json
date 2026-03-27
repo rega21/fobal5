@@ -1,0 +1,18 @@
+{
+  "name": "Futbol Foca",
+  "short_name": "Fobal5",
+  "description": "Seguimiento de partidos y ratings de jugadores",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
