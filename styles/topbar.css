@@ -20,6 +20,7 @@ body.admin-active .topbar{
   font-size:20px;
 }
 .ball{ font-size:20px; }
+.brand-logo{ height:50px; width:auto; object-fit:contain; border-radius:50%; }
 
 .topbar-actions{
   position: relative;

@@ -17,7 +17,7 @@ const STATIC_ASSETS = [
   '/src/services/playerRatingsService.js',
   '/src/services/feedbackService.js',
   '/manifest.json',
-  '/icons/icon.svg',
+  '/icons/futbolFoca.png',
 ];
 
 self.addEventListener('install', (event) => {

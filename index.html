@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Futbol Foca</title>
-  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="icons/icon.svg" />
+  <link rel="icon" href="icons/futbolFoca.png" type="image/png" />
+  <link rel="apple-touch-icon" href="icons/futbolFoca.png" />
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#3b82f6" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,7 +17,7 @@
 <body>
   <header class="topbar">
     <div class="brand">
-      <span class="brand-title">Futbol Foca</span>
+      <img src="icons/futbolFoca.png" alt="Futbol Foca" class="brand-logo" id="brandLogo" style="cursor:pointer" />
     </div>
 
     <div class="topbar-actions" id="topbarActions">
@@ -427,6 +427,13 @@
         </ul>
         <p class="muted" style="margin:0; font-size:12px;">Hecho por <strong>Agustín Rega</strong></p>
       </div>
+    </div>
+  </div>
+
+  <div id="logoModal" class="modal hidden">
+    <div class="modal-content modal-small" style="text-align:center; background:transparent; box-shadow:none;">
+      <button class="close-btn" id="closeLogoModalBtn" style="position:absolute; top:8px; right:8px;">&times;</button>
+      <img src="icons/futbolFoca.png" alt="Futbol Foca" style="max-width:100%; max-height:80vh; object-fit:contain; border-radius:12px;" />
     </div>
   </div>
 

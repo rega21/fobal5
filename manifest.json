@@ -9,10 +9,10 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "icons/icon.svg",
+      "src": "icons/futbolFoca.png",
       "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

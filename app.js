@@ -3150,6 +3150,15 @@ document.getElementById("infoAppBtn")?.addEventListener("click", openInfoApp);
 document.getElementById("closeInfoAppBtn")?.addEventListener("click", () => {
   document.getElementById("infoAppModal")?.classList.add("hidden");
 });
+document.getElementById("brandLogo")?.addEventListener("click", () => {
+  document.getElementById("logoModal")?.classList.remove("hidden");
+});
+document.getElementById("closeLogoModalBtn")?.addEventListener("click", () => {
+  document.getElementById("logoModal")?.classList.add("hidden");
+});
+document.getElementById("logoModal")?.addEventListener("click", (e) => {
+  if (e.target === e.currentTarget) document.getElementById("logoModal")?.classList.add("hidden");
+});
 document.getElementById("menuToggleBtn")?.addEventListener("click", (e) => {
   e.stopPropagation();
   toggleTopbarMenu();
