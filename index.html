@@ -15,6 +15,7 @@
 </head>
 
 <body>
+<div id="app-shell">
   <header class="topbar">
     <div class="brand">
       <img src="icons/futbolFoca.png" alt="Futbol Foca" class="brand-logo" id="brandLogo" style="cursor:pointer" />
@@ -171,11 +172,71 @@
       </div>
     </section>
 
+    <!-- Player Stats Modal (Tabla General) -->
+    <div id="playerStatsModal" class="modal hidden">
+      <div class="modal-content modal-small modal-dark">
+        <div class="modal-header">
+          <h2 id="playerStatsName">Jugador</h2>
+          <button class="close-btn" id="closePlayerStatsBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="pstats-grid">
+            <div class="pstats-card">
+              <div class="pstats-card-inner">
+                <svg class="pstats-icon pstats-icon--neutral" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <div class="pstats-num-wrap">
+                  <span class="pstats-value" id="pstatsPlayed">—</span>
+                  <span class="pstats-label">Jugados</span>
+                </div>
+              </div>
+            </div>
+            <div class="pstats-card pstats-card--win">
+              <div class="pstats-card-inner">
+                <svg class="pstats-icon pstats-icon--win" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 9H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2"/><path d="M18 9h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/><path d="M6 2h12v10a6 6 0 0 1-12 0V2Z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M9 21h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12 17v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <div class="pstats-num-wrap">
+                  <span class="pstats-value" id="pstatsWon">—</span>
+                  <span class="pstats-label">Ganados</span>
+                </div>
+              </div>
+            </div>
+            <div class="pstats-card pstats-card--loss">
+              <div class="pstats-card-inner">
+                <svg class="pstats-icon pstats-icon--loss" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+                <div class="pstats-num-wrap">
+                  <span class="pstats-value" id="pstatsLost">—</span>
+                  <span class="pstats-label">Perdidos</span>
+                </div>
+              </div>
+            </div>
+            <div class="pstats-card">
+              <div class="pstats-card-inner">
+                <i data-lucide="handshake" class="pstats-icon pstats-icon--neutral"></i>
+                <div class="pstats-num-wrap">
+                  <span class="pstats-value" id="pstatsDraw">—</span>
+                  <span class="pstats-label">Empates</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pstats-winrate">
+            <div class="pstats-winrate-header">
+              <span>Win Rate</span>
+              <span id="pstatsWinRatePct">—%</span>
+            </div>
+            <div class="pstats-winrate-bar-track">
+              <div class="pstats-winrate-bar-fill" id="pstatsWinRateBar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Trajectory view -->
     <section class="view hidden" id="view-trajectory">
       <div class="trajectory-wrap">
         <div class="trajectory-header">
           <h2>Tabla General</h2>
+          <p class="trajectory-sub">Partidos ganados por jugador</p>
         </div>
         <div class="trajectory-chart-container">
           <canvas id="trajectoryChart"></canvas>
@@ -481,6 +542,7 @@
 
   </nav>
 
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <script src="config.public.js"></script>
@@ -491,6 +553,7 @@
   <script src="src/views/matchView.js"></script>
   <script src="src/views/historyView.js"></script>
   <script src="src/views/trajectoryView.js"></script>
+  <script src="src/views/trajectoryModal.js"></script>
   <script src="src/controllers/historyController.js"></script>
   <script src="src/controllers/matchController.js"></script>
   <script src="src/controllers/adminPlayersController.js"></script>
@@ -505,5 +568,6 @@
       });
     }
   </script>
+</div>
 </body>
 </html>

@@ -69,10 +69,26 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 5. **Stamina** — menos determinante en cancha chica que en fútbol 11
 6. **Defensa** — importante pero menos "glamoroso" en el formato
 
-## Pendiente: PWA (Progressive Web App)
+## PWA (Progressive Web App)
 
-- Implementar `manifest.json` + service worker para que la app se pueda instalar en el celular como app nativa.
-- **Requisito previo**: ícono en PNG cuadrado (mínimo 512x512) para generar los tamaños necesarios (192x192, 512x512).
+Implementada. La app se puede instalar en el celular como app nativa desde Chrome/Edge/Safari.
+
+**Archivos clave:**
+- `manifest.json` — nombre, colores, ícono
+- `sw.js` — service worker con cache de assets estáticos
+- `icons/futbolFoca.png` — logo light mode
+- `icons/futbolFocapt2.jpg` — logo dark mode (se swapea automáticamente)
+
+### ⚠️ Importante: cada vez que se hace push con cambios
+
+Hay que actualizar la versión del cache en `sw.js` para que la app instalada descargue los nuevos archivos:
+
+```js
+// sw.js — línea 1
+const CACHE_NAME = 'fobal5-2026-03-27b'; // <- cambiar fecha/sufijo en cada push
+```
+
+Sin este cambio, los usuarios con la app instalada siguen viendo la versión vieja hasta que cierren y abran la app manualmente.
 
 ## Próximo paso recomendado
 
@@ -101,6 +117,35 @@ La app está pensada actualmente como grupo único (FutbolFoca). Para escalar a 
 **Nota**: La etapa 1 valida que el modelo de datos aisle correctamente; la etapa 2 agrega creación autónoma sin cambios arquitectónicos mayores.
 
 
+
+# Migración de matches a Supabase
+
+- `matches` migrado de MockAPI a Supabase con schema extendido: `status`, `location`, `address`, `scheduled_at`, `place_id`, `maps_url`, `latitude`, `longitude`, `date_display`, `mvp_name`, `mvp_voting_ends_at`, `mvp_votes`, `notes`.
+- `match_players` extendido con columnas `name` y `nickname` para evitar JOIN con `players` (sin FK declarada).
+- `getMatches` usa dos queries en paralelo (`matches` + `match_players`) y merge en JS.
+- `createMatch` y `updateMatch` escriben a ambas tablas; `deleteMatch` limpia `match_players` antes de borrar el match.
+- Mapeo bidireccional en `client.js`: camelCase (app) ↔ snake_case (Supabase).
+- Fecha formateada desde `scheduled_at` con locale fijo `es-UY` (DD/MM/YYYY, 24hs) para consistencia entre OS.
+- Orden: `played_at desc nullslast, scheduled_at desc nullslast` — partidos jugados primero, pendientes por fecha programada.
+- Fallback MockAPI mantenido para entornos sin Supabase.
+
+# Tabla General (ex Trayectoria)
+
+- Accesible desde el menú hamburguesa → "Tabla General".
+- Bar chart horizontal (Chart.js + `chartjs-plugin-datalabels`) con victorias totales por jugador, ordenadas de mayor a menor.
+- Gradiente en barras: dark mode `#008B8B → #1a3a4a`, light mode `#008B8B → #4BC0C0`.
+- Estrella ☆ en el nombre del líder; jugadores con 0 victorias incluidos en el chart con label `0`.
+- Agrupación por `player.id` para evitar duplicados cuando el mismo jugador tiene nombre y apodo distintos en partidos distintos.
+- Efecto de borde gradiente teal + estela en el bottom nav, solo en dark mode al estar en esta vista (clase `body.view-trajectory`).
+- Implementado en `src/views/trajectoryView.js`; sólo considera partidos con `status === "played"` y score definido.
+
+## Modal de estadísticas por jugador
+
+- Click en cualquier barra del chart abre un modal con las stats del jugador.
+- Implementado en `src/views/trajectoryModal.js` (IIFE, expuesto en `window.TrajectoryModal`).
+- Stats mostradas: Jugados, Ganados, Perdidos, Empates + barra de Win Rate con gradiente teal.
+- Iconos: reloj (jugados), copa (ganados), escudo (perdidos), handshake Lucide (empates).
+- **Nota:** la key interna del stat "Resistencia" sigue siendo `stamina` en el código para no romper datos existentes.
 
 # Dark Mode
 

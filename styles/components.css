@@ -14,6 +14,78 @@
   padding: 2rem 0;
 }
 
+/* Player Stats Modal */
+.pstats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.pstats-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px 12px;
+}
+.pstats-card--win { border-color: #10b981; background: rgba(16,185,129,0.07); }
+.pstats-card--loss { border-color: #ef4444; background: rgba(239,68,68,0.07); }
+.pstats-card-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pstats-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+.pstats-icon--win { color: #10b981; }
+.pstats-icon--loss { color: #ef4444; }
+.pstats-icon--neutral { color: #6b7280; }
+.pstats-num-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pstats-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+}
+.pstats-card--win .pstats-value { color: #10b981; }
+.pstats-card--loss .pstats-value { color: #ef4444; }
+.pstats-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.pstats-winrate {
+  margin-top: 4px;
+}
+.pstats-winrate-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+.pstats-winrate-bar-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+.pstats-winrate-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(to right, #008B8B, #4BC0C0);
+  transition: width 0.5s ease;
+}
+
 /* Ya votaste label */
 .ya-votaste-label {
   background: #e0f2fe;

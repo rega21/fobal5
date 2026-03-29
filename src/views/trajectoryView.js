@@ -36,11 +36,12 @@
     });
 
     const sorted = Object.entries(wins)
-      .map(([key, v]) => [displayNames[key] || key, v])
-      .sort((a, b) => b[1] - a[1]);
+      .map(([key, v]) => [key, displayNames[key] || key, v])
+      .sort((a, b) => b[2] - a[2]);
     return {
-      labels: sorted.map(([name]) => name),
-      values: sorted.map(([, v]) => v),
+      keys: sorted.map(([key]) => key),
+      labels: sorted.map(([, name]) => name),
+      values: sorted.map(([,, v]) => v),
     };
   }
 
@@ -149,6 +150,15 @@
       },
       plugins: [ChartDataLabels],
     });
+
+    canvas.onclick = (e) => {
+      const points = chartInstance.getElementsAtEventForMode(e, "y", { intersect: false }, false);
+      if (!points.length) return;
+      const idx = points[0].index;
+      const displayName = result.labels[idx];
+      const playerKey = result.keys[idx];
+      window.TrajectoryModal?.openPlayerStats(playerKey, displayName);
+    };
   }
 
   window.TrajectoryView = { renderTrajectory };

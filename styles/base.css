@@ -29,6 +29,25 @@ body{
   color: var(--text);
 }
 
+@media (min-width: 640px) {
+  body {
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+  #app-shell {
+    width: 480px;
+    min-height: 100vh;
+    background: var(--bg);
+    position: relative;
+    box-shadow: 0 0 60px rgba(0,0,0,0.6);
+    overflow-x: hidden;
+    flex-shrink: 0;
+  }
+}
+
 
 .hidden{ display: none !important; }
 
