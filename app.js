@@ -824,7 +824,7 @@ function renderPlayerRadarChart(stats) {
   playerRadarChartInstance = new Chart(canvas, {
     type: "radar",
     data: {
-      labels: ["Ataque", "Centro", "Defensa", "Stamina", "Garra", "Técnica"],
+      labels: ["Ataque", "Centro", "Defensa", "Resistencia", "Garra", "Técnica"],
       datasets: [{
         data,
         backgroundColor: color + "33",
@@ -2709,7 +2709,7 @@ function updateEditRadarChart(stats) {
   editRadarChartInstance = new Chart(canvas, {
     type: "radar",
     data: {
-      labels: ["Ataque", "Centro", "Defensa", "Stamina", "Garra", "Técnica"],
+      labels: ["Ataque", "Centro", "Defensa", "Resistencia", "Garra", "Técnica"],
       datasets: [{
         data: [stats.attack, stats.midfield, stats.defense, stats.stamina, stats.garra, stats.technique],
         backgroundColor: hasAnyValue ? color + "33" : "transparent",
