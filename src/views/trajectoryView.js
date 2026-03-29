@@ -12,26 +12,32 @@
 
     if (!played.length) return null;
 
-    const wins = {};
+    const wins = {};    // key: id || displayName
+    const displayNames = {};
 
     played.forEach((m) => {
       const draw = m.scoreA === m.scoreB;
       const winTeam = !draw ? (m.scoreA > m.scoreB ? m.teamA : m.teamB) : null;
 
       [...(m.teamA || []), ...(m.teamB || [])].forEach((p) => {
-        const n = p.nickname || p.name;
-        if (!wins[n]) wins[n] = 0;
+        const key = p.id || (p.nickname || p.name);
+        const label = p.nickname || p.name;
+        if (!wins[key]) wins[key] = 0;
+        // Prefer nickname over name as display label
+        if (!displayNames[key] || p.nickname) displayNames[key] = label;
       });
 
       if (winTeam) {
         winTeam.forEach((p) => {
-          const n = p.nickname || p.name;
-          wins[n] = (wins[n] || 0) + 1;
+          const key = p.id || (p.nickname || p.name);
+          wins[key] = (wins[key] || 0) + 1;
         });
       }
     });
 
-    const sorted = Object.entries(wins).sort((a, b) => b[1] - a[1]);
+    const sorted = Object.entries(wins)
+      .map(([key, v]) => [displayNames[key] || key, v])
+      .sort((a, b) => b[1] - a[1]);
     return {
       labels: sorted.map(([name]) => name),
       values: sorted.map(([, v]) => v),
