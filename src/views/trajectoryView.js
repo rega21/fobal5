@@ -118,7 +118,7 @@
               weight: "700",
               size: ctx.dataset.data[ctx.dataIndex] === 0 ? 12 : 13,
             }),
-            formatter: (value) => value === 0 ? "🕐 0" : value,
+            formatter: (value) => value === 0 ? "0" : value,
           },
         },
         layout: {
