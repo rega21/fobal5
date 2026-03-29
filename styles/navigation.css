@@ -1,6 +1,23 @@
 /* Bottom nav */
+[data-theme="dark"] body.view-trajectory .bottomnav {
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(to right, transparent, rgba(0, 242, 234, 0.35), transparent) 1;
+}
+
+[data-theme="dark"] body.view-trajectory .bottomnav::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: linear-gradient(to top, rgba(0, 242, 234, 0.12), transparent);
+  pointer-events: none;
+}
+
 .bottomnav{
   position: fixed;
+  isolation: isolate;
   left:0; right:0; bottom:0;
   height: calc(74px + env(safe-area-inset-bottom));
   background: var(--bg);

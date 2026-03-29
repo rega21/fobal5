@@ -87,6 +87,12 @@
   cursor:pointer;
   transition:all 0.2s;
   flex-shrink:0;
+  opacity: 0.35;
+}
+
+.match-song-icon-btn:hover:not(:disabled),
+.match-song-icon-btn.is-playing {
+  opacity: 1;
 }
 
 .match-song-icon-btn:hover:not(:disabled){

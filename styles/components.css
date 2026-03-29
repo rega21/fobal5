@@ -1,3 +1,19 @@
+/* Trajectory view */
+.trajectory-wrap {
+  padding: 1rem;
+}
+.trajectory-header { margin-bottom: 0.5rem; }
+.trajectory-header h2 { font-size: 1.1rem; margin: 0 0 0.2rem; }
+.trajectory-sub { font-size: 0.75rem; color: var(--text-muted, #888); margin: 0; }
+.trajectory-chart-container {
+  position: relative;
+}
+.trajectory-empty {
+  text-align: center;
+  color: var(--text-muted, #888);
+  padding: 2rem 0;
+}
+
 /* Ya votaste label */
 .ya-votaste-label {
   background: #e0f2fe;
@@ -166,6 +182,7 @@
 .player-community{
   display:inline-flex;
   align-items:center;
+  gap:3px;
   font-size:11px;
   font-weight:700;
   letter-spacing:.2px;
