@@ -3151,10 +3151,23 @@ window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   _installPrompt = e;
 });
+function _updateInstallBtn() {
+  const btn = document.getElementById("installAppBtn");
+  if (!btn) return;
+  if (_isInstalled) {
+    btn.textContent = "Ya instalada ✓";
+    btn.disabled = true;
+  } else if (!_installPrompt) {
+    btn.disabled = true;
+    btn.style.opacity = "0.5";
+  }
+}
+
 window.addEventListener("appinstalled", () => {
   _installPrompt = null;
   document.getElementById("installFab")?.classList.add("hidden");
-  document.getElementById("installAppBtn")?.classList.add("hidden");
+  const btn = document.getElementById("installAppBtn");
+  if (btn) { btn.innerHTML = "Ya instalada ✓"; btn.disabled = true; }
 });
 document.getElementById("installFab")?.addEventListener("click", async () => {
   if (!_installPrompt) return;
@@ -3164,12 +3177,12 @@ document.getElementById("installFab")?.addEventListener("click", async () => {
 });
 document.getElementById("installAppBtn")?.addEventListener("click", async () => {
   if (!_installPrompt) return;
-  closeTopbarMenu();
   await _installPrompt.prompt();
   _installPrompt = null;
   document.getElementById("installFab")?.classList.add("hidden");
-  document.getElementById("installAppBtn")?.classList.add("hidden");
 });
+
+_updateInstallBtn();
 
 // Mostrar FAB en segunda visita + después de una acción clave
 _maybeShowInstall();
