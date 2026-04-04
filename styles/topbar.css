@@ -5,11 +5,11 @@ body.admin-active .topbar{
 }
 
 .topbar{
-  height: 64px;
+  height: calc(64px + env(safe-area-inset-top));
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding: 0 16px;
+  padding: env(safe-area-inset-top) 16px 0;
   border-bottom: 1px solid var(--line);
 }
 .brand{
