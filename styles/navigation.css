@@ -54,7 +54,6 @@
 .global-song-fab{
   position: fixed;
   right: 20px;
-  bottom: 88px;
   bottom: calc(74px + env(safe-area-inset-bottom) + 14px);
   width: 56px;
   height: 56px;
@@ -66,10 +65,19 @@
   z-index: 999;
 }
 
+.install-fab{
+  background: var(--success);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.install-fab:active{ transform: scale(0.93); }
+
 @media (max-width: 768px){
   .global-song-fab{
     right: 16px;
-    bottom: 84px;
     bottom: calc(74px + env(safe-area-inset-bottom) + 10px);
     width: 54px;
     height: 54px;

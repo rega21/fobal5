@@ -2636,6 +2636,7 @@ async function saveEditPlayer() {
         technique,
       });
       markPlayerAsVoted(editPlayerId);
+      _maybeShowInstall();
       await refreshPlayerRatingsSummary();
       await animateEditButtonFadeOut(editPlayerId);
       renderPlayers({ preserveOrder: true });
@@ -3132,22 +3133,46 @@ document.getElementById("feedbackBtn")?.addEventListener("click", () => {
 
 // PWA install prompt
 let _installPrompt = null;
+const _installDismissed = localStorage.getItem("fobal5_install_dismissed") === "true";
+const _isInstalled = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+
+function _showInstallFab() {
+  if (_installDismissed || _isInstalled || !_installPrompt) return;
+  document.getElementById("installFab")?.classList.remove("hidden");
+}
+
+function _maybeShowInstall() {
+  const visited = localStorage.getItem("fobal5_visited");
+  if (!visited) { localStorage.setItem("fobal5_visited", "true"); return; }
+  _showInstallFab();
+}
+
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   _installPrompt = e;
-  document.getElementById("installAppBtn")?.classList.remove("hidden");
 });
 window.addEventListener("appinstalled", () => {
-  document.getElementById("installAppBtn")?.classList.add("hidden");
   _installPrompt = null;
+  document.getElementById("installFab")?.classList.add("hidden");
+  document.getElementById("installAppBtn")?.classList.add("hidden");
+});
+document.getElementById("installFab")?.addEventListener("click", async () => {
+  if (!_installPrompt) return;
+  await _installPrompt.prompt();
+  _installPrompt = null;
+  document.getElementById("installFab")?.classList.add("hidden");
 });
 document.getElementById("installAppBtn")?.addEventListener("click", async () => {
   if (!_installPrompt) return;
   closeTopbarMenu();
   await _installPrompt.prompt();
   _installPrompt = null;
+  document.getElementById("installFab")?.classList.add("hidden");
   document.getElementById("installAppBtn")?.classList.add("hidden");
 });
+
+// Mostrar FAB en segunda visita + después de una acción clave
+_maybeShowInstall();
 const ICON_MOON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>`;
 const ICON_SUN = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`;
 const ICON_STAR_FILLED = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>`;
@@ -3175,7 +3200,7 @@ function applyDarkModeToggle() {
   updateBrandLogo();
 }
 document.getElementById("darkModeFab")?.addEventListener("click", applyDarkModeToggle);
-document.getElementById("matchSongToggleBtn")?.addEventListener("click", toggleMatchSong);
+// document.getElementById("matchSongToggleBtn")?.addEventListener("click", toggleMatchSong);
 if (document.documentElement.getAttribute("data-theme") === "dark") {
   const fab = document.getElementById("darkModeFab");
   if (fab) fab.innerHTML = ICON_SUN;
@@ -3307,6 +3332,7 @@ document.getElementById('createPlayerBtn')?.addEventListener('click', () => {
     return;
   }
   addPlayer(name, nickname, attack, defense, midfield, stamina, garra, technique);
+  _maybeShowInstall();
   closeNewPlayerModal();
 });
 
