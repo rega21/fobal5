@@ -69,6 +69,87 @@
     };
   }
 
+  function formatMatchDate(isoString) {
+    if (!isoString) return "";
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleString("es-UY", {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit", hour12: false,
+    });
+  }
+
+  function mapMatchFromSupabase(m) {
+    const allPlayers = m.match_players || [];
+    const teamA = allPlayers
+      .filter((mp) => mp.team === "A")
+      .map((mp) => ({ id: mp.player_id, name: mp.name || "", nickname: mp.nickname || "" }));
+    const teamB = allPlayers
+      .filter((mp) => mp.team === "B")
+      .map((mp) => ({ id: mp.player_id, name: mp.name || "", nickname: mp.nickname || "" }));
+    return {
+      id: m.id,
+      status: m.status || "played",
+      date: formatMatchDate(m.scheduled_at) || m.date_display || "",
+      location: m.location || "",
+      address: m.address || "",
+      scheduledAt: m.scheduled_at || "",
+      placeId: m.place_id || "",
+      mapsUrl: m.maps_url || "",
+      latitude: m.latitude ?? null,
+      longitude: m.longitude ?? null,
+      teamA,
+      teamB,
+      scoreA: m.team_a_goals ?? null,
+      scoreB: m.team_b_goals ?? null,
+      mvp: m.mvp_name || "",
+      mvpVotes: m.mvp_votes || {},
+      mvpVotingEndsAt: m.mvp_voting_ends_at || "",
+      playedAt: m.played_at || "",
+      createdAt: m.created_at || "",
+      notes: m.notes || "",
+    };
+  }
+
+  function mapMatchToSupabase(body = {}) {
+    return {
+      status: body.status || "played",
+      date_display: body.date || null,
+      location: body.location || null,
+      address: body.address || null,
+      scheduled_at: body.scheduledAt || null,
+      place_id: body.placeId || null,
+      maps_url: body.mapsUrl || null,
+      latitude: body.latitude ?? null,
+      longitude: body.longitude ?? null,
+      team_a_goals: body.scoreA ?? null,
+      team_b_goals: body.scoreB ?? null,
+      mvp_name: body.mvp || null,
+      mvp_votes: body.mvpVotes || {},
+      mvp_voting_ends_at: body.mvpVotingEndsAt || null,
+      played_at: body.playedAt || (body.status === "played" ? (body.scheduledAt || null) : null),
+      notes: body.notes || null,
+    };
+  }
+
+  async function upsertMatchPlayers(matchId, teamA, teamB) {
+    await requestSupabase(`/rest/v1/match_players?match_id=eq.${encodeURIComponent(String(matchId))}`, {
+      method: "DELETE",
+      headers: buildSupabaseHeaders({ Prefer: "return=minimal" }),
+    });
+    const playerRows = [
+      ...(teamA || []).map((p) => ({ match_id: matchId, player_id: p.id, team: "A", name: p.name || "", nickname: p.nickname || "" })),
+      ...(teamB || []).map((p) => ({ match_id: matchId, player_id: p.id, team: "B", name: p.name || "", nickname: p.nickname || "" })),
+    ];
+    if (playerRows.length > 0) {
+      await requestSupabase("/rest/v1/match_players", {
+        method: "POST",
+        headers: buildSupabaseHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify(playerRows),
+      });
+    }
+  }
+
   function buildFeedbackPayload(body = {}) {
     return {
       kind: String(body?.kind || "sugerencia").trim().toLowerCase() === "bug" ? "bug" : "sugerencia",
@@ -82,7 +163,7 @@
   global.FobalApi = {
     urls: {
       players: HAS_SUPABASE ? `${SUPABASE_BASE_URL}/rest/v1/players` : PLAYERS_URL,
-      matches: MATCHES_URL,
+      matches: HAS_SUPABASE ? `${SUPABASE_BASE_URL}/rest/v1/matches` : MATCHES_URL,
       supabase: SUPABASE_BASE_URL,
     },
     async getPlayers() {
@@ -151,25 +232,95 @@
         headers: buildSupabaseHeaders({ Prefer: "return=minimal" }),
       });
     },
-    getMatches() {
-      return request(MATCHES_URL);
+    async getMatches() {
+      if (!HAS_SUPABASE) {
+        return request(MATCHES_URL);
+      }
+      const [matches, matchPlayers] = await Promise.all([
+        requestSupabase("/rest/v1/matches?select=*&order=played_at.desc.nullslast,scheduled_at.desc.nullslast", {
+          method: "GET",
+          headers: buildSupabaseHeaders(),
+        }),
+        requestSupabase("/rest/v1/match_players?select=match_id,player_id,team,name,nickname", {
+          method: "GET",
+          headers: buildSupabaseHeaders(),
+        }),
+      ]);
+      const playersByMatch = {};
+      (matchPlayers || []).forEach((mp) => {
+        if (!playersByMatch[mp.match_id]) playersByMatch[mp.match_id] = [];
+        playersByMatch[mp.match_id].push(mp);
+      });
+      return (matches || []).map((m) =>
+        mapMatchFromSupabase({ ...m, match_players: playersByMatch[m.id] || [] })
+      );
     },
-    createMatch(body) {
-      return request(MATCHES_URL, {
+    async createMatch(body) {
+      if (!HAS_SUPABASE) {
+        return request(MATCHES_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      }
+      const payload = mapMatchToSupabase(body);
+      const rows = await requestSupabase("/rest/v1/matches", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        headers: buildSupabaseHeaders({
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        }),
+        body: JSON.stringify([payload]),
       });
+      const created = Array.isArray(rows) ? rows[0] : rows;
+      if (created?.id) {
+        await upsertMatchPlayers(created.id, body.teamA, body.teamB);
+      }
+      return mapMatchFromSupabase({ ...created, match_players: [] });
     },
-    updateMatch(id, body) {
-      return request(`${MATCHES_URL}/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+    async updateMatch(id, body) {
+      if (!HAS_SUPABASE) {
+        return request(`${MATCHES_URL}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      }
+      const payload = mapMatchToSupabase(body);
+      await requestSupabase(`/rest/v1/matches?id=eq.${encodeURIComponent(String(id))}`, {
+        method: "PATCH",
+        headers: buildSupabaseHeaders({
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        }),
+        body: JSON.stringify(payload),
       });
+      await upsertMatchPlayers(id, body.teamA, body.teamB);
+      const [rows, matchPlayers] = await Promise.all([
+        requestSupabase(`/rest/v1/matches?id=eq.${encodeURIComponent(String(id))}&select=*`, {
+          method: "GET",
+          headers: buildSupabaseHeaders(),
+        }),
+        requestSupabase(`/rest/v1/match_players?match_id=eq.${encodeURIComponent(String(id))}&select=match_id,player_id,team,name,nickname`, {
+          method: "GET",
+          headers: buildSupabaseHeaders(),
+        }),
+      ]);
+      const updated = Array.isArray(rows) ? rows[0] : rows;
+      return mapMatchFromSupabase({ ...(updated || { id, ...payload }), match_players: matchPlayers || [] });
     },
-    deleteMatch(id) {
-      return request(`${MATCHES_URL}/${id}`, { method: "DELETE" });
+    async deleteMatch(id) {
+      if (!HAS_SUPABASE) {
+        return request(`${MATCHES_URL}/${id}`, { method: "DELETE" });
+      }
+      await requestSupabase(`/rest/v1/match_players?match_id=eq.${encodeURIComponent(String(id))}`, {
+        method: "DELETE",
+        headers: buildSupabaseHeaders({ Prefer: "return=minimal" }),
+      });
+      return requestSupabase(`/rest/v1/matches?id=eq.${encodeURIComponent(String(id))}`, {
+        method: "DELETE",
+        headers: buildSupabaseHeaders({ Prefer: "return=minimal" }),
+      });
     },
     async getPlayerRatingsSummaryByPlayerId() {
       const rows = await requestSupabase("/rest/v1/player_ratings?select=player_id,attack,defense,midfield,stamina,garra,technique", {
