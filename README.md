@@ -69,6 +69,15 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 5. **Stamina** — menos determinante en cancha chica que en fútbol 11
 6. **Defensa** — importante pero menos "glamoroso" en el formato
 
+## v1.1 — Cambios recientes
+
+- **Safe area PWA (iOS):** agregado `viewport-fit=cover` al meta viewport para que `env(safe-area-inset-bottom/top)` funcione correctamente en la app instalada. El topbar y el bottom nav ahora respetan el notch y la barra de inicio.
+- **Modal "Nuevo jugador":** ahora incluye las 6 stats (Ataque, Defensa, Medio, Resistencia, Garra, Técnica) con sliders coloreados y valor inicial en 0, igual que el modal de edición.
+- **Rename:** "Reportes" → "Sugerencias" en menú hamburguesa, título de modal y toast de error.
+- **Jugadores sin votos:** reemplazado emoji ⏳ y texto "XX" por ☆ y "Pendiente" en la tarjeta del jugador.
+
+---
+
 ## PWA (Progressive Web App)
 
 Implementada. La app se puede instalar en el celular como app nativa desde Chrome/Edge/Safari.
