@@ -1418,14 +1418,14 @@ async function fetchMatches() {
   updateMatchCreationLockUi();
 }
 
-async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0) {
+async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0, stamina = 0, garra = 0, technique = 0) {
   if (adminPlayersController) {
-    await adminPlayersController.addPlayer(name, nickname, attack, defense, midfield);
+    await adminPlayersController.addPlayer(name, nickname, attack, defense, midfield, stamina, garra, technique);
     return;
   }
 
   try {
-    const body = { name, nickname: nickname || "", attack, defense, midfield };
+    const body = { name, nickname: nickname || "", attack, defense, midfield, stamina, garra, technique };
     const newPlayer = await apiClient.createPlayer(body);
     players.push(newPlayer);
     renderPlayers();
@@ -2892,7 +2892,7 @@ async function openAdminReportsModal() {
   }
 
   if (!authClient?.listAdminFeedback) {
-    showToast("Reportes no disponible en este entorno", 2600, "error");
+    showToast("Sugerencias no disponible en este entorno", 2600, "error");
     closeTopbarMenu();
     return;
   }
@@ -3252,9 +3252,12 @@ function openNewPlayerModal(){
   // set default values
   document.getElementById('newPlayerName').value = '';
   document.getElementById('newPlayerNickname').value = '';
-  document.getElementById('newPlayerAttack').value = 5;
-  document.getElementById('newPlayerDefense').value = 5;
-  document.getElementById('newPlayerMidfield').value = 5;
+  document.getElementById('newPlayerAttack').value = 0;
+  document.getElementById('newPlayerDefense').value = 0;
+  document.getElementById('newPlayerMidfield').value = 0;
+  document.getElementById('newPlayerStamina').value = 0;
+  document.getElementById('newPlayerGarra').value = 0;
+  document.getElementById('newPlayerTechnique').value = 0;
   updateNewSliderValues();
 }
 
@@ -3266,6 +3269,15 @@ function updateNewSliderValues(){
   document.getElementById('newAttackValue').textContent = document.getElementById('newPlayerAttack').value;
   document.getElementById('newDefenseValue').textContent = document.getElementById('newPlayerDefense').value;
   document.getElementById('newMidfieldValue').textContent = document.getElementById('newPlayerMidfield').value;
+  document.getElementById('newStaminaValue').textContent = document.getElementById('newPlayerStamina').value;
+  document.getElementById('newGarraValue').textContent = document.getElementById('newPlayerGarra').value;
+  document.getElementById('newTechniqueValue').textContent = document.getElementById('newPlayerTechnique').value;
+  colorSliderTrack('newPlayerAttack',    '#FF4C4C');
+  colorSliderTrack('newPlayerDefense',   '#00E5FF');
+  colorSliderTrack('newPlayerMidfield',  '#2ECC71');
+  colorSliderTrack('newPlayerStamina',   '#F1C40F');
+  colorSliderTrack('newPlayerGarra',     '#F97316');
+  colorSliderTrack('newPlayerTechnique', '#9B59B6');
 }
 
 document.getElementById('closeNewBtn')?.addEventListener('click', closeNewPlayerModal);
@@ -3273,6 +3285,9 @@ document.getElementById('newPlayerModal')?.addEventListener('click', (e)=>{ if(e
 document.getElementById('newPlayerAttack')?.addEventListener('input', updateNewSliderValues);
 document.getElementById('newPlayerDefense')?.addEventListener('input', updateNewSliderValues);
 document.getElementById('newPlayerMidfield')?.addEventListener('input', updateNewSliderValues);
+document.getElementById('newPlayerStamina')?.addEventListener('input', updateNewSliderValues);
+document.getElementById('newPlayerGarra')?.addEventListener('input', updateNewSliderValues);
+document.getElementById('newPlayerTechnique')?.addEventListener('input', updateNewSliderValues);
 
 document.getElementById('createPlayerBtn')?.addEventListener('click', () => {
   const name = document.getElementById('newPlayerName').value.trim();
@@ -3280,6 +3295,9 @@ document.getElementById('createPlayerBtn')?.addEventListener('click', () => {
   const attack = parseInt(document.getElementById('newPlayerAttack').value) || 0;
   const defense = parseInt(document.getElementById('newPlayerDefense').value) || 0;
   const midfield = parseInt(document.getElementById('newPlayerMidfield').value) || 0;
+  const stamina = parseInt(document.getElementById('newPlayerStamina').value) || 0;
+  const garra = parseInt(document.getElementById('newPlayerGarra').value) || 0;
+  const technique = parseInt(document.getElementById('newPlayerTechnique').value) || 0;
   if (!name) {
     alert('El nombre no puede estar vacío');
     return;
@@ -3288,7 +3306,7 @@ document.getElementById('createPlayerBtn')?.addEventListener('click', () => {
     alert('Nombre y apodo juntos no pueden superar 14 caracteres');
     return;
   }
-  addPlayer(name, nickname, attack, defense, midfield);
+  addPlayer(name, nickname, attack, defense, midfield, stamina, garra, technique);
   closeNewPlayerModal();
 });
 

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Futbol Foca</title>
   <link rel="icon" href="icons/futbolFoca.png" type="image/png" />
   <link rel="apple-touch-icon" href="icons/futbolFoca.png" />
@@ -34,7 +34,7 @@
         <button class="topbar-menu-item" type="button" id="trajectoryBtn" role="menuitem" aria-label="Tabla General">Tabla General</button>
         <button class="topbar-menu-item" type="button" id="globalRatingBtn" role="menuitem" aria-label="Rating global">Rating Global</button>
         <button class="topbar-menu-item hidden" type="button" id="installAppBtn" role="menuitem" aria-label="Instalar app">Instalar app</button>
-        <button class="topbar-menu-item" type="button" id="feedbackBtn" role="menuitem" aria-label="Reportes o mejoras">Reportes</button>
+        <button class="topbar-menu-item" type="button" id="feedbackBtn" role="menuitem" aria-label="Sugerencias o mejoras">Sugerencias</button>
         <button class="topbar-menu-item" type="button" id="infoAppBtn" role="menuitem" aria-label="Info App">Info App</button>
       </div>
     </div>
@@ -428,15 +428,27 @@
         </div>
         <div class="slider-group">
           <label>Ataque: <span id="newAttackValue">5</span></label>
-          <input type="range" id="newPlayerAttack" min="0" max="10" value="5" class="slider">
+          <input type="range" id="newPlayerAttack" min="0" max="10" value="0" class="slider">
         </div>
         <div class="slider-group">
           <label>Defensa: <span id="newDefenseValue">5</span></label>
-          <input type="range" id="newPlayerDefense" min="0" max="10" value="5" class="slider">
+          <input type="range" id="newPlayerDefense" min="0" max="10" value="0" class="slider">
         </div>
         <div class="slider-group">
           <label>Medio: <span id="newMidfieldValue">5</span></label>
-          <input type="range" id="newPlayerMidfield" min="0" max="10" value="5" class="slider">
+          <input type="range" id="newPlayerMidfield" min="0" max="10" value="0" class="slider">
+        </div>
+        <div class="slider-group">
+          <label>Resistencia: <span id="newStaminaValue">5</span></label>
+          <input type="range" id="newPlayerStamina" min="0" max="10" value="0" class="slider">
+        </div>
+        <div class="slider-group">
+          <label>Garra: <span id="newGarraValue">5</span></label>
+          <input type="range" id="newPlayerGarra" min="0" max="10" value="0" class="slider">
+        </div>
+        <div class="slider-group">
+          <label>Técnica: <span id="newTechniqueValue">5</span></label>
+          <input type="range" id="newPlayerTechnique" min="0" max="10" value="0" class="slider">
         </div>
         <button class="btn btn-success" id="createPlayerBtn">Agregar jugador</button>
       </div>
@@ -495,7 +507,7 @@
       <div class="modal-body" style="text-align:center; padding: 24px 20px;">
         <img src="icons/futbolFoca.png" alt="Futbol Foca" style="width:72px; height:72px; border-radius:50%; object-fit:contain; margin-bottom:12px;">
         <h3 style="margin:0 0 4px; font-size:20px;">Futbol Foca</h3>
-        <p class="muted" style="margin:0 0 20px; font-size:13px;">v1.0</p>
+        <p class="muted" style="margin:0 0 20px; font-size:13px;">v1.1</p>
         <ul style="text-align:left; margin:0 0 20px; padding:0 0 0 20px; font-size:14px; line-height:2;">
           <li>Crear y calificar jugadores</li>
           <li>Armar equipos balanceados o manuales</li>
@@ -511,7 +523,7 @@
   <div id="reportsModal" class="modal hidden">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>📋 Reportes</h2>
+        <h2>📋 Sugerencias</h2>
         <button class="close-btn" id="closeReportsBtn">&times;</button>
       </div>
       <div class="modal-body">

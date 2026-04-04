@@ -21,9 +21,9 @@
       }
     }
 
-    async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0) {
+    async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0, stamina = 0, garra = 0, technique = 0) {
       try {
-        const body = { name, nickname: nickname || "", attack, defense, midfield };
+        const body = { name, nickname: nickname || "", attack, defense, midfield, stamina, garra, technique };
         const newPlayer = await apiClient.createPlayer(body);
         const nextPlayers = [...getPlayers(), newPlayer];
         setPlayers(nextPlayers);
