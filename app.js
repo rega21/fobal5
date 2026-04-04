@@ -3155,11 +3155,20 @@ function _updateInstallBtn() {
   const btn = document.getElementById("installAppBtn");
   if (!btn) return;
   if (_isInstalled) {
-    btn.textContent = "Ya instalada ✓";
-    btn.disabled = true;
-  } else if (!_installPrompt) {
+    btn.innerHTML = "Ya instalada ✓";
     btn.disabled = true;
     btn.style.opacity = "0.5";
+  } else if (!_installPrompt) {
+    // iOS: mostrar instrucción manual
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIos) {
+      btn.innerHTML = `<i data-lucide="share"></i> Compartir → Agregar a inicio`;
+      btn.disabled = true;
+      if (window.lucide) lucide.createIcons();
+    } else {
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+    }
   }
 }
 
