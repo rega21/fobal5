@@ -470,6 +470,19 @@
       });
       return Array.isArray(rows) ? rows : [];
     },
+    async createGroup({ name, slug, pin_hash }) {
+      const row = await requestSupabase("/rest/v1/groups", {
+        method: "POST",
+        headers: buildSupabaseHeaders({
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        }),
+        body: JSON.stringify({ name, slug, pin_hash }),
+      });
+      const created = Array.isArray(row) ? row[0] : row;
+      if (!created || !created.id) throw new Error("No se pudo crear el grupo");
+      return created;
+    },
     async createFeedback(payload) {
       if (!HAS_SUPABASE) {
         throw new Error("Feedback requires Supabase config");

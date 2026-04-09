@@ -133,8 +133,11 @@ El selector actual muestra solo el nombre. Si se quiere mostrar un logo por grup
 ### Próximas visitas
 - Entra directo a su grupo, sin selector ni PIN
 
-### Crear un nuevo grupo (pendiente de implementar)
-- Botón "Crear nuevo grupo" en el selector
-- Formulario con nombre, slug y PIN
-- Al crear → entra automáticamente al grupo nuevo
+### ✅ Crear un nuevo grupo — COMPLETADO
+
+- Botón "Crear nuevo grupo" en el selector (dashed, secundario)
+- Formulario: nombre → genera slug automático (editable) → PIN → confirmar PIN
+- Al crear → INSERT en `groups` → auto-entra al grupo nuevo sin pedir PIN
 - Cualquiera puede crear un grupo — el PIN protege el acceso entre grupos, no la creación
+- `toSlug()` normaliza acentos, espacios y caracteres especiales al slug
+- Error claro si el slug ya existe (constraint UNIQUE en BD)

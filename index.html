@@ -420,6 +420,64 @@
     <img src="icons/futbolFoca.png" alt="Futbol Foca" style="width:72px;height:72px;border-radius:50%;" />
     <h1 style="margin:0;font-size:1.4rem;color:var(--text-primary,#fff);">Seleccioná tu grupo</h1>
     <div id="groupSelectorList" style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px;"></div>
+    <button id="createGroupBtn" style="
+      padding:12px 16px;font-size:0.95rem;font-weight:600;border-radius:12px;
+      border:1px dashed var(--border,#334155);cursor:pointer;
+      background:transparent;color:var(--text-secondary,#94a3b8);
+      width:100%;max-width:320px;
+    ">+ Crear nuevo grupo</button>
+  </div>
+
+  <!-- Create group overlay -->
+  <div id="createGroupOverlay" class="hidden" style="
+    position:fixed;inset:0;z-index:10001;
+    background:var(--bg,#0f172a);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:16px;padding:32px;overflow-y:auto;
+  ">
+    <img src="icons/futbolFoca.png" alt="Futbol Foca" style="width:56px;height:56px;border-radius:50%;" />
+    <h1 style="margin:0;font-size:1.3rem;color:var(--text-primary,#fff);">Crear nuevo grupo</h1>
+    <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px;">
+      <div>
+        <label style="display:block;font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin-bottom:4px;">Nombre del grupo</label>
+        <input id="createGroupName" type="text" placeholder="Ej: Futbol Marte" maxlength="40" style="
+          padding:12px 14px;font-size:1rem;border-radius:10px;border:1px solid var(--border,#334155);
+          background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
+        " />
+      </div>
+      <div>
+        <label style="display:block;font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin-bottom:4px;">Slug (en la URL: ?group=<span id="slugPreview">...</span>)</label>
+        <input id="createGroupSlug" type="text" placeholder="Ej: marte" maxlength="30" style="
+          padding:12px 14px;font-size:1rem;border-radius:10px;border:1px solid var(--border,#334155);
+          background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
+        " />
+      </div>
+      <div>
+        <label style="display:block;font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin-bottom:4px;">PIN del grupo</label>
+        <input id="createGroupPin" type="password" placeholder="PIN" maxlength="20" style="
+          padding:12px 14px;font-size:1rem;border-radius:10px;border:1px solid var(--border,#334155);
+          background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
+          text-align:center;letter-spacing:4px;
+        " />
+      </div>
+      <div>
+        <label style="display:block;font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin-bottom:4px;">Confirmar PIN</label>
+        <input id="createGroupPinConfirm" type="password" placeholder="Repetir PIN" maxlength="20" style="
+          padding:12px 14px;font-size:1rem;border-radius:10px;border:1px solid var(--border,#334155);
+          background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
+          text-align:center;letter-spacing:4px;
+        " />
+      </div>
+      <p id="createGroupError" class="hidden" style="margin:0;font-size:0.85rem;color:#ef4444;text-align:center;"></p>
+      <button id="createGroupSubmitBtn" style="
+        padding:14px;font-size:1rem;font-weight:700;border-radius:12px;border:none;cursor:pointer;
+        background:#008B8B;color:#fff;
+      ">Crear grupo</button>
+      <button id="createGroupBackBtn" style="
+        padding:10px;font-size:0.9rem;border-radius:10px;border:1px solid var(--border,#334155);
+        background:transparent;color:var(--text-secondary,#94a3b8);cursor:pointer;
+      ">← Volver</button>
+    </div>
   </div>
 
   <!-- Group PIN overlay -->

@@ -3847,18 +3847,112 @@ function showPinOverlay(group, onSuccess) {
   const overlay = document.getElementById("groupSelectorOverlay");
   const list = document.getElementById("groupSelectorList");
   if (overlay && list) {
-    list.innerHTML = "";
-    groups.forEach((g) => {
-      const btn = document.createElement("button");
-      btn.textContent = g.name;
-      btn.style.cssText = "padding:16px;font-size:1.1rem;font-weight:700;border-radius:12px;border:none;cursor:pointer;background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);";
-      btn.addEventListener("click", () => {
-        overlay.classList.add("hidden");
-        resolveGroup(g);
+    function renderGroupList() {
+      list.innerHTML = "";
+      groups.forEach((g) => {
+        const btn = document.createElement("button");
+        btn.textContent = g.name;
+        btn.style.cssText = "padding:16px;font-size:1.1rem;font-weight:700;border-radius:12px;border:none;cursor:pointer;background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);";
+        btn.addEventListener("click", () => {
+          overlay.classList.add("hidden");
+          resolveGroup(g);
+        });
+        list.appendChild(btn);
       });
-      list.appendChild(btn);
-    });
+    }
+    renderGroupList();
     overlay.classList.remove("hidden");
+
+    // Crear nuevo grupo
+    const createOverlay = document.getElementById("createGroupOverlay");
+    const createBtn = document.getElementById("createGroupBtn");
+    const backBtn = document.getElementById("createGroupBackBtn");
+    const nameInput = document.getElementById("createGroupName");
+    const slugInput = document.getElementById("createGroupSlug");
+    const slugPreview = document.getElementById("slugPreview");
+    const pinInput = document.getElementById("createGroupPin");
+    const pinConfirmInput = document.getElementById("createGroupPinConfirm");
+    const submitBtn = document.getElementById("createGroupSubmitBtn");
+    const errorMsg = document.getElementById("createGroupError");
+
+    function toSlug(str) {
+      return str.toLowerCase().trim()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    nameInput?.addEventListener("input", () => {
+      const slug = toSlug(nameInput.value);
+      slugInput.value = slug;
+      if (slugPreview) slugPreview.textContent = slug || "...";
+    });
+
+    slugInput?.addEventListener("input", () => {
+      const cleaned = toSlug(slugInput.value) || slugInput.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+      slugInput.value = cleaned;
+      if (slugPreview) slugPreview.textContent = cleaned || "...";
+    });
+
+    createBtn?.addEventListener("click", () => {
+      overlay.classList.add("hidden");
+      if (createOverlay) {
+        nameInput.value = "";
+        slugInput.value = "";
+        pinInput.value = "";
+        pinConfirmInput.value = "";
+        if (slugPreview) slugPreview.textContent = "...";
+        errorMsg?.classList.add("hidden");
+        createOverlay.classList.remove("hidden");
+        nameInput.focus();
+      }
+    });
+
+    backBtn?.addEventListener("click", () => {
+      createOverlay?.classList.add("hidden");
+      overlay.classList.remove("hidden");
+    });
+
+    async function submitCreateGroup() {
+      const name = nameInput.value.trim();
+      const slug = slugInput.value.trim();
+      const pin = pinInput.value;
+      const pinConfirm = pinConfirmInput.value;
+
+      errorMsg?.classList.add("hidden");
+
+      if (!name) { showCreateError("El nombre es obligatorio."); return; }
+      if (!slug || !/^[a-z0-9-]+$/.test(slug)) { showCreateError("El slug solo puede tener letras minúsculas, números y guiones."); return; }
+      if (!pin) { showCreateError("El PIN es obligatorio."); return; }
+      if (pin !== pinConfirm) { showCreateError("Los PINs no coinciden."); return; }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Creando...";
+
+      try {
+        const pin_hash = await hashPin(pin);
+        const newGroup = await apiClient.createGroup({ name, slug, pin_hash });
+        groups.push(newGroup);
+        createOverlay?.classList.add("hidden");
+        saveGroupToStorage(newGroup);
+        enterGroup(newGroup);
+      } catch (e) {
+        const msg = e?.message?.includes("duplicate") || e?.message?.includes("unique")
+          ? "Ese slug ya está en uso, elegí otro."
+          : (e?.message || "Error al crear el grupo.");
+        showCreateError(msg);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Crear grupo";
+      }
+    }
+
+    function showCreateError(msg) {
+      if (errorMsg) { errorMsg.textContent = msg; errorMsg.classList.remove("hidden"); }
+    }
+
+    submitBtn?.addEventListener("click", submitCreateGroup);
+    pinConfirmInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") submitCreateGroup(); });
   }
 })();
 showView("players");
