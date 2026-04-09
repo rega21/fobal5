@@ -121,16 +121,20 @@ El selector actual muestra solo el nombre. Si se quiere mostrar un logo por grup
 
 ---
 
-## Para agregar un nuevo grupo
+## Flujo de onboarding para un nuevo grupo
 
-1. Insertar en Supabase:
-```sql
-INSERT INTO groups (name, slug) VALUES ('Nombre del grupo', 'slug-corto');
-```
+### Primera vez
+1. Usuario entra a `fobaAmigo5.vercel.app`
+2. Ve el selector de grupos → elige el suyo (o crea uno nuevo)
+3. Ingresa el PIN del grupo
+4. Entra a la app con los datos de su grupo
+5. El grupo queda guardado en `localStorage` → próximas visitas entran directo sin selector ni PIN
 
-2. Compartir la URL con el grupo:
-```
-fobaAmigo5.vercel.app?group=slug-corto
-```
+### Próximas visitas
+- Entra directo a su grupo, sin selector ni PIN
 
-No hay más pasos — la app ya está preparada para manejarlo.
+### Crear un nuevo grupo (pendiente de implementar)
+- Botón "Crear nuevo grupo" en el selector
+- Formulario con nombre, slug y PIN
+- Al crear → entra automáticamente al grupo nuevo
+- Cualquiera puede crear un grupo — el PIN protege el acceso entre grupos, no la creación
