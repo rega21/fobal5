@@ -3357,6 +3357,9 @@ document.getElementById('newPlayerStamina')?.addEventListener('input', updateNew
 document.getElementById('newPlayerGarra')?.addEventListener('input', updateNewSliderValues);
 document.getElementById('newPlayerTechnique')?.addEventListener('input', updateNewSliderValues);
 
+document.getElementById('newPlayerName')?.addEventListener('input', () => {
+  document.getElementById('newPlayerNameError')?.classList.add('hidden');
+});
 document.getElementById('createPlayerBtn')?.addEventListener('click', () => {
   const name = document.getElementById('newPlayerName').value.trim();
   const nickname = document.getElementById('newPlayerNickname').value.trim();
@@ -3366,12 +3369,15 @@ document.getElementById('createPlayerBtn')?.addEventListener('click', () => {
   const stamina = parseInt(document.getElementById('newPlayerStamina').value) || 0;
   const garra = parseInt(document.getElementById('newPlayerGarra').value) || 0;
   const technique = parseInt(document.getElementById('newPlayerTechnique').value) || 0;
+  const nameError = document.getElementById('newPlayerNameError');
   if (!name) {
-    alert('El nombre no puede estar vacío');
+    nameError?.classList.remove('hidden');
+    document.getElementById('newPlayerName')?.focus();
     return;
   }
+  nameError?.classList.add('hidden');
   if ((name + nickname).length > 14) {
-    alert('Nombre y apodo juntos no pueden superar 14 caracteres');
+    showToast('Nombre y apodo juntos no pueden superar 14 caracteres', 3000, 'error');
     return;
   }
   addPlayer(name, nickname, attack, defense, midfield, stamina, garra, technique);

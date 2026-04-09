@@ -518,12 +518,13 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label>Nombre</label>
-          <input type="text" id="newPlayerName" placeholder="Nombre" maxlength="20">
+          <label>Nombre <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="newPlayerName" placeholder="" maxlength="20">
+          <p id="newPlayerNameError" class="hidden" style="margin:4px 0 0;font-size:0.8rem;color:#ef4444;">El nombre es obligatorio.</p>
         </div>
         <div class="form-group">
-          <label>Apodo (opcional)</label>
-          <input type="text" id="newPlayerNickname" placeholder="Apodo (opcional)">
+          <label>Apodo <span style="font-size:0.8rem;color:var(--text-secondary,#94a3b8);">(opcional)</span></label>
+          <input type="text" id="newPlayerNickname" placeholder="" maxlength="20">
         </div>
         <div class="slider-group">
           <label>Ataque: <span id="newAttackValue">5</span></label>
