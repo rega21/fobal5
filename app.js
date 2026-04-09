@@ -3765,6 +3765,12 @@ function showPinOverlay(group, onSuccess) {
   title.textContent = group.name;
   input.value = "";
   errorMsg.classList.add("hidden");
+  const logoEl = document.getElementById("groupPinLogo");
+  if (logoEl) {
+    logoEl.innerHTML = group.logo_url
+      ? `<img src="${group.logo_url}" alt="${group.name}" style="width:100%;height:100%;object-fit:cover;" />`
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary,#94a3b8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
+  }
   overlay.classList.remove("hidden");
   setTimeout(() => input.focus(), 100);
 
@@ -3838,11 +3844,6 @@ function showPinOverlay(group, onSuccess) {
     }
   }
 
-  if (groups.length === 1) {
-    resolveGroup(groups[0]);
-    return;
-  }
-
   // Mostrar selector
   const overlay = document.getElementById("groupSelectorOverlay");
   const list = document.getElementById("groupSelectorList");
@@ -3851,8 +3852,11 @@ function showPinOverlay(group, onSuccess) {
       list.innerHTML = "";
       groups.forEach((g) => {
         const btn = document.createElement("button");
-        btn.textContent = g.name;
-        btn.style.cssText = "padding:16px;font-size:1.1rem;font-weight:700;border-radius:12px;border:none;cursor:pointer;background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);";
+        btn.style.cssText = "padding:12px 16px;font-size:1.1rem;font-weight:700;border-radius:12px;border:none;cursor:pointer;background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);display:flex;align-items:center;gap:12px;";
+        const logoHtml = g.logo_url
+          ? `<img src="${g.logo_url}" alt="${g.name}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;" />`
+          : `<div style="width:36px;height:36px;border-radius:50%;background:var(--border,#334155);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">⚽</div>`;
+        btn.innerHTML = `${logoHtml}<span>${g.name}</span>`;
         btn.addEventListener("click", () => {
           overlay.classList.add("hidden");
           resolveGroup(g);
@@ -3868,8 +3872,8 @@ function showPinOverlay(group, onSuccess) {
     const createBtn = document.getElementById("createGroupBtn");
     const backBtn = document.getElementById("createGroupBackBtn");
     const nameInput = document.getElementById("createGroupName");
-    const slugInput = document.getElementById("createGroupSlug");
-    const slugPreview = document.getElementById("slugPreview");
+    const logoUrlInput = document.getElementById("createGroupLogoUrl");
+    const logoPreviewEl = document.getElementById("createGroupLogoPreview");
     const pinInput = document.getElementById("createGroupPin");
     const pinConfirmInput = document.getElementById("createGroupPinConfirm");
     const submitBtn = document.getElementById("createGroupSubmitBtn");
@@ -3882,26 +3886,25 @@ function showPinOverlay(group, onSuccess) {
         .replace(/^-+|-+$/g, "");
     }
 
-    nameInput?.addEventListener("input", () => {
-      const slug = toSlug(nameInput.value);
-      slugInput.value = slug;
-      if (slugPreview) slugPreview.textContent = slug || "...";
-    });
+    const genericLogoSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary,#94a3b8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
 
-    slugInput?.addEventListener("input", () => {
-      const cleaned = toSlug(slugInput.value) || slugInput.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
-      slugInput.value = cleaned;
-      if (slugPreview) slugPreview.textContent = cleaned || "...";
+    logoUrlInput?.addEventListener("input", () => {
+      const url = logoUrlInput.value.trim();
+      if (logoPreviewEl) {
+        logoPreviewEl.innerHTML = url
+          ? `<img src="${url}" alt="logo" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='${genericLogoSvg.replace(/"/g, "&quot;")}'"/>`
+          : genericLogoSvg;
+      }
     });
 
     createBtn?.addEventListener("click", () => {
       overlay.classList.add("hidden");
       if (createOverlay) {
         nameInput.value = "";
-        slugInput.value = "";
+        logoUrlInput.value = "";
         pinInput.value = "";
         pinConfirmInput.value = "";
-        if (slugPreview) slugPreview.textContent = "...";
+        if (logoPreviewEl) logoPreviewEl.innerHTML = genericLogoSvg;
         errorMsg?.classList.add("hidden");
         createOverlay.classList.remove("hidden");
         nameInput.focus();
@@ -3915,14 +3918,15 @@ function showPinOverlay(group, onSuccess) {
 
     async function submitCreateGroup() {
       const name = nameInput.value.trim();
-      const slug = slugInput.value.trim();
+      const slug = toSlug(name);
+      const logo_url = logoUrlInput.value.trim() || null;
       const pin = pinInput.value;
       const pinConfirm = pinConfirmInput.value;
 
       errorMsg?.classList.add("hidden");
 
       if (!name) { showCreateError("El nombre es obligatorio."); return; }
-      if (!slug || !/^[a-z0-9-]+$/.test(slug)) { showCreateError("El slug solo puede tener letras minúsculas, números y guiones."); return; }
+      if (!slug) { showCreateError("El nombre no es válido."); return; }
       if (!pin) { showCreateError("El PIN es obligatorio."); return; }
       if (pin !== pinConfirm) { showCreateError("Los PINs no coinciden."); return; }
 
@@ -3931,7 +3935,7 @@ function showPinOverlay(group, onSuccess) {
 
       try {
         const pin_hash = await hashPin(pin);
-        const newGroup = await apiClient.createGroup({ name, slug, pin_hash });
+        const newGroup = await apiClient.createGroup({ name, slug, pin_hash, logo_url });
         groups.push(newGroup);
         createOverlay?.classList.add("hidden");
         saveGroupToStorage(newGroup);

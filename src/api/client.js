@@ -464,20 +464,22 @@
       return Array.isArray(rows) && rows.length >= 10;
     },
     async getGroups() {
-      const rows = await requestSupabase("/rest/v1/groups?select=id,name,slug,pin_hash&order=name.asc", {
+      const rows = await requestSupabase("/rest/v1/groups?select=id,name,slug,pin_hash,logo_url&order=name.asc", {
         method: "GET",
         headers: buildSupabaseHeaders(),
       });
       return Array.isArray(rows) ? rows : [];
     },
-    async createGroup({ name, slug, pin_hash }) {
+    async createGroup({ name, slug, pin_hash, logo_url }) {
+      const payload = { name, slug, pin_hash };
+      if (logo_url) payload.logo_url = logo_url;
       const row = await requestSupabase("/rest/v1/groups", {
         method: "POST",
         headers: buildSupabaseHeaders({
           "Content-Type": "application/json",
           Prefer: "return=representation",
         }),
-        body: JSON.stringify({ name, slug, pin_hash }),
+        body: JSON.stringify(payload),
       });
       const created = Array.isArray(row) ? row[0] : row;
       if (!created || !created.id) throw new Error("No se pudo crear el grupo");
