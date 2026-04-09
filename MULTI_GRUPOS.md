@@ -135,9 +135,24 @@ El selector actual muestra solo el nombre. Si se quiere mostrar un logo por grup
 
 ### ✅ Crear un nuevo grupo — COMPLETADO
 
-- Botón "Crear nuevo grupo" en el selector (dashed, secundario)
-- Formulario: nombre → genera slug automático (editable) → PIN → confirmar PIN
+- Botón "+ Crear nuevo grupo" en el selector (dashed, secundario)
+- Formulario: nombre, logo_url (opcional con preview en tiempo real), PIN, confirmar PIN
+- Slug se genera automáticamente del nombre con `toSlug()` — el usuario no lo ve
 - Al crear → INSERT en `groups` → auto-entra al grupo nuevo sin pedir PIN
 - Cualquiera puede crear un grupo — el PIN protege el acceso entre grupos, no la creación
-- `toSlug()` normaliza acentos, espacios y caracteres especiales al slug
 - Error claro si el slug ya existe (constraint UNIQUE en BD)
+
+### ✅ Logo por grupo — COMPLETADO
+
+- Columna `logo_url text` en tabla `groups` (nullable)
+- Selector muestra logo circular de cada grupo (fallback: ⚽ genérico)
+- PIN overlay muestra logo del grupo seleccionado
+- Topbar actualiza el logo al entrar al grupo
+- Foca tiene logo seteado vía `UPDATE groups SET logo_url = '...' WHERE slug = 'foca'`
+- Formulario de creación acepta URL de imagen con preview instantáneo
+
+### ✅ Navegación entre grupos — COMPLETADO
+
+- "Salir del grupo" en el menú hamburguesa → borra localStorage y vuelve al selector
+- "← Volver" en el overlay de PIN → regresa al selector sin entrar al grupo
+- Selector siempre visible cuando no hay grupo guardado en localStorage

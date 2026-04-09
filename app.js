@@ -3237,6 +3237,12 @@ document.getElementById("globalRatingBtn")?.addEventListener("click", () => {
   if (firstPlayer) openRatingDetailsByPlayerId(firstPlayer.id);
 });
 document.getElementById("infoAppBtn")?.addEventListener("click", openInfoApp);
+document.getElementById("switchGroupBtn")?.addEventListener("click", () => {
+  localStorage.removeItem(GROUP_STORAGE_KEY);
+  const url = new URL(window.location.href);
+  url.searchParams.delete("group");
+  window.location.replace(url.toString());
+});
 document.getElementById("closeInfoAppBtn")?.addEventListener("click", () => {
   document.getElementById("infoAppModal")?.classList.add("hidden");
 });
@@ -3754,11 +3760,12 @@ function loadGroupFromStorage() {
   }
 }
 
-function showPinOverlay(group, onSuccess) {
+function showPinOverlay(group, onSuccess, onBack) {
   const overlay = document.getElementById("groupPinOverlay");
   const title = document.getElementById("groupPinTitle");
   const input = document.getElementById("groupPinInput");
   const confirmBtn = document.getElementById("groupPinConfirmBtn");
+  const backBtn = document.getElementById("groupPinBackBtn");
   const errorMsg = document.getElementById("groupPinError");
   if (!overlay) return;
 
@@ -3789,6 +3796,12 @@ function showPinOverlay(group, onSuccess) {
 
   confirmBtn.onclick = attemptPin;
   input.onkeydown = (e) => { if (e.key === "Enter") attemptPin(); };
+  if (backBtn) {
+    backBtn.onclick = () => {
+      overlay.classList.add("hidden");
+      if (onBack) onBack();
+    };
+  }
 }
 
 (async function init() {
@@ -3812,6 +3825,10 @@ function showPinOverlay(group, onSuccess) {
     const url = new URL(window.location.href);
     url.searchParams.set("group", group.slug);
     window.history.replaceState({}, "", url.toString());
+    if (group.logo_url) {
+      const brandLogo = document.getElementById("brandLogo");
+      if (brandLogo) brandLogo.src = group.logo_url;
+    }
     fetchPlayers();
     fetchMatches();
   }
@@ -3822,7 +3839,9 @@ function showPinOverlay(group, onSuccess) {
       // Ya autenticado previamente
       enterGroup(group);
     } else {
-      showPinOverlay(group, () => enterGroup(group));
+      showPinOverlay(group, () => enterGroup(group), () => {
+        document.getElementById("groupSelectorOverlay")?.classList.remove("hidden");
+      });
     }
   }
 
