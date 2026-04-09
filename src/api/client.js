@@ -464,7 +464,7 @@
       return Array.isArray(rows) && rows.length >= 10;
     },
     async getGroups() {
-      const rows = await requestSupabase("/rest/v1/groups?select=id,name,slug&order=name.asc", {
+      const rows = await requestSupabase("/rest/v1/groups?select=id,name,slug,pin_hash&order=name.asc", {
         method: "GET",
         headers: buildSupabaseHeaders(),
       });

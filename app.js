@@ -3732,52 +3732,134 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* Init */
-(async function init() {
-  const slug = new URLSearchParams(window.location.search).get("group");
+const GROUP_STORAGE_KEY = "fobal5_group";
 
-  if (typeof apiClient.getGroups === "function") {
-    let groups = [];
-    try {
-      groups = await apiClient.getGroups();
-    } catch (e) {
-      console.warn("No se pudo cargar grupos:", e);
-    }
+async function hashPin(pin) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pin.toUpperCase().trim());
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
-    if (slug) {
-      const match = groups.find((g) => g.slug === slug);
-      if (match) apiClient.setGroupId(match.id);
-    } else if (groups.length > 1) {
-      // Mostrar selector de grupo
-      const overlay = document.getElementById("groupSelectorOverlay");
-      const list = document.getElementById("groupSelectorList");
-      if (overlay && list) {
-        list.innerHTML = "";
-        groups.forEach((g) => {
-          const btn = document.createElement("button");
-          btn.textContent = g.name;
-          btn.style.cssText = "padding:16px;font-size:1.1rem;font-weight:700;border-radius:12px;border:none;cursor:pointer;background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);";
-          btn.addEventListener("click", () => {
-            apiClient.setGroupId(g.id);
-            overlay.classList.add("hidden");
-            const url = new URL(window.location.href);
-            url.searchParams.set("group", g.slug);
-            window.history.replaceState({}, "", url.toString());
-            fetchPlayers();
-            fetchMatches();
-          });
-          list.appendChild(btn);
-        });
-        overlay.classList.remove("hidden");
-        return; // No cargamos datos hasta que el usuario elija
-      }
-    } else if (groups.length === 1) {
-      // Solo hay un grupo, lo seteamos automáticamente
-      apiClient.setGroupId(groups[0].id);
+function saveGroupToStorage(group) {
+  localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify({ id: group.id, slug: group.slug, name: group.name }));
+}
+
+function loadGroupFromStorage() {
+  try {
+    const raw = localStorage.getItem(GROUP_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function showPinOverlay(group, onSuccess) {
+  const overlay = document.getElementById("groupPinOverlay");
+  const title = document.getElementById("groupPinTitle");
+  const input = document.getElementById("groupPinInput");
+  const confirmBtn = document.getElementById("groupPinConfirmBtn");
+  const errorMsg = document.getElementById("groupPinError");
+  if (!overlay) return;
+
+  title.textContent = group.name;
+  input.value = "";
+  errorMsg.classList.add("hidden");
+  overlay.classList.remove("hidden");
+  setTimeout(() => input.focus(), 100);
+
+  async function attemptPin() {
+    const hash = await hashPin(input.value);
+    if (hash === group.pin_hash) {
+      overlay.classList.add("hidden");
+      saveGroupToStorage(group);
+      onSuccess();
+    } else {
+      errorMsg.classList.remove("hidden");
+      input.value = "";
+      input.focus();
     }
   }
 
-  fetchPlayers();
-  fetchMatches();
+  confirmBtn.onclick = attemptPin;
+  input.onkeydown = (e) => { if (e.key === "Enter") attemptPin(); };
+}
+
+(async function init() {
+  const slug = new URLSearchParams(window.location.search).get("group");
+
+  if (typeof apiClient.getGroups !== "function") {
+    fetchPlayers();
+    fetchMatches();
+    return;
+  }
+
+  let groups = [];
+  try {
+    groups = await apiClient.getGroups();
+  } catch (e) {
+    console.warn("No se pudo cargar grupos:", e);
+  }
+
+  function enterGroup(group) {
+    apiClient.setGroupId(group.id);
+    const url = new URL(window.location.href);
+    url.searchParams.set("group", group.slug);
+    window.history.replaceState({}, "", url.toString());
+    fetchPlayers();
+    fetchMatches();
+  }
+
+  function resolveGroup(group) {
+    const saved = loadGroupFromStorage();
+    if (saved && saved.id === group.id) {
+      // Ya autenticado previamente
+      enterGroup(group);
+    } else {
+      showPinOverlay(group, () => enterGroup(group));
+    }
+  }
+
+  if (slug) {
+    const match = groups.find((g) => g.slug === slug);
+    if (match) {
+      resolveGroup(match);
+      return;
+    }
+  }
+
+  // Intentar recuperar grupo guardado
+  const saved = loadGroupFromStorage();
+  if (saved) {
+    const match = groups.find((g) => g.id === saved.id);
+    if (match) {
+      enterGroup(match);
+      return;
+    }
+  }
+
+  if (groups.length === 1) {
+    resolveGroup(groups[0]);
+    return;
+  }
+
+  // Mostrar selector
+  const overlay = document.getElementById("groupSelectorOverlay");
+  const list = document.getElementById("groupSelectorList");
+  if (overlay && list) {
+    list.innerHTML = "";
+    groups.forEach((g) => {
+      const btn = document.createElement("button");
+      btn.textContent = g.name;
+      btn.style.cssText = "padding:16px;font-size:1.1rem;font-weight:700;border-radius:12px;border:none;cursor:pointer;background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);";
+      btn.addEventListener("click", () => {
+        overlay.classList.add("hidden");
+        resolveGroup(g);
+      });
+      list.appendChild(btn);
+    });
+    overlay.classList.remove("hidden");
+  }
 })();
 showView("players");
 // Ensure match mode default
