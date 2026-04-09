@@ -89,23 +89,29 @@ Overlay en `index.html` con id `groupSelectorOverlay`:
 
 ---
 
+### ✅ PIN por grupo — COMPLETADO
+
+- Columna `pin_hash text` en tabla `groups` (SHA-256 del PIN en mayúsculas)
+- Modal de PIN aparece la primera vez que se entra a un grupo
+- El PIN se normaliza a mayúsculas antes de hashear — el usuario puede escribir en cualquier capitalización
+- Grupo autenticado se guarda en `localStorage` con key `fobal5_group` → próximas visitas entran directo
+- Hash se valida en el cliente con `crypto.subtle.digest`
+
+Para setear el PIN de un nuevo grupo:
+```bash
+# Obtener el hash SHA-256 del PIN (en mayúsculas)
+echo -n "ELPIN" | sha256sum
+```
+```sql
+UPDATE groups SET pin_hash = '<hash>' WHERE slug = 'slug-del-grupo';
+```
+
+---
+
 ## Pendiente
 
-### PIN por grupo + RLS
-
-Similar al PIN de admin existente. El flujo sería:
-
-1. Usuario entra sin `?group=` → ve el selector de grupos
-2. Elige su grupo → se le pide el PIN
-3. PIN correcto → carga los datos, se guarda en `sessionStorage` para no pedirlo en cada recarga
-4. PIN incorrecto → no accede
-
-Implementación:
-- Columna `pin_hash` en la tabla `groups` (hasheado, no texto plano)
-- Validación contra Supabase antes de setear el `group_id`
-- Con el PIN validado se puede habilitar RLS real usando un token de sesión con `group_id` como claim
-
-Sin PIN, RLS no aporta seguridad real porque toda la app usa la misma anon key — Supabase no puede distinguir de qué grupo viene cada request.
+### RLS policies
+Sin autenticación real por grupo (JWT), RLS no puede filtrar por `group_id` a nivel de BD. La seguridad actual es a nivel de código. Para RLS real se necesitaría auth por grupo con claims en el JWT.
 
 ### ~~insertPlayerRatingLimited (RPC)~~ — COMPLETADO
 Función SQL actualizada para aceptar `p_group_id DEFAULT NULL`. El cliente pasa `activeGroupId` en cada llamada.
