@@ -26,11 +26,11 @@
     return { matchesPlayed, won, lost, drawn, winRate };
   }
 
-  async function openPlayerStats(playerKey, displayName) {
+  async function openPlayerStats(playerKey, displayName, isLeader = false) {
     const modal = document.getElementById("playerStatsModal");
     if (!modal) return;
 
-    document.getElementById("playerStatsName").textContent = displayName;
+    document.getElementById("playerStatsName").textContent = isLeader ? "♕ " + displayName : displayName;
     document.getElementById("pstatsPlayed").textContent = "—";
     document.getElementById("pstatsWon").textContent = "—";
     document.getElementById("pstatsLost").textContent = "—";

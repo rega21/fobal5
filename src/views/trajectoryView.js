@@ -88,8 +88,9 @@
     const container = canvas.parentElement;
     container.style.height = Math.max(180, barCount * 38) + "px";
 
-    // Leader label with star
-    const yLabels = result.labels.map((name, i) => i === 0 ? "☆ " + name : name);
+    const topScore = result.values[0];
+    const isUniqueleader = result.values[1] !== topScore;
+    const yLabels = result.labels.map((name, i) => i === 0 && isUniqueleader ? "♕ " + name : name);
 
     chartInstance = new Chart(canvas, {
       type: "bar",
@@ -139,8 +140,8 @@
           },
           y: {
             ticks: {
-              color: (ctx) => ctx.index === 0 ? (isDark ? "#4BC0C0" : "#2a9d8f") : tickColor,
-              font: (ctx) => ctx.index === 0
+              color: (ctx) => ctx.index === 0 && isUniqueleader ? (isDark ? "#4BC0C0" : "#2a9d8f") : tickColor,
+              font: (ctx) => ctx.index === 0 && isUniqueleader
                 ? { size: 12, weight: "700" }
                 : { size: 12 },
             },
@@ -157,7 +158,7 @@
       const idx = points[0].index;
       const displayName = result.labels[idx];
       const playerKey = result.keys[idx];
-      window.TrajectoryModal?.openPlayerStats(playerKey, displayName);
+      window.TrajectoryModal?.openPlayerStats(playerKey, displayName, idx === 0 && isUniqueleader);
     };
   }
 
