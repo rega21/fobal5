@@ -160,7 +160,15 @@
     };
   }
 
+  let activeGroupId = null;
+
   global.FobalApi = {
+    setGroupId(id) {
+      activeGroupId = id || null;
+    },
+    getGroupId() {
+      return activeGroupId;
+    },
     urls: {
       players: HAS_SUPABASE ? `${SUPABASE_BASE_URL}/rest/v1/players` : PLAYERS_URL,
       matches: HAS_SUPABASE ? `${SUPABASE_BASE_URL}/rest/v1/matches` : MATCHES_URL,
@@ -171,7 +179,8 @@
         return request(PLAYERS_URL);
       }
 
-      const rows = await requestSupabase("/rest/v1/players?select=id,name,nickname,attack,defense,midfield,created_at&order=name.asc", {
+      const groupFilter = activeGroupId ? `&group_id=eq.${encodeURIComponent(activeGroupId)}` : "";
+      const rows = await requestSupabase(`/rest/v1/players?select=id,name,nickname,attack,defense,midfield,created_at&order=name.asc${groupFilter}`, {
         method: "GET",
         headers: buildSupabaseHeaders(),
       });
@@ -187,7 +196,7 @@
         });
       }
 
-      const payload = buildPlayerPayload(body);
+      const payload = { ...buildPlayerPayload(body), ...(activeGroupId ? { group_id: activeGroupId } : {}) };
       const rows = await requestSupabase("/rest/v1/players", {
         method: "POST",
         headers: buildSupabaseHeaders({
@@ -210,7 +219,8 @@
       }
 
       const payload = buildPlayerPayload(body);
-      const rows = await requestSupabase(`/rest/v1/players?id=eq.${encodeURIComponent(String(id))}`, {
+      const groupFilter = activeGroupId ? `&group_id=eq.${encodeURIComponent(activeGroupId)}` : "";
+      const rows = await requestSupabase(`/rest/v1/players?id=eq.${encodeURIComponent(String(id))}${groupFilter}`, {
         method: "PATCH",
         headers: buildSupabaseHeaders({
           "Content-Type": "application/json",
@@ -227,7 +237,8 @@
         return request(`${PLAYERS_URL}/${id}`, { method: "DELETE" });
       }
 
-      return requestSupabase(`/rest/v1/players?id=eq.${encodeURIComponent(String(id))}`, {
+      const groupFilter = activeGroupId ? `&group_id=eq.${encodeURIComponent(activeGroupId)}` : "";
+      return requestSupabase(`/rest/v1/players?id=eq.${encodeURIComponent(String(id))}${groupFilter}`, {
         method: "DELETE",
         headers: buildSupabaseHeaders({ Prefer: "return=minimal" }),
       });
@@ -236,8 +247,9 @@
       if (!HAS_SUPABASE) {
         return request(MATCHES_URL);
       }
+      const groupFilter = activeGroupId ? `&group_id=eq.${encodeURIComponent(activeGroupId)}` : "";
       const [matches, matchPlayers] = await Promise.all([
-        requestSupabase("/rest/v1/matches?select=*&order=played_at.desc.nullslast,scheduled_at.desc.nullslast", {
+        requestSupabase(`/rest/v1/matches?select=*&order=played_at.desc.nullslast,scheduled_at.desc.nullslast${groupFilter}`, {
           method: "GET",
           headers: buildSupabaseHeaders(),
         }),
@@ -263,7 +275,7 @@
           body: JSON.stringify(body),
         });
       }
-      const payload = mapMatchToSupabase(body);
+      const payload = { ...mapMatchToSupabase(body), ...(activeGroupId ? { group_id: activeGroupId } : {}) };
       const rows = await requestSupabase("/rest/v1/matches", {
         method: "POST",
         headers: buildSupabaseHeaders({
@@ -287,7 +299,8 @@
         });
       }
       const payload = mapMatchToSupabase(body);
-      await requestSupabase(`/rest/v1/matches?id=eq.${encodeURIComponent(String(id))}`, {
+      const groupFilter = activeGroupId ? `&group_id=eq.${encodeURIComponent(activeGroupId)}` : "";
+      await requestSupabase(`/rest/v1/matches?id=eq.${encodeURIComponent(String(id))}${groupFilter}`, {
         method: "PATCH",
         headers: buildSupabaseHeaders({
           "Content-Type": "application/json",
@@ -317,13 +330,15 @@
         method: "DELETE",
         headers: buildSupabaseHeaders({ Prefer: "return=minimal" }),
       });
-      return requestSupabase(`/rest/v1/matches?id=eq.${encodeURIComponent(String(id))}`, {
+      const groupFilter = activeGroupId ? `&group_id=eq.${encodeURIComponent(activeGroupId)}` : "";
+      return requestSupabase(`/rest/v1/matches?id=eq.${encodeURIComponent(String(id))}${groupFilter}`, {
         method: "DELETE",
         headers: buildSupabaseHeaders({ Prefer: "return=minimal" }),
       });
     },
     async getPlayerRatingsSummaryByPlayerId() {
-      const rows = await requestSupabase("/rest/v1/player_ratings?select=player_id,attack,defense,midfield,stamina,garra,technique", {
+      const groupFilter = activeGroupId ? `&group_id=eq.${encodeURIComponent(activeGroupId)}` : "";
+      const rows = await requestSupabase(`/rest/v1/player_ratings?select=player_id,attack,defense,midfield,stamina,garra,technique${groupFilter}`, {
         method: "GET",
         headers: buildSupabaseHeaders(),
       });
@@ -376,8 +391,9 @@
       const normalizedVoterKey = String(voterKey || "").trim();
       if (!normalizedPlayerId || !normalizedVoterKey) return null;
 
+      const groupFilter = activeGroupId ? `&group_id=eq.${encodeURIComponent(activeGroupId)}` : "";
       const rows = await requestSupabase(
-        `/rest/v1/player_ratings?select=attack,defense,midfield,stamina,garra,technique&player_id=eq.${encodeURIComponent(normalizedPlayerId)}&voter_key=eq.${encodeURIComponent(normalizedVoterKey)}&limit=1`,
+        `/rest/v1/player_ratings?select=attack,defense,midfield,stamina,garra,technique&player_id=eq.${encodeURIComponent(normalizedPlayerId)}&voter_key=eq.${encodeURIComponent(normalizedVoterKey)}${groupFilter}&limit=1`,
         {
           method: "GET",
           headers: buildSupabaseHeaders(),
@@ -398,13 +414,14 @@
     },
     async upsertPlayerRating(payload) {
       // Deprecated: Usar insertPlayerRatingLimited para control de límite de votos
+      const fullPayload = { ...payload, ...(activeGroupId ? { group_id: activeGroupId } : {}) };
       return requestSupabase("/rest/v1/player_ratings?on_conflict=player_id,voter_key", {
         method: "POST",
         headers: buildSupabaseHeaders({
           "Content-Type": "application/json",
           Prefer: "resolution=merge-duplicates,return=representation",
         }),
-        body: JSON.stringify([payload]),
+        body: JSON.stringify([fullPayload]),
       });
     },
 
@@ -421,12 +438,14 @@
           p_stamina: stamina,
           p_garra: garra,
           p_technique: technique,
+          p_group_id: activeGroupId || null,
         })
       });
     },
     async getRecentVoteActivity(limit = 30) {
+      const groupFilter = activeGroupId ? `&group_id=eq.${encodeURIComponent(activeGroupId)}` : "";
       const rows = await requestSupabase(
-        `/rest/v1/player_ratings?select=player_id,attack,defense,midfield,stamina,garra,technique,created_at&order=created_at.desc&limit=${Number(limit)}`,
+        `/rest/v1/player_ratings?select=player_id,attack,defense,midfield,stamina,garra,technique,created_at&order=created_at.desc${groupFilter}&limit=${Number(limit)}`,
         { method: "GET", headers: buildSupabaseHeaders() }
       );
       return Array.isArray(rows) ? rows : [];
@@ -437,18 +456,29 @@
       const normalizedVoterKey = String(voterKey || "").trim();
       if (!normalizedPlayerId || !normalizedVoterKey) return false;
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const groupFilter = activeGroupId ? `&group_id=eq.${encodeURIComponent(activeGroupId)}` : "";
       const rows = await requestSupabase(
-        `/rest/v1/player_ratings?select=id&player_id=eq.${encodeURIComponent(normalizedPlayerId)}&voter_key=eq.${encodeURIComponent(normalizedVoterKey)}&created_at=gte.${encodeURIComponent(since)}`,
+        `/rest/v1/player_ratings?select=id&player_id=eq.${encodeURIComponent(normalizedPlayerId)}&voter_key=eq.${encodeURIComponent(normalizedVoterKey)}&created_at=gte.${encodeURIComponent(since)}${groupFilter}`,
         { method: "GET", headers: buildSupabaseHeaders() }
       );
       return Array.isArray(rows) && rows.length >= 10;
+    },
+    async getGroups() {
+      const rows = await requestSupabase("/rest/v1/groups?select=id,name,slug&order=name.asc", {
+        method: "GET",
+        headers: buildSupabaseHeaders(),
+      });
+      return Array.isArray(rows) ? rows : [];
     },
     async createFeedback(payload) {
       if (!HAS_SUPABASE) {
         throw new Error("Feedback requires Supabase config");
       }
 
-      const normalizedPayload = buildFeedbackPayload(payload);
+      const normalizedPayload = {
+        ...buildFeedbackPayload(payload),
+        ...(activeGroupId ? { group_id: activeGroupId } : {}),
+      };
       if (!normalizedPayload.message) {
         throw new Error("Feedback message required");
       }

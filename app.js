@@ -3732,8 +3732,53 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* Init */
-fetchPlayers();
-fetchMatches();
+(async function init() {
+  const slug = new URLSearchParams(window.location.search).get("group");
+
+  if (typeof apiClient.getGroups === "function") {
+    let groups = [];
+    try {
+      groups = await apiClient.getGroups();
+    } catch (e) {
+      console.warn("No se pudo cargar grupos:", e);
+    }
+
+    if (slug) {
+      const match = groups.find((g) => g.slug === slug);
+      if (match) apiClient.setGroupId(match.id);
+    } else if (groups.length > 1) {
+      // Mostrar selector de grupo
+      const overlay = document.getElementById("groupSelectorOverlay");
+      const list = document.getElementById("groupSelectorList");
+      if (overlay && list) {
+        list.innerHTML = "";
+        groups.forEach((g) => {
+          const btn = document.createElement("button");
+          btn.textContent = g.name;
+          btn.style.cssText = "padding:16px;font-size:1.1rem;font-weight:700;border-radius:12px;border:none;cursor:pointer;background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);";
+          btn.addEventListener("click", () => {
+            apiClient.setGroupId(g.id);
+            overlay.classList.add("hidden");
+            const url = new URL(window.location.href);
+            url.searchParams.set("group", g.slug);
+            window.history.replaceState({}, "", url.toString());
+            fetchPlayers();
+            fetchMatches();
+          });
+          list.appendChild(btn);
+        });
+        overlay.classList.remove("hidden");
+        return; // No cargamos datos hasta que el usuario elija
+      }
+    } else if (groups.length === 1) {
+      // Solo hay un grupo, lo seteamos automáticamente
+      apiClient.setGroupId(groups[0].id);
+    }
+  }
+
+  fetchPlayers();
+  fetchMatches();
+})();
 showView("players");
 // Ensure match mode default
 setTimeout(()=> setMatchMode('balanced'), 50);

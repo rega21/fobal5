@@ -410,6 +410,18 @@
     </div>
   </main>
 
+  <!-- Group selector overlay -->
+  <div id="groupSelectorOverlay" class="hidden" style="
+    position:fixed;inset:0;z-index:9999;
+    background:var(--bg,#0f172a);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:24px;padding:32px;
+  ">
+    <img src="icons/futbolFoca.png" alt="Futbol Foca" style="width:72px;height:72px;border-radius:50%;" />
+    <h1 style="margin:0;font-size:1.4rem;color:var(--text-primary,#fff);">Seleccioná tu grupo</h1>
+    <div id="groupSelectorList" style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px;"></div>
+  </div>
+
     <!-- Modal nuevo jugador -->
   <div id="newPlayerModal" class="modal hidden">
     <div class="modal-content modal-small">
