@@ -3253,7 +3253,7 @@ document.getElementById("globalRatingBtn")?.addEventListener("click", () => {
 });
 document.getElementById("infoAppBtn")?.addEventListener("click", openInfoApp);
 document.getElementById("switchGroupBtn")?.addEventListener("click", () => {
-  localStorage.removeItem(GROUP_STORAGE_KEY);
+  removeGroupFromStorage();
   const url = new URL(window.location.href);
   url.searchParams.delete("group");
   window.location.replace(url.toString());
@@ -3769,16 +3769,29 @@ async function hashPin(pin) {
 }
 
 function saveGroupToStorage(group) {
-  localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify({ id: group.id, slug: group.slug, name: group.name }));
+  const data = JSON.stringify({ id: group.id, slug: group.slug, name: group.name });
+  try { localStorage.setItem(GROUP_STORAGE_KEY, data); } catch (_) {}
+  // Cookie como fallback persistente (iOS PWA limpia localStorage entre sesiones)
+  const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+  document.cookie = `${GROUP_STORAGE_KEY}=${encodeURIComponent(data)}; expires=${expires}; path=/; SameSite=Strict`;
+}
+
+function removeGroupFromStorage() {
+  try { localStorage.removeItem(GROUP_STORAGE_KEY); } catch (_) {}
+  document.cookie = `${GROUP_STORAGE_KEY}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict`;
 }
 
 function loadGroupFromStorage() {
   try {
     const raw = localStorage.getItem(GROUP_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+    if (raw) return JSON.parse(raw);
+  } catch (_) {}
+  // Fallback a cookie (más persistente en iOS PWA)
+  try {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${GROUP_STORAGE_KEY}=([^;]*)`));
+    if (match) return JSON.parse(decodeURIComponent(match[1]));
+  } catch (_) {}
+  return null;
 }
 
 function showPinOverlay(group, onSuccess, onBack) {
