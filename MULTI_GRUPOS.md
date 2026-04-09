@@ -110,14 +110,17 @@ UPDATE groups SET pin_hash = '<hash>' WHERE slug = 'slug-del-grupo';
 
 ## Pendiente
 
-### RLS policies
-Sin autenticación real por grupo (JWT), RLS no puede filtrar por `group_id` a nivel de BD. La seguridad actual es a nivel de código. Para RLS real se necesitaría auth por grupo con claims en el JWT.
+### RLS policies en otras tablas
+`groups` ya tiene RLS habilitado (SELECT y INSERT públicos, UPDATE/DELETE bloqueados). El resto de las tablas (`players`, `matches`, `player_ratings`, `feedback`) siguen sin RLS — sin JWT no se puede filtrar por grupo a nivel de BD. La seguridad es a nivel de código.
 
 ### ~~insertPlayerRatingLimited (RPC)~~ — COMPLETADO
 Función SQL actualizada para aceptar `p_group_id DEFAULT NULL`. El cliente pasa `activeGroupId` en cada llamada.
 
-### Imagen/logo por grupo
-El selector actual muestra solo el nombre. Si se quiere mostrar un logo por grupo, habría que agregar una columna `logo_url` a la tabla `groups`.
+### ~~Imagen/logo por grupo~~ — COMPLETADO
+Ver sección "Logo por grupo" más arriba.
+
+### Voto automático al crear jugador — PARCIAL
+Se intentó insertar un voto automático en `player_ratings` al crear un jugador (con los mismos valores de los sliders), para que el creador no tenga que votar dos veces. El `markPlayerAsVoted` funciona (muestra EDITAR tras recargar), pero el INSERT directo a `player_ratings` falla silenciosamente. Pendiente de investigar. Por ahora el creador ve VOTAR y puede votar normalmente.
 
 ---
 

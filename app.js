@@ -1428,8 +1428,23 @@ async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0, 
     const body = { name, nickname: nickname || "", attack, defense, midfield, stamina, garra, technique };
     const newPlayer = await apiClient.createPlayer(body);
     players.push(newPlayer);
+
+    // Insertar voto automático del creador con los mismos valores
+    try {
+      const voterKey = playerRatingsService.getOrCreateVoterKey();
+      await apiClient.insertInitialPlayerRating({
+        player_id: newPlayer.id,
+        voter_key: voterKey,
+        attack, defense, midfield, stamina, garra, technique,
+      });
+      markPlayerAsVoted(newPlayer.id);
+    } catch (e) {
+      console.error("No se pudo insertar voto inicial del jugador:", e, "player_id:", newPlayer?.id);
+    }
+
     renderPlayers();
     renderAdminPlayers();
+    showToast("El promedio real se calcula cuando el grupo califique al jugador.", 3500, "info");
   } catch (e) {
     console.error("Error adding player:", e);
   }

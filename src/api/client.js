@@ -425,6 +425,17 @@
       });
     },
 
+    async insertInitialPlayerRating({ player_id, voter_key, attack, defense, midfield, stamina, garra, technique }) {
+      const payload = {
+        player_id, voter_key, attack, defense, midfield, stamina, garra, technique,
+        ...(activeGroupId ? { group_id: activeGroupId } : {}),
+      };
+      return requestSupabase("/rest/v1/player_ratings", {
+        method: "POST",
+        headers: buildSupabaseHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify(payload),
+      });
+    },
     async insertPlayerRatingLimited({ player_id, voter_key, attack, defense, midfield, stamina, garra, technique }) {
       return requestSupabase('/rest/v1/rpc/insert_player_rating_limited', {
         method: 'POST',
