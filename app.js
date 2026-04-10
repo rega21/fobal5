@@ -1455,7 +1455,6 @@ async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0, 
 
     renderPlayers();
     renderAdminPlayers();
-    showToast("El promedio real se calcula cuando el grupo califique al jugador.", 3500, "info");
   } catch (e) {
     console.error("Error adding player:", e);
   }
@@ -3405,6 +3404,7 @@ document.getElementById('createPlayerBtn')?.addEventListener('click', () => {
   addPlayer(name, nickname, attack, defense, midfield, stamina, garra, technique);
   _maybeShowInstall();
   closeNewPlayerModal();
+  showToast("El promedio real se calcula cuando el grupo califique al jugador.", 7000, "info");
 });
 
 document.getElementById("startMatchBtn")?.addEventListener("click", divideTeams);
