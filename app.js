@@ -2381,7 +2381,7 @@ async function editPlayer(id) {
   }
 
   if (editNavPlayers.length === 0) {
-    editNavPlayers = getPlayersForDisplay(players).filter(p => p.communityStatus === "validated");
+    editNavPlayers = getPlayersForDisplay(players);
   }
   editNavIndex = editNavPlayers.findIndex(p => String(p.id) === String(id));
 
@@ -3662,11 +3662,10 @@ document.getElementById("editNavNext")?.addEventListener("click", () => {
   editPlayer(editNavPlayers[editNavIndex].id);
 });
 const _editModalContent = document.querySelector("#editPlayerModal .modal-content");
-const _editSwipeZone = document.getElementById("editRadarContainer");
-if (_editModalContent && _editSwipeZone) {
+if (_editModalContent) {
   let _editSwipeStartX = null;
   let _editSwipeStartY = null;
-  _editSwipeZone.addEventListener("touchstart", (e) => {
+  _editModalContent.addEventListener("touchstart", (e) => {
     _editSwipeStartX = e.touches[0].clientX;
     _editSwipeStartY = e.touches[0].clientY;
   }, { passive: true });
