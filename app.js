@@ -3294,6 +3294,26 @@ document.getElementById("switchGroupBtn")?.addEventListener("click", () => {
 document.getElementById("closeInfoAppBtn")?.addEventListener("click", () => {
   document.getElementById("infoAppModal")?.classList.add("hidden");
 });
+
+document.getElementById("brandLogo")?.addEventListener("click", () => {
+  const groupId = window.FobalApi?.getGroupId?.();
+  if (!groupId) return;
+  const url = prompt("URL del logo del grupo:", activeGroupLogoUrl || "");
+  if (url === null) return;
+  const newUrl = url.trim() || null;
+  window.FobalApi.updateGroupLogo(groupId, newUrl)
+    .then(() => {
+      activeGroupLogoUrl = newUrl;
+      updateBrandLogo();
+      const logoEl = document.getElementById("infoAppGroupLogo");
+      if (logoEl) {
+        if (newUrl) { logoEl.src = newUrl; logoEl.style.display = ""; }
+        else logoEl.style.display = "none";
+      }
+      showToast("Logo actualizado", 2500, "success");
+    })
+    .catch(() => showToast("Error al guardar el logo", 3000, "error"));
+});
 document.getElementById("menuToggleBtn")?.addEventListener("click", (e) => {
   e.stopPropagation();
   toggleTopbarMenu();

@@ -496,6 +496,15 @@
       if (!created || !created.id) throw new Error("No se pudo crear el grupo");
       return created;
     },
+    async updateGroupLogo(groupId, logo_url) {
+      await requestSupabase(`/rest/v1/groups?id=eq.${groupId}`, {
+        method: "PATCH",
+        headers: buildSupabaseHeaders({
+          "Content-Type": "application/json",
+        }),
+        body: JSON.stringify({ logo_url }),
+      });
+    },
     async createFeedback(payload) {
       if (!HAS_SUPABASE) {
         throw new Error("Feedback requires Supabase config");
