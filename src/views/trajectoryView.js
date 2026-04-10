@@ -110,7 +110,7 @@
         const nameStartX = xRight - nameWidth;
 
         const crownColor = isDark ? "#4BC0C0" : "#2a9d8f";
-        ctx.font = "700 22px sans-serif";
+        ctx.font = "700 28px sans-serif";
         ctx.fillStyle = crownColor;
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
