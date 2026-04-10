@@ -496,6 +496,12 @@
       if (!created || !created.id) throw new Error("No se pudo crear el grupo");
       return created;
     },
+    async deleteGroup(groupId) {
+      await requestSupabase(`/rest/v1/groups?id=eq.${groupId}`, {
+        method: "DELETE",
+        headers: buildSupabaseHeaders(),
+      });
+    },
     async updateGroupLogo(groupId, logo_url) {
       await requestSupabase(`/rest/v1/groups?id=eq.${groupId}`, {
         method: "PATCH",

@@ -2966,17 +2966,6 @@ function closeFeedbackModal() {
 
 function openInfoApp() {
   closeTopbarMenu();
-  const logoEl = document.getElementById("infoAppGroupLogo");
-  const nameEl = document.getElementById("infoAppGroupName");
-  if (logoEl) {
-    if (activeGroupLogoUrl) {
-      logoEl.src = activeGroupLogoUrl;
-      logoEl.style.display = "";
-    } else {
-      logoEl.style.display = "none";
-    }
-  }
-  if (nameEl) nameEl.textContent = activeGroupName || "";
   document.getElementById("infoAppModal")?.classList.remove("hidden");
 }
 
