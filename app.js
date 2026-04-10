@@ -3452,6 +3452,12 @@ document.getElementById('createPlayerBtn')?.addEventListener('click', () => {
     showToast('Nombre y apodo juntos no pueden superar 14 caracteres', 3000, 'error');
     return;
   }
+  const duplicate = players.find(p => p.name?.toLowerCase() === name.toLowerCase() || (nickname && p.nickname?.toLowerCase() === nickname.toLowerCase()));
+  if (duplicate) {
+    const label = duplicate.nickname || duplicate.name;
+    const confirmed = confirm(`Ya existe un jugador llamado "${label}". ¿Querés crearlo igual?`);
+    if (!confirmed) return;
+  }
   addPlayer(name, nickname, attack, defense, midfield, stamina, garra, technique);
   _maybeShowInstall();
   closeNewPlayerModal();
