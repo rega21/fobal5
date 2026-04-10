@@ -246,7 +246,9 @@
     const historyList = document.getElementById("historyList");
     if (!historyList) return;
 
+    const titleEl = document.getElementById("historyGroupTitle");
     if (!Array.isArray(history) || history.length === 0) {
+      if (titleEl) titleEl.style.display = "none";
       historyList.innerHTML = '<p class="muted">Sin partidos registrados</p>';
       return;
     }
@@ -268,9 +270,11 @@
     const orderedMatches = [...validMatches].sort((a, b) => getMatchTimestamp(b) - getMatchTimestamp(a));
 
     if (validMatches.length === 0) {
+      if (titleEl) titleEl.style.display = "none";
       historyList.innerHTML = '<p class="muted">Sin partidos registrados</p>';
       return;
     }
+    if (titleEl) titleEl.style.display = "";
 
     const buildMobileFriendlyMapsLink = (rawMapsUrl = "", matchLocation = "") => {
       const safeLocation = String(matchLocation || "").trim();

@@ -3934,6 +3934,11 @@ function showPinOverlay(group, onSuccess, onBack) {
     activeGroupLogoUrl = group.logo_url || null;
     activeGroupName = group.name || null;
     updateBrandLogo();
+    const historyTitle = document.getElementById("historyGroupTitle");
+    if (historyTitle) {
+      historyTitle.textContent = group.name ? `Partidos registrados de ${group.name}` : "";
+      historyTitle.style.display = "none";
+    }
     fetchPlayers();
     fetchMatches();
   }

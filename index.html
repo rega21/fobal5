@@ -169,6 +169,7 @@
 
     <!-- Historial view -->
     <section class="view hidden" id="view-history">
+      <p id="historyGroupTitle" class="muted" style="font-size:0.85rem;margin:8px 0 12px;"></p>
       <div class="list" id="historyList">
         <p class="muted">Sin partidos registrados</p>
       </div>
@@ -428,6 +429,10 @@
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:24px;padding:32px;
   ">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary,#94a3b8)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+      <p style="margin:0;font-size:0.85rem;font-weight:700;letter-spacing:0.1em;color:var(--text-secondary,#94a3b8);text-transform:uppercase;">Falta Uno</p>
+    </div>
     <h1 style="margin:0;font-size:1.4rem;color:var(--text-primary,#fff);">Seleccioná tu grupo</h1>
     <div id="groupSelectorList" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;"></div>
     <button id="createGroupBtn" style="
