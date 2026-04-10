@@ -30,7 +30,7 @@
     const modal = document.getElementById("playerStatsModal");
     if (!modal) return;
 
-    document.getElementById("playerStatsName").textContent = isLeader ? "⭐ " + displayName : displayName;
+    document.getElementById("playerStatsName").textContent = isLeader ? "★ " + displayName : displayName;
     document.getElementById("pstatsPlayed").textContent = "—";
     document.getElementById("pstatsWon").textContent = "—";
     document.getElementById("pstatsLost").textContent = "—";

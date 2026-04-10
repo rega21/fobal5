@@ -90,7 +90,29 @@
 
     const topScore = result.values[0];
     const isUniqueleader = result.values[1] !== topScore;
-    const yLabels = result.labels.map((name, i) => i === 0 && isUniqueleader ? "⭐ " + name : name);
+    const yLabels = result.labels.map((name, i) => i === 0 && isUniqueleader ? "    " + name : name);
+
+    const starPlugin = {
+      id: "starPlugin",
+      afterDraw(chart) {
+        if (!isUniqueleader) return;
+        const yAxis = chart.scales.y;
+        const ctx = chart.ctx;
+        const y = yAxis.getPixelForTick(0);
+        const tickPadding = yAxis.options.ticks.padding || 3;
+        const xRight = yAxis.right - tickPadding;
+        ctx.save();
+        ctx.font = "700 12px sans-serif";
+        const nameWidth = ctx.measureText(result.labels[0]).width;
+        const nameStartX = xRight - nameWidth;
+        ctx.font = "700 16px sans-serif";
+        ctx.fillStyle = isDark ? "#4BC0C0" : "#2a9d8f";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillText("★", nameStartX - 3, y);
+        ctx.restore();
+      },
+    };
 
     chartInstance = new Chart(canvas, {
       type: "bar",
@@ -149,7 +171,7 @@
           },
         },
       },
-      plugins: [ChartDataLabels],
+      plugins: [ChartDataLabels, starPlugin],
     });
 
     canvas.onclick = (e) => {
