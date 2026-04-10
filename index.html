@@ -418,25 +418,22 @@
     .group-selector-btn { transition: background 0.15s, transform 0.1s; }
     .group-selector-btn:hover { background: var(--card-bg-hover, #263244) !important; }
     .group-selector-btn:active { transform: scale(0.97); }
-    #createGroupBtn:hover { border-color: var(--accent, #3b82f6) !important; color: var(--accent, #3b82f6) !important; }
+    #createGroupBtn:hover { background: #2563eb !important; }
+    #createGroupBtn:active { transform: scale(0.97); }
   </style>
   <div id="groupSelectorOverlay" class="hidden" style="
     position:fixed;inset:0;z-index:9999;
     background:var(--bg,#0f172a);
     display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:20px;padding:32px;
+    gap:24px;padding:32px;
   ">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
-      <span style="font-size:64px;line-height:1;">⚽</span>
-      <p style="margin:0;font-size:1.05rem;font-weight:700;letter-spacing:0.08em;color:var(--text-secondary,#94a3b8);text-transform:uppercase;">Falta Uno</p>
-    </div>
     <h1 style="margin:0;font-size:1.4rem;color:var(--text-primary,#fff);">Seleccioná tu grupo</h1>
-    <div id="groupSelectorList" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;"></div>
+    <div id="groupSelectorList" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;"></div>
     <button id="createGroupBtn" style="
-      padding:12px 16px;font-size:0.95rem;font-weight:600;border-radius:12px;
-      border:1.5px dashed var(--border,#334155);cursor:pointer;
-      background:transparent;color:var(--text-secondary,#94a3b8);
-      width:100%;max-width:320px;transition:border-color 0.15s,color 0.15s;
+      padding:14px 16px;font-size:1rem;font-weight:700;border-radius:14px;
+      border:none;cursor:pointer;
+      background:#3b82f6;color:#fff;
+      width:100%;max-width:340px;transition:background 0.15s,transform 0.1s;
     ">+ Crear nuevo grupo</button>
   </div>
 
@@ -454,7 +451,7 @@
     <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px;">
       <div>
         <label style="display:block;font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin-bottom:4px;">Nombre del grupo</label>
-        <input id="createGroupName" type="text" placeholder="Ej: Futbol Marte" maxlength="40" style="
+        <input id="createGroupName" type="text" placeholder="" maxlength="40" style="
           padding:12px 14px;font-size:1rem;border-radius:10px;border:1px solid var(--border,#334155);
           background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
         " />

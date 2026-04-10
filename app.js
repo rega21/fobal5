@@ -3237,9 +3237,9 @@ function updateBrandLogo() {
   if (!logo) return;
   if (activeGroupLogoUrl) {
     logo.src = activeGroupLogoUrl;
+    logo.style.display = "";
   } else {
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-    logo.src = isDark ? "icons/futbolFocapt2.jpg" : "icons/futbolFoca.png";
+    logo.style.display = "none";
   }
 }
 
@@ -3925,10 +3925,10 @@ function showPinOverlay(group, onSuccess, onBack) {
       groups.forEach((g) => {
         const btn = document.createElement("button");
         btn.className = "group-selector-btn";
-        btn.style.cssText = "padding:12px 16px;font-size:1.1rem;font-weight:700;border-radius:12px;border:none;cursor:pointer;background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);display:flex;align-items:center;gap:12px;width:100%;";
+        btn.style.cssText = "padding:14px 16px;font-size:1.1rem;font-weight:700;border-radius:14px;border:none;cursor:pointer;background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);display:flex;align-items:center;gap:14px;width:100%;";
         const logoHtml = g.logo_url
-          ? `<img src="${g.logo_url}" alt="${g.name}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;" />`
-          : `<div style="width:40px;height:40px;border-radius:50%;background:var(--border,#334155);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.3rem;">⚽</div>`;
+          ? `<img src="${g.logo_url}" alt="${g.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;" />`
+          : `<div style="width:44px;height:44px;border-radius:50%;background:var(--border,#334155);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem;">⚽</div>`;
         btn.innerHTML = `${logoHtml}<span>${g.name}</span>`;
         btn.addEventListener("click", () => {
           overlay.classList.remove("visible");
