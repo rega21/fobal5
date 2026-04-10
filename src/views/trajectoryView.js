@@ -90,7 +90,34 @@
 
     const topScore = result.values[0];
     const isUniqueleader = result.values[1] !== topScore;
-    const yLabels = result.labels.map((name, i) => i === 0 && isUniqueleader ? "♕ " + name : name);
+    // La corona se dibuja aparte (plugin) para poder tener un tamaño independiente del texto
+    // Se agregan espacios al inicio del label líder para que Chart.js reserve espacio
+    const yLabels = result.labels.map((name, i) => i === 0 && isUniqueleader ? "      " + name : name);
+
+    const crownPlugin = {
+      id: "crownPlugin",
+      afterDraw(chart) {
+        if (!isUniqueleader) return;
+        const yAxis = chart.scales.y;
+        const ctx = chart.ctx;
+        const y = yAxis.getPixelForTick(0);
+        const tickPadding = yAxis.options.ticks.padding || 3;
+        const xRight = yAxis.right - tickPadding;
+
+        ctx.save();
+        ctx.font = "700 12px sans-serif";
+        const nameWidth = ctx.measureText(result.labels[0]).width;
+        const nameStartX = xRight - nameWidth;
+
+        const crownColor = isDark ? "#4BC0C0" : "#2a9d8f";
+        ctx.font = "700 18px sans-serif";
+        ctx.fillStyle = crownColor;
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillText("♕", nameStartX - 8, y);
+        ctx.restore();
+      },
+    };
 
     chartInstance = new Chart(canvas, {
       type: "bar",
@@ -149,7 +176,7 @@
           },
         },
       },
-      plugins: [ChartDataLabels],
+      plugins: [ChartDataLabels, crownPlugin],
     });
 
     canvas.onclick = (e) => {
