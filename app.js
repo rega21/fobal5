@@ -3284,25 +3284,51 @@ document.getElementById("closeInfoAppBtn")?.addEventListener("click", () => {
   document.getElementById("infoAppModal")?.classList.add("hidden");
 });
 
-document.getElementById("brandLogo")?.addEventListener("click", () => {
+function openEditGroupLogoModal() {
+  closeTopbarMenu();
+  const input = document.getElementById("editLogoUrlInput");
+  const preview = document.getElementById("editLogoPreview");
+  if (input) input.value = activeGroupLogoUrl || "";
+  if (preview) {
+    preview.innerHTML = activeGroupLogoUrl
+      ? `<img src="${activeGroupLogoUrl}" style="width:100%;height:100%;object-fit:cover;" />`
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary,#94a3b8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`;
+  }
+  document.getElementById("editGroupLogoModal")?.classList.remove("hidden");
+}
+
+document.getElementById("editLogoUrlInput")?.addEventListener("input", () => {
+  const url = document.getElementById("editLogoUrlInput").value.trim();
+  const preview = document.getElementById("editLogoPreview");
+  if (!preview) return;
+  if (url) {
+    preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<span style=color:#ef4444;font-size:11px>Error</span>'" />`;
+  } else {
+    preview.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary,#94a3b8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`;
+  }
+});
+
+document.getElementById("saveGroupLogoBtn")?.addEventListener("click", () => {
   const groupId = window.FobalApi?.getGroupId?.();
   if (!groupId) return;
-  const url = prompt("URL del logo del grupo:", activeGroupLogoUrl || "");
-  if (url === null) return;
-  const newUrl = url.trim() || null;
+  const newUrl = document.getElementById("editLogoUrlInput").value.trim() || null;
   window.FobalApi.updateGroupLogo(groupId, newUrl)
     .then(() => {
       activeGroupLogoUrl = newUrl;
       updateBrandLogo();
-      const logoEl = document.getElementById("infoAppGroupLogo");
-      if (logoEl) {
-        if (newUrl) { logoEl.src = newUrl; logoEl.style.display = ""; }
-        else logoEl.style.display = "none";
-      }
+      document.getElementById("editGroupLogoModal")?.classList.add("hidden");
       showToast("Logo actualizado", 2500, "success");
     })
     .catch(() => showToast("Error al guardar el logo", 3000, "error"));
 });
+
+document.getElementById("closeEditGroupLogoBtn")?.addEventListener("click", () => {
+  document.getElementById("editGroupLogoModal")?.classList.add("hidden");
+});
+document.getElementById("cancelEditGroupLogoBtn")?.addEventListener("click", () => {
+  document.getElementById("editGroupLogoModal")?.classList.add("hidden");
+});
+document.getElementById("editGroupLogoBtn")?.addEventListener("click", openEditGroupLogoModal);
 document.getElementById("menuToggleBtn")?.addEventListener("click", (e) => {
   e.stopPropagation();
   toggleTopbarMenu();
