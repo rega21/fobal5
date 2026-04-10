@@ -505,10 +505,18 @@
     async updateGroupLogo(groupId, logo_url) {
       await requestSupabase(`/rest/v1/groups?id=eq.${groupId}`, {
         method: "PATCH",
-        headers: buildSupabaseHeaders({
-          "Content-Type": "application/json",
-        }),
+        headers: buildSupabaseHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ logo_url }),
+      });
+    },
+    async updateGroupSettings(groupId, { name, logo_url }) {
+      const payload = {};
+      if (name !== undefined) payload.name = name;
+      if (logo_url !== undefined) payload.logo_url = logo_url;
+      await requestSupabase(`/rest/v1/groups?id=eq.${groupId}`, {
+        method: "PATCH",
+        headers: buildSupabaseHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify(payload),
       });
     },
     async createFeedback(payload) {

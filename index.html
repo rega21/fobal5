@@ -34,9 +34,9 @@
         <button class="topbar-menu-item hidden" type="button" id="voteHistoryBtn" role="menuitem" aria-label="Historial de votos">🗳️ Historial de votos</button>
         <button class="topbar-menu-item" type="button" id="trajectoryBtn" role="menuitem" aria-label="Tabla General">Tabla General</button>
         <button class="topbar-menu-item" type="button" id="globalRatingBtn" role="menuitem" aria-label="Rating global">Rating Global</button>
-        <button class="topbar-menu-item" type="button" id="feedbackBtn" role="menuitem" aria-label="Sugerencias o mejoras">Sugerencias</button>
+        <button class="topbar-menu-item hidden" type="button" id="feedbackBtn" role="menuitem" aria-label="Sugerencias o mejoras">Sugerencias</button>
+        <button class="topbar-menu-item" type="button" id="editGroupLogoBtn" role="menuitem" aria-label="Configuración del grupo">Configuración del grupo</button>
         <button class="topbar-menu-item" type="button" id="infoAppBtn" role="menuitem" aria-label="Info App">Info App</button>
-        <button class="topbar-menu-item" type="button" id="editGroupLogoBtn" role="menuitem" aria-label="Editar logo">Editar logo</button>
         <button class="topbar-menu-item" type="button" id="switchGroupBtn" role="menuitem" aria-label="Exit">Exit</button>
       </div>
     </div>
@@ -633,11 +633,11 @@
   </div>
 
 
-  <!-- Edit Group Logo Modal -->
+  <!-- Group Settings Modal -->
   <div id="editGroupLogoModal" class="modal hidden">
     <div class="modal-content modal-small">
       <div class="modal-header">
-        <h2>Editar logo del grupo</h2>
+        <h2>Configuración del grupo</h2>
         <button class="close-btn" id="closeEditGroupLogoBtn">&times;</button>
       </div>
       <div class="modal-body" style="padding:20px;display:flex;flex-direction:column;gap:16px;">
@@ -647,7 +647,14 @@
           </div>
         </div>
         <div>
-          <label style="display:block;font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin-bottom:6px;">URL de la imagen</label>
+          <label style="display:block;font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin-bottom:6px;">Nombre del grupo</label>
+          <input id="editGroupNameInput" type="text" maxlength="40" placeholder="" style="
+            padding:12px 14px;font-size:0.95rem;border-radius:10px;border:1px solid var(--border,#334155);
+            background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
+          "/>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin-bottom:6px;">URL del logo</label>
           <input id="editLogoUrlInput" type="url" placeholder="https://..." style="
             padding:12px 14px;font-size:0.95rem;border-radius:10px;border:1px solid var(--border,#334155);
             background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;

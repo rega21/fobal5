@@ -3287,8 +3287,10 @@ document.getElementById("closeInfoAppBtn")?.addEventListener("click", () => {
 function openEditGroupLogoModal() {
   closeTopbarMenu();
   const input = document.getElementById("editLogoUrlInput");
+  const nameInput = document.getElementById("editGroupNameInput");
   const preview = document.getElementById("editLogoPreview");
   if (input) input.value = activeGroupLogoUrl || "";
+  if (nameInput) nameInput.value = activeGroupName || "";
   if (preview) {
     preview.innerHTML = activeGroupLogoUrl
       ? `<img src="${activeGroupLogoUrl}" style="width:100%;height:100%;object-fit:cover;" />`
@@ -3312,14 +3314,16 @@ document.getElementById("saveGroupLogoBtn")?.addEventListener("click", () => {
   const groupId = window.FobalApi?.getGroupId?.();
   if (!groupId) return;
   const newUrl = document.getElementById("editLogoUrlInput").value.trim() || null;
-  window.FobalApi.updateGroupLogo(groupId, newUrl)
+  const newName = document.getElementById("editGroupNameInput").value.trim() || activeGroupName;
+  window.FobalApi.updateGroupSettings(groupId, { name: newName, logo_url: newUrl })
     .then(() => {
       activeGroupLogoUrl = newUrl;
+      activeGroupName = newName;
       updateBrandLogo();
       document.getElementById("editGroupLogoModal")?.classList.add("hidden");
-      showToast("Logo actualizado", 2500, "success");
+      showToast("Configuración guardada", 2500, "success");
     })
-    .catch(() => showToast("Error al guardar el logo", 3000, "error"));
+    .catch(() => showToast("Error al guardar", 3000, "error"));
 });
 
 document.getElementById("closeEditGroupLogoBtn")?.addEventListener("click", () => {
