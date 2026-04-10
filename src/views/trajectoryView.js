@@ -109,7 +109,7 @@
         ctx.fillStyle = isDark ? "#4BC0C0" : "#2a9d8f";
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
-        ctx.fillText("★", nameStartX - 3, y);
+        ctx.fillText("★", nameStartX - 8, y);
         ctx.restore();
       },
     };
