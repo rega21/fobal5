@@ -51,6 +51,16 @@ Abrir PWA (start_url: "/")
             └─ no hay → mostrar selector de grupos
 ```
 
+## URL de producción
+
+- **URL actual**: `faltauno5.vercel.app`
+- **URL vieja**: `fobalfoca5.vercel.app` → redirige automáticamente (307) a la nueva
+- **Proyecto en Vercel**: `faltauno5`
+- **Nombre en manifest**: "Falta Uno"
+
+### Historial de cambios de dominio
+El proyecto originalmente se llamaba `fobalfoca5`. Al querer renombrarlo a `faltauno`, Vercel bloqueó ese subdominio al reservarlo internamente al cambiar el Project Name antes que el dominio. El orden correcto es: **primero cambiar el dominio, después el Project Name**. La URL quedó como `faltauno5.vercel.app`.
+
 ## Instalar la PWA en iOS
 
 1. Abrir la URL en Safari
