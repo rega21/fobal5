@@ -3956,7 +3956,9 @@ function showPinOverlay(group, onSuccess, onBack) {
       enterGroup(group);
     } else {
       showPinOverlay(group, () => enterGroup(group), () => {
-        document.getElementById("groupSelectorOverlay")?.classList.remove("hidden");
+        const sel = document.getElementById("groupSelectorOverlay");
+        sel?.classList.remove("hidden");
+        requestAnimationFrame(() => requestAnimationFrame(() => sel?.classList.add("visible")));
       });
     }
   }
