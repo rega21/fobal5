@@ -3924,13 +3924,15 @@ function showPinOverlay(group, onSuccess, onBack) {
       list.innerHTML = "";
       groups.forEach((g) => {
         const btn = document.createElement("button");
-        btn.style.cssText = "padding:12px 16px;font-size:1.1rem;font-weight:700;border-radius:12px;border:none;cursor:pointer;background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);display:flex;align-items:center;gap:12px;";
+        btn.className = "group-selector-btn";
+        btn.style.cssText = "padding:12px 16px;font-size:1.1rem;font-weight:700;border-radius:12px;border:none;cursor:pointer;background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);display:flex;align-items:center;gap:12px;width:100%;";
         const logoHtml = g.logo_url
-          ? `<img src="${g.logo_url}" alt="${g.name}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;" />`
-          : `<div style="width:36px;height:36px;border-radius:50%;background:var(--border,#334155);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">⚽</div>`;
+          ? `<img src="${g.logo_url}" alt="${g.name}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;" />`
+          : `<div style="width:40px;height:40px;border-radius:50%;background:var(--border,#334155);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.3rem;">⚽</div>`;
         btn.innerHTML = `${logoHtml}<span>${g.name}</span>`;
         btn.addEventListener("click", () => {
-          overlay.classList.add("hidden");
+          overlay.classList.remove("visible");
+          setTimeout(() => overlay.classList.add("hidden"), 250);
           resolveGroup(g);
         });
         list.appendChild(btn);
@@ -3938,6 +3940,7 @@ function showPinOverlay(group, onSuccess, onBack) {
     }
     renderGroupList();
     overlay.classList.remove("hidden");
+    requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
 
     // Crear nuevo grupo
     const createOverlay = document.getElementById("createGroupOverlay");
