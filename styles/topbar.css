@@ -118,6 +118,12 @@ body.admin-active .topbar{
   outline-offset: -1px;
 }
 
+.topbar-menu-item:disabled{
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .topbar-menu-item.admin-authenticated{
   background: #ecfdf5;
   color: #047857;

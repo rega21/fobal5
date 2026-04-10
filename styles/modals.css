@@ -430,25 +430,28 @@
 
 .vote-activity-item{
   display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
+  flex-direction:column;
+  gap:3px;
   padding:7px 10px;
   border-radius:8px;
   background:#f0f4ff;
   font-size:13px;
 }
 
+.vote-activity-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
 .vote-activity-name{
   font-weight:600;
   color:var(--text);
-  min-width:80px;
 }
 
 .vote-activity-scores{
-  flex:1;
-  color:var(--text);
-  text-align:center;
+  color:var(--text-secondary,#64748b);
+  font-size:12px;
 }
 
 .vote-activity-time{

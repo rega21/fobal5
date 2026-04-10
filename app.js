@@ -1416,6 +1416,17 @@ async function fetchPlayers() {
 async function fetchMatches() {
   await historyController.fetchMatches();
   updateMatchCreationLockUi();
+  updateMenuItemsState();
+}
+
+function updateMenuItemsState() {
+  const hasValidated = getPlayersForDisplay(players).some((p) => p.communityStatus === "validated");
+  const globalRatingBtn = document.getElementById("globalRatingBtn");
+  if (globalRatingBtn) globalRatingBtn.disabled = !hasValidated;
+
+  const hasPlayedMatches = historyController.getHistory().some((m) => m.status === "played");
+  const trajectoryBtn = document.getElementById("trajectoryBtn");
+  if (trajectoryBtn) trajectoryBtn.disabled = !hasPlayedMatches;
 }
 
 async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0, stamina = 0, garra = 0, technique = 0) {
@@ -1511,6 +1522,9 @@ function renderPlayers(options = {}) {
   const shouldPreserveOrder = preserveOrder || preservePlayersOrderOnNextRender;
   preservePlayersOrderOnNextRender = false;
   const playersForView = getPlayersForDisplay(players);
+
+  // Mostrar "Rating Global" solo si hay jugadores con rating validado en el grupo activo
+  updateMenuItemsState();
 
   if (window.PlayersView?.renderPlayersList) {
     window.PlayersView.renderPlayersList({
@@ -2857,9 +2871,11 @@ function renderVoteActivity(rows = []) {
     const timeAgo = formatTimeAgo(diffMs);
     return `
       <div class="vote-activity-item">
-        <span class="vote-activity-name">${escapeHtml(name)}</span>
-        <span class="vote-activity-scores">Atk ${Number(row.attack)} / Med ${Number(row.midfield)} / Def ${Number(row.defense)}</span>
-        <span class="vote-activity-time muted">${escapeHtml(timeAgo)}</span>
+        <div class="vote-activity-header">
+          <span class="vote-activity-name">${escapeHtml(name)}</span>
+          <span class="vote-activity-time muted">${escapeHtml(timeAgo)}</span>
+        </div>
+        <span class="vote-activity-scores">Atk ${Number(row.attack)} · Med ${Number(row.midfield)} · Def ${Number(row.defense)} · Fis ${Number(row.stamina)} · Gar ${Number(row.garra)} · Tec ${Number(row.technique)}</span>
       </div>
     `;
   }).join("");
@@ -3215,11 +3231,17 @@ const ICON_SUN = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
 const ICON_STAR_FILLED = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>`;
 const ICON_STAR_OUTLINE = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>`;
 
+let activeGroupLogoUrl = null;
+
 function updateBrandLogo() {
-  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
   const logo = document.getElementById("brandLogo");
-  const src = isDark ? "icons/futbolFocapt2.jpg" : "icons/futbolFoca.png";
-  if (logo) logo.src = src;
+  if (!logo) return;
+  if (activeGroupLogoUrl) {
+    logo.src = activeGroupLogoUrl;
+  } else {
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    logo.src = isDark ? "icons/futbolFocapt2.jpg" : "icons/futbolFoca.png";
+  }
 }
 
 function applyDarkModeToggle() {
@@ -3859,10 +3881,8 @@ function showPinOverlay(group, onSuccess, onBack) {
     const url = new URL(window.location.href);
     url.searchParams.set("group", group.slug);
     window.history.replaceState({}, "", url.toString());
-    if (group.logo_url) {
-      const brandLogo = document.getElementById("brandLogo");
-      if (brandLogo) brandLogo.src = group.logo_url;
-    }
+    activeGroupLogoUrl = group.logo_url || null;
+    updateBrandLogo();
     fetchPlayers();
     fetchMatches();
   }
