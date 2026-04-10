@@ -1,6 +1,6 @@
 {
-  "name": "Futbol Foca",
-  "short_name": "Fobal5",
+  "name": "Falta Uno",
+  "short_name": "FaltaUno",
   "description": "Seguimiento de partidos y ratings de jugadores",
   "start_url": "/",
   "display": "standalone",
