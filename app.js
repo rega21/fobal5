@@ -602,6 +602,17 @@ function parseValidatedScore(inputId, teamLabel = "") {
 
 let toastTimeoutId = null;
 let editVoteHintTimeoutId = null;
+function togglePinVisibility(btn, inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const showing = input.type === "text";
+  input.type = showing ? "password" : "text";
+  btn.innerHTML = showing
+    ? `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`;
+  btn.setAttribute("aria-label", showing ? "Mostrar PIN" : "Ocultar PIN");
+}
+
 function showToast(message = "", duration = 2000, variant = "default") {
   const text = String(message || "").trim();
   if (!text) return;
@@ -1576,7 +1587,7 @@ function renderPlayers(options = {}) {
     const ratingIcon = p.communityStatus === "validated" ? ICON_STAR_FILLED : ICON_STAR_OUTLINE;
     const ratingValue = p.communityStatus === "validated"
       ? ratingAverage
-      : "Pendiente";
+      : `Pendiente ${p.communityVotes}/${p.communityMinVotes}`;
     const canOpenRating = p.communityStatus === "validated";
     const ratingDisabledAttr = canOpenRating ? "" : " disabled aria-disabled=\"true\"";
     const trendDirection = canOpenRating ? String(p.communityTrendDirection || "flat") : "flat";
@@ -3232,6 +3243,7 @@ const ICON_STAR_OUTLINE = `<svg xmlns="http://www.w3.org/2000/svg" width="14" he
 
 let activeGroupLogoUrl = null;
 let activeGroupName = null;
+let activeGroupPin = "";
 
 function updateBrandLogo() {
   const logo = document.getElementById("brandLogo");
@@ -3291,6 +3303,21 @@ function openEditGroupLogoModal() {
   const preview = document.getElementById("editLogoPreview");
   if (input) input.value = activeGroupLogoUrl || "";
   if (nameInput) nameInput.value = activeGroupName || "";
+  const newPinInput = document.getElementById("editGroupNewPinInput");
+  const confirmPinInput = document.getElementById("editGroupConfirmPinInput");
+  const pinError = document.getElementById("editGroupPinError");
+  if (newPinInput) { newPinInput.value = ""; newPinInput.placeholder = "Nuevo PIN"; }
+  if (confirmPinInput) confirmPinInput.value = "";
+  if (pinError) pinError.classList.add("hidden");
+  const pinLabel = document.getElementById("editGroupPinLabel");
+  if (pinLabel) {
+    if (activeGroupPin) {
+      pinLabel.innerHTML = `PIN actual: <span style="font-weight:500;color:var(--text-primary,#fff);">${activeGroupPin}</span>`;
+      pinLabel.classList.remove("hidden");
+    } else {
+      pinLabel.classList.add("hidden");
+    }
+  }
   if (preview) {
     preview.innerHTML = activeGroupLogoUrl
       ? `<img src="${activeGroupLogoUrl}" style="width:100%;height:100%;object-fit:cover;" />`
@@ -3310,18 +3337,37 @@ document.getElementById("editLogoUrlInput")?.addEventListener("input", () => {
   }
 });
 
-document.getElementById("saveGroupLogoBtn")?.addEventListener("click", () => {
+document.getElementById("saveGroupLogoBtn")?.addEventListener("click", async () => {
   const groupId = window.FobalApi?.getGroupId?.();
   if (!groupId) return;
   const newUrl = document.getElementById("editLogoUrlInput").value.trim() || null;
   const newName = document.getElementById("editGroupNameInput").value.trim() || activeGroupName;
-  window.FobalApi.updateGroupSettings(groupId, { name: newName, logo_url: newUrl })
+
+  const newPin = document.getElementById("editGroupNewPinInput")?.value || "";
+  const confirmPin = document.getElementById("editGroupConfirmPinInput")?.value || "";
+  const pinError = document.getElementById("editGroupPinError");
+
+  if (newPin || confirmPin) {
+    if (newPin !== confirmPin) {
+      if (pinError) pinError.classList.remove("hidden");
+      return;
+    }
+    if (pinError) pinError.classList.add("hidden");
+  }
+
+  const settings = { name: newName, logo_url: newUrl };
+  if (newPin) {
+    settings.pin_hash = await hashPin(newPin);
+  }
+
+  window.FobalApi.updateGroupSettings(groupId, settings)
     .then(() => {
       activeGroupLogoUrl = newUrl;
       activeGroupName = newName;
       updateBrandLogo();
       document.getElementById("editGroupLogoModal")?.classList.add("hidden");
-      showToast("Configuración guardada", 2500, "success");
+      const msg = newPin ? "Configuración y PIN guardados" : "Configuración guardada";
+      showToast(msg, 2500, "success");
     })
     .catch(() => showToast("Error al guardar", 3000, "error"));
 });
@@ -3896,6 +3942,8 @@ function showPinOverlay(group, onSuccess, onBack) {
   async function attemptPin() {
     const hash = await hashPin(input.value);
     if (hash === group.pin_hash) {
+      activeGroupPin = input.value;
+      try { sessionStorage.setItem("fobal5_group_pin", input.value); } catch (_) {}
       overlay.classList.add("hidden");
       saveGroupToStorage(group);
       onSuccess();
@@ -3939,6 +3987,9 @@ function showPinOverlay(group, onSuccess, onBack) {
     window.history.replaceState({}, "", url.toString());
     activeGroupLogoUrl = group.logo_url || null;
     activeGroupName = group.name || null;
+    if (!activeGroupPin) {
+      try { activeGroupPin = sessionStorage.getItem("fobal5_group_pin") || ""; } catch (_) {}
+    }
     updateBrandLogo();
     const historyTitle = document.getElementById("historyGroupTitle");
     if (historyTitle) {

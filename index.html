@@ -474,19 +474,35 @@
       </div>
       <div>
         <label style="display:block;font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin-bottom:4px;">PIN del grupo</label>
-        <input id="createGroupPin" type="password" placeholder="PIN" maxlength="20" style="
-          padding:12px 14px;font-size:1rem;border-radius:10px;border:1px solid var(--border,#334155);
-          background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
-          text-align:center;letter-spacing:4px;
-        " />
+        <div style="position:relative;">
+          <input id="createGroupPin" type="password" placeholder="PIN" maxlength="20" style="
+            padding:12px 44px 12px 14px;font-size:1rem;border-radius:10px;border:1px solid var(--border,#334155);
+            background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
+            text-align:center;letter-spacing:4px;
+          " />
+          <button type="button" onclick="togglePinVisibility(this,'createGroupPin')" tabindex="-1" style="
+            position:absolute;right:10px;top:50%;transform:translateY(-50%);
+            background:none;border:none;cursor:pointer;padding:4px;color:var(--text-secondary,#94a3b8);line-height:0;
+          " aria-label="Mostrar PIN">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </div>
       <div>
         <label style="display:block;font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin-bottom:4px;">Confirmar PIN</label>
-        <input id="createGroupPinConfirm" type="password" placeholder="Repetir PIN" maxlength="20" style="
-          padding:12px 14px;font-size:1rem;border-radius:10px;border:1px solid var(--border,#334155);
-          background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
-          text-align:center;letter-spacing:4px;
-        " />
+        <div style="position:relative;">
+          <input id="createGroupPinConfirm" type="password" placeholder="Repetir PIN" maxlength="20" style="
+            padding:12px 44px 12px 14px;font-size:1rem;border-radius:10px;border:1px solid var(--border,#334155);
+            background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
+            text-align:center;letter-spacing:4px;
+          " />
+          <button type="button" onclick="togglePinVisibility(this,'createGroupPinConfirm')" tabindex="-1" style="
+            position:absolute;right:10px;top:50%;transform:translateY(-50%);
+            background:none;border:none;cursor:pointer;padding:4px;color:var(--text-secondary,#94a3b8);line-height:0;
+          " aria-label="Mostrar PIN">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </div>
       <p id="createGroupError" class="hidden" style="margin:0;font-size:0.85rem;color:#ef4444;text-align:center;"></p>
       <button id="createGroupSubmitBtn" style="
@@ -667,6 +683,18 @@
             padding:12px 14px;font-size:0.95rem;border-radius:10px;border:1px solid var(--border,#334155);
             background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
           "/>
+        </div>
+        <div style="border-top:1px solid var(--border,#334155);padding-top:14px;">
+          <p id="editGroupPinLabel" class="hidden" style="font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin:0 0 8px;"></p>
+          <input id="editGroupNewPinInput" type="password" inputmode="numeric" maxlength="20" placeholder="Nuevo PIN" autocomplete="new-password" style="
+            padding:12px 14px;font-size:0.95rem;border-radius:10px;border:1px solid var(--border,#334155);
+            background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;margin-bottom:8px;
+          "/>
+          <input id="editGroupConfirmPinInput" type="password" inputmode="numeric" maxlength="20" placeholder="Confirmar PIN" autocomplete="new-password" style="
+            padding:12px 14px;font-size:0.95rem;border-radius:10px;border:1px solid var(--border,#334155);
+            background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
+          "/>
+          <p id="editGroupPinError" class="hidden" style="color:#ef4444;font-size:0.8rem;margin-top:6px;margin-bottom:0;">Los PINes no coinciden</p>
         </div>
         <div style="display:flex;gap:10px;">
           <button id="saveGroupLogoBtn" class="btn btn-success" style="flex:1;">Guardar</button>

@@ -119,7 +119,7 @@
         const ratingIcon = player.communityStatus === "validated" ? ICON_STAR_FILLED : ICON_STAR_OUTLINE;
         const ratingValue = player.communityStatus === "validated"
           ? ratingAverage
-          : "Pendiente";
+          : `Pendiente ${player.communityVotes ?? 0}/${player.communityMinVotes ?? 4}`;
         const canOpenRating = player.communityStatus === "validated";
         const ratingDisabledAttr = canOpenRating ? "" : " disabled aria-disabled=\"true\"";
         const trendDirection = canOpenRating ? String(player.communityTrendDirection || "flat") : "flat";
