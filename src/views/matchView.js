@@ -265,18 +265,143 @@
     window.open(resolvedMapsUrl, "_blank", "noopener,noreferrer");
   }
 
-  function renderTeams({ teams }) {
+  let swapSelection = null;
+  let swapOnSwapCallback = null;
+  let swapListenersAttached = false;
+
+  function initSwapListeners() {
+    if (swapListenersAttached) return;
+    swapListenersAttached = true;
+
+    ["teamA", "teamB"].forEach((id) => {
+      const container = document.getElementById(id);
+      if (!container) return;
+      container.addEventListener("click", (e) => {
+        if (!swapOnSwapCallback) return;
+        const el = e.target.closest(".team-player");
+        if (!el) return;
+
+        const team = el.dataset.team;
+        const index = parseInt(el.dataset.index);
+
+        if (!swapSelection) {
+          swapSelection = { team, index, el };
+          el.classList.add("swap-selected");
+          return;
+        }
+
+        if (swapSelection.el === el) {
+          el.classList.remove("swap-selected");
+          swapSelection = null;
+          return;
+        }
+
+        if (swapSelection.team === team) {
+          swapSelection.el.classList.remove("swap-selected");
+          swapSelection = { team, index, el };
+          el.classList.add("swap-selected");
+          return;
+        }
+
+        const idxA = team === "a" ? index : swapSelection.index;
+        const idxB = team === "b" ? index : swapSelection.index;
+
+        // Capturar posiciones antes del swap (FLIP)
+        const rectA = swapSelection.team === "a" ? swapSelection.el.getBoundingClientRect() : el.getBoundingClientRect();
+        const rectB = swapSelection.team === "b" ? swapSelection.el.getBoundingClientRect() : el.getBoundingClientRect();
+
+        swapSelection.el.classList.remove("swap-selected");
+        swapSelection = null;
+        swapOnSwapCallback(idxA, idxB);
+
+        // Animar después del re-render
+        requestAnimationFrame(() => {
+          const newElA = document.querySelector(`#teamA [data-index="${idxA}"]`);
+          const newElB = document.querySelector(`#teamB [data-index="${idxB}"]`);
+          if (!newElA || !newElB) return;
+
+          const dxA = rectB.left - rectA.left;
+          const dyA = rectB.top - rectA.top;
+          const dxB = rectA.left - rectB.left;
+          const dyB = rectA.top - rectB.top;
+
+          newElA.style.transition = "none";
+          newElB.style.transition = "none";
+          newElA.style.transform = `translate(${dxA}px, ${dyA}px)`;
+          newElB.style.transform = `translate(${dxB}px, ${dyB}px)`;
+
+          requestAnimationFrame(() => {
+            newElA.style.transition = "transform 0.35s ease";
+            newElB.style.transition = "transform 0.35s ease";
+            newElA.style.transform = "";
+            newElB.style.transform = "";
+
+            setTimeout(() => {
+              newElA.classList.add("swap-done");
+              newElB.classList.add("swap-done");
+              setTimeout(() => {
+                newElA.classList.remove("swap-done");
+                newElB.classList.remove("swap-done");
+              }, 5000);
+            }, 350);
+          });
+        });
+      });
+    });
+  }
+
+  function renderTeams({ teams, onSwap }) {
     const teamA = document.getElementById("teamA");
     const teamB = document.getElementById("teamB");
     if (!teamA || !teamB || !teams) return;
 
-    teamA.innerHTML = (teams.a || [])
-      .map((player) => `<div class="team-player">${escapeHtml(player.nickname?.trim() || player.name)}</div>`)
-      .join("");
+    swapSelection = null;
+    swapOnSwapCallback = onSwap || null;
 
-    teamB.innerHTML = (teams.b || [])
-      .map((player) => `<div class="team-player">${escapeHtml(player.nickname?.trim() || player.name)}</div>`)
-      .join("");
+    const renderPlayer = (player, team, index) =>
+      `<div class="team-player" data-team="${team}" data-index="${index}" style="cursor:${onSwap ? 'pointer' : 'default'}">${escapeHtml(player.nickname?.trim() || player.name)}</div>`;
+
+    teamA.innerHTML = (teams.a || []).map((p, i) => renderPlayer(p, "a", i)).join("");
+    teamB.innerHTML = (teams.b || []).map((p, i) => renderPlayer(p, "b", i)).join("");
+
+    if (onSwap) initSwapListeners();
+  }
+
+  const FAVORITE_REASONS = [
+    "se los ve con más hambre",
+    "tienen la defensa más sólida",
+    "meten más presión arriba",
+    "corren más que nadie",
+    "tienen energía infinita",
+    "juegan más en equipo",
+    "se ven más enchufados",
+    "tienen mejor pie",
+    "están más finos últimamente",
+    "se mueven mejor sin la pelota",
+    "tienen más experiencia en el grupo",
+    "están en un gran momento de forma",
+    "su físico está a full",
+    "tienen mejor salida desde atrás",
+    "se communican mejor en la cancha",
+  ];
+
+  function pickReasons(n) {
+    const shuffled = [...FAVORITE_REASONS].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, n);
+  }
+
+  function buildFavoriteMsg(teams) {
+    const avgA = (teams.a || []).reduce((s, p) => s + (p.rating || 0), 0) / ((teams.a || []).length || 1);
+    const avgB = (teams.b || []).reduce((s, p) => s + (p.rating || 0), 0) / ((teams.b || []).length || 1);
+    const diff = Math.abs(avgA - avgB);
+
+    if (diff < 0.15) {
+      return "Las estadísticas no se animan a elegir favorito — esto se define en la cancha.";
+    }
+
+    const favorite = avgA > avgB ? "Equipo A" : "Equipo B";
+    const reasons = pickReasons(2);
+    return `Según las estadísticas, el favorito del encuentro es ${favorite} — ${reasons[0]} y ${reasons[1]}.`;
   }
 
   function renderConfirmedTeams({ teams }) {
@@ -291,6 +416,9 @@
     teamB.innerHTML = (teams.b || [])
       .map((player) => `<div class="team-player">${escapeHtml(player.nickname?.trim() || player.name)}</div>`)
       .join("");
+
+    const msg = document.getElementById("matchFavoriteMsg");
+    if (msg) msg.textContent = buildFavoriteMsg(teams);
   }
 
   function populateMvpOptions({ teams }) {

@@ -356,6 +356,10 @@
 [data-theme="dark"] .match-selection-header{ background: var(--bg); border-bottom-color: var(--line); }
 [data-theme="dark"] .team{ background: var(--card); }
 [data-theme="dark"] .team-player{ background: #374151; color: var(--text); }
+.team-player.swap-selected{ border: 2px solid #3b82f6; background: rgba(59,130,246,0.15); }
+[data-theme="dark"] .team-player.swap-selected{ background: rgba(59,130,246,0.2); }
+.team-player.swap-done{ border: 1px solid rgba(16,185,129,0.3); background: rgba(16,185,129,0.08); transition: border 0.3s, background 0.3s; }
+[data-theme="dark"] .team-player.swap-done{ border: 1px solid rgba(16,185,129,0.25); background: rgba(16,185,129,0.1); }
 .match-team--a{ background: #ecfdf5; }
 .match-team--b{ background: #eff6ff; }
 [data-theme="dark"] .match-team{ background: #374151; }
