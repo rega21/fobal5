@@ -423,33 +423,30 @@
     .group-selector-btn { transition: background 0.15s, transform 0.1s; }
     .group-selector-btn:hover { background: var(--card-bg-hover, #263244) !important; }
     .group-selector-btn:active { transform: scale(0.97); }
-    #createGroupBtn:hover { background: #2563eb !important; }
+    #createGroupBtn:hover { background: rgba(255,255,255,0.2) !important; }
     #createGroupBtn:active { transform: scale(0.97); }
   </style>
   <div id="groupSelectorOverlay" class="hidden" style="
-    position:fixed;inset:0;z-index:9999;
-    background:var(--bg,#0f172a);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:24px;padding:32px;margin-top:-60px;
+    position:absolute;inset:0;z-index:9999;
+    background:linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url('icons/imgPortada.png') center/cover no-repeat;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
   ">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary,#94a3b8)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-      <p style="margin:0;font-size:0.85rem;font-weight:700;letter-spacing:0.1em;color:var(--text-secondary,#94a3b8);text-transform:uppercase;">Falta Uno</p>
+    <div style="width:100%;max-width:640px;display:flex;flex-direction:column;align-items:center;gap:24px;padding:32px;padding-bottom:80px;">
+      <h1 style="margin:0;font-size:1.4rem;color:var(--text-primary,#fff);">Seleccioná tu grupo</h1>
+      <div id="groupSelectorList" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;"></div>
+      <button id="createGroupBtn" style="
+        padding:14px 16px;font-size:1rem;font-weight:700;border-radius:14px;
+        border:none;cursor:pointer;
+        background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.75);border:1px solid rgba(255,255,255,0.2);
+        width:100%;max-width:340px;transition:background 0.15s,transform 0.1s;
+      ">+ Crear nuevo grupo</button>
     </div>
-    <h1 style="margin:0;font-size:1.4rem;color:var(--text-primary,#fff);">Seleccioná tu grupo</h1>
-    <div id="groupSelectorList" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;"></div>
-    <button id="createGroupBtn" style="
-      padding:14px 16px;font-size:1rem;font-weight:700;border-radius:14px;
-      border:none;cursor:pointer;
-      background:#3b82f6;color:#fff;
-      width:100%;max-width:340px;transition:background 0.15s,transform 0.1s;
-    ">+ Crear nuevo grupo</button>
   </div>
 
   <!-- Create group overlay -->
   <div id="createGroupOverlay" class="hidden" style="
-    position:fixed;inset:0;z-index:10001;
-    background:var(--bg,#0f172a);
+    position:absolute;inset:0;z-index:10001;
+    background:linear-gradient(rgba(0,0,0,0.65),rgba(0,0,0,0.65)),url('icons/imgPortada.png') center/cover no-repeat;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:16px;padding:32px;overflow-y:auto;
   ">
@@ -518,8 +515,8 @@
 
   <!-- Group PIN overlay -->
   <div id="groupPinOverlay" class="hidden" style="
-    position:fixed;inset:0;z-index:10000;
-    background:var(--bg,#0f172a);
+    position:absolute;inset:0;z-index:10000;
+    background:linear-gradient(rgba(0,0,0,0.65),rgba(0,0,0,0.65)),url('icons/imgPortada.png') center/cover no-repeat;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:20px;padding:32px;
   ">
