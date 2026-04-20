@@ -5,7 +5,7 @@
 })();
 
 const HISTORY_KEY = "fobal5_history";
-const DEFAULT_COMMUNITY_MIN_VOTES = 4;
+const DEFAULT_COMMUNITY_MIN_VOTES = 3;
 const configuredCommunityMinVotes = Number(window.APP_CONFIG?.COMMUNITY_MIN_VOTES);
 const COMMUNITY_MIN_VOTES =
   Number.isFinite(configuredCommunityMinVotes) && configuredCommunityMinVotes > 0
@@ -1726,7 +1726,15 @@ function generateBalancedTeams() {
 }
 
 function renderTeams() {
-  window.MatchView?.renderTeams?.({ teams: currentTeams });
+  window.MatchView?.renderTeams?.({
+    teams: currentTeams,
+    onSwap: (idxA, idxB) => {
+      const tmp = currentTeams.a[idxA];
+      currentTeams.a[idxA] = currentTeams.b[idxB];
+      currentTeams.b[idxB] = tmp;
+      renderTeams();
+    },
+  });
 }
 
 function populateMVPSelect() {
