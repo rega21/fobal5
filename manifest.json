@@ -9,10 +9,10 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "icons/futbolFoca.png",
+      "src": "icons/FaltaUnoVerde.png",
       "sizes": "any",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
