@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fobal5-2026-04-10';
+const CACHE_NAME = 'fobal5-2026-04-24';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -17,7 +17,7 @@ const STATIC_ASSETS = [
   '/src/services/playerRatingsService.js',
   '/src/services/feedbackService.js',
   '/manifest.json',
-  '/icons/futbolFoca.png',
+  '/icons/FaltaUnoVerde.png',
 ];
 
 self.addEventListener('install', (event) => {
