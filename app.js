@@ -1894,6 +1894,7 @@ function showMatchSetup() {
     : null;
 
   void initLocationAutocomplete();
+  void initLocationRecentSuggestions();
 }
 
 function showMatchResults() {
@@ -2014,6 +2015,64 @@ function loadGoogleMapsPlacesScript() {
   });
 
   return googleMapsPlacesPromise;
+}
+
+async function initLocationRecentSuggestions() {
+  const locationInput = document.getElementById("matchLocation");
+  const dropdown = document.getElementById("recentLocationsDropdown");
+  if (!locationInput || !dropdown) return;
+  if (locationInput.dataset.suggestionsReady === "1") return;
+  locationInput.dataset.suggestionsReady = "1";
+
+  let recentLocations = [];
+
+  function renderDropdown() {
+    if (!recentLocations.length) return;
+    dropdown.innerHTML = recentLocations
+      .map(
+        (loc, i) => `
+      <div class="recent-location-item" data-index="${i}">
+        <span class="recent-location-icon">📍</span>
+        <div>
+          <div class="recent-location-name">${escapeHtml(loc.location)}</div>
+          ${loc.address ? `<div class="recent-location-addr">${escapeHtml(loc.address)}</div>` : ""}
+        </div>
+      </div>`
+      )
+      .join("");
+    dropdown.querySelectorAll(".recent-location-item").forEach((item) => {
+      item.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        const loc = recentLocations[parseInt(item.dataset.index, 10)];
+        if (!loc) return;
+        locationInput.value = loc.location;
+        selectedPlaceData = { ...loc };
+        setDetectedAddressDetails(loc.address, loc.mapsUrl || "");
+        setMatchLocationHint("Lugar reciente seleccionado.");
+        dropdown.classList.add("hidden");
+      });
+    });
+    dropdown.classList.remove("hidden");
+  }
+
+  locationInput.addEventListener("focus", async () => {
+    if (!recentLocations.length) {
+      try {
+        recentLocations = await apiClient.getRecentLocations();
+      } catch (_) {
+        return;
+      }
+    }
+    renderDropdown();
+  });
+
+  locationInput.addEventListener("input", () => {
+    dropdown.classList.add("hidden");
+  });
+
+  locationInput.addEventListener("blur", () => {
+    setTimeout(() => dropdown.classList.add("hidden"), 150);
+  });
 }
 
 async function initLocationAutocomplete() {

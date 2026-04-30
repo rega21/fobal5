@@ -267,6 +267,27 @@
         mapMatchFromSupabase({ ...m, match_players: playersByMatch[m.id] || [] })
       );
     },
+    async getRecentLocations() {
+      if (!HAS_SUPABASE || !activeGroupId) return [];
+      const groupFilter = `&group_id=eq.${encodeURIComponent(activeGroupId)}`;
+      const rows = await requestSupabase(
+        `/rest/v1/matches?select=location,address,place_id,maps_url,latitude,longitude&location=not.is.null&order=played_at.desc.nullslast,scheduled_at.desc.nullslast${groupFilter}&limit=15`,
+        { method: "GET", headers: buildSupabaseHeaders() }
+      );
+      if (!Array.isArray(rows)) return [];
+      const seen = new Set();
+      return rows
+        .filter((r) => r.location && !seen.has(r.location) && seen.add(r.location))
+        .slice(0, 5)
+        .map((r) => ({
+          location: r.location,
+          address: r.address || "",
+          placeId: r.place_id || "",
+          mapsUrl: r.maps_url || "",
+          latitude: r.latitude ?? null,
+          longitude: r.longitude ?? null,
+        }));
+    },
     async createMatch(body) {
       if (!HAS_SUPABASE) {
         return request(MATCHES_URL, {
