@@ -15,6 +15,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Falta Uno" />
   <script>(function(){var s=localStorage.getItem("fobal5_theme");if(s!=="light")document.documentElement.setAttribute("data-theme","dark");})()</script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -177,10 +178,21 @@
 
     <!-- Historial view -->
     <section class="view hidden" id="view-history">
+      <div class="history-view-toggle">
+        <button class="history-toggle-btn history-toggle-btn--active" id="historyListToggle" aria-label="Vista lista">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Lista
+        </button>
+        <button class="history-toggle-btn" id="historyCalendarToggle" aria-label="Vista calendario">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Calendario
+        </button>
+      </div>
       <p id="historyGroupTitle" class="muted" style="font-size:0.85rem;margin:8px 0 12px;"></p>
       <div class="list" id="historyList">
         <p class="muted">Sin partidos registrados</p>
       </div>
+      <div id="calendarContainer" class="hidden"></div>
     </section>
 
     <!-- Player Stats Modal (Tabla General) -->
@@ -741,6 +753,8 @@
 
   </nav>
 
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -751,6 +765,7 @@
   <script src="src/views/playersView.js"></script>
   <script src="src/views/matchView.js"></script>
   <script src="src/views/historyView.js"></script>
+  <script src="src/views/calendarView.js"></script>
   <script src="src/views/trajectoryView.js"></script>
   <script src="src/views/trajectoryModal.js"></script>
   <script src="src/controllers/historyController.js"></script>

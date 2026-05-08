@@ -69,6 +69,11 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 5. **Stamina** — menos determinante en cancha chica que en fútbol 11
 6. **Defensa** — importante pero menos "glamoroso" en el formato
 
+## v1.2 — Cambios recientes
+
+- **Vista Calendario en Historial:** toggle Lista/Calendario en la sección de historial. El calendario marca en verde los partidos pendientes y en rojo los jugados. Click en un día abre el card del partido directamente.
+- **Flatpickr en selector de fecha/hora:** reemplaza el `<input type="datetime-local">` nativo (que en desktop se veía como campos de texto manuales) por un calendar picker consistente entre plataformas. Incluye soporte dark mode, hora editable en formato 24h, locale español y botón "Listo" para cerrar.
+
 ## v1.1 — Cambios recientes
 
 - **Safe area PWA (iOS):** agregado `viewport-fit=cover` al meta viewport para que `env(safe-area-inset-bottom/top)` funcione correctamente en la app instalada. El topbar y el bottom nav ahora respetan el notch y la barra de inicio.

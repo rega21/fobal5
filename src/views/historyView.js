@@ -234,8 +234,38 @@
     return "";
   }
 
-  function renderHistoryList({
-    history,
+  const buildMobileFriendlyMapsLink = (rawMapsUrl = "", matchLocation = "") => {
+    const safeLocation = String(matchLocation || "").trim();
+    const fallbackLink = safeLocation
+      ? `https://maps.google.com/?q=${encodeURIComponent(safeLocation)}`
+      : "";
+
+    const safeRawUrl = String(rawMapsUrl || "").trim();
+    if (!safeRawUrl) return fallbackLink;
+
+    try {
+      const parsedUrl = new URL(safeRawUrl);
+      const queryParam = parsedUrl.searchParams.get("query");
+      if (queryParam) {
+        return `https://maps.google.com/?q=${encodeURIComponent(queryParam)}`;
+      }
+    } catch (_error) {
+    }
+
+    return fallbackLink || safeRawUrl;
+  };
+
+  function getMatchTimestamp(match) {
+    const candidates = [match?.scheduledAt, match?.createdAt, match?.updatedAt, match?.date];
+    for (const rawValue of candidates) {
+      if (!rawValue) continue;
+      const timestamp = new Date(rawValue).getTime();
+      if (!Number.isNaN(timestamp)) return timestamp;
+    }
+    return 0;
+  }
+
+  function renderMatchCards(matches, container, {
     adminAuthenticated,
     onDelete,
     onResolveResult,
@@ -243,61 +273,7 @@
     getCurrentMvpVoteForMatch,
     resolvePlayerDisplay,
   }) {
-    const historyList = document.getElementById("historyList");
-    if (!historyList) return;
-
-    const titleEl = document.getElementById("historyGroupTitle");
-    if (!Array.isArray(history) || history.length === 0) {
-      if (titleEl) titleEl.style.display = "none";
-      historyList.innerHTML = '<p class="muted">Sin partidos registrados</p>';
-      return;
-    }
-
-    const validMatches = history.filter(
-      (m) => m.teamA && m.teamB && m.teamA.length > 0 && m.teamB.length > 0
-    );
-
-    const getMatchTimestamp = (match) => {
-      const candidates = [match?.scheduledAt, match?.createdAt, match?.updatedAt, match?.date];
-      for (const rawValue of candidates) {
-        if (!rawValue) continue;
-        const timestamp = new Date(rawValue).getTime();
-        if (!Number.isNaN(timestamp)) return timestamp;
-      }
-      return 0;
-    };
-
-    const orderedMatches = [...validMatches].sort((a, b) => getMatchTimestamp(b) - getMatchTimestamp(a));
-
-    if (validMatches.length === 0) {
-      if (titleEl) titleEl.style.display = "none";
-      historyList.innerHTML = '<p class="muted">Sin partidos registrados</p>';
-      return;
-    }
-    if (titleEl) titleEl.style.display = "";
-
-    const buildMobileFriendlyMapsLink = (rawMapsUrl = "", matchLocation = "") => {
-      const safeLocation = String(matchLocation || "").trim();
-      const fallbackLink = safeLocation
-        ? `https://maps.google.com/?q=${encodeURIComponent(safeLocation)}`
-        : "";
-
-      const safeRawUrl = String(rawMapsUrl || "").trim();
-      if (!safeRawUrl) return fallbackLink;
-
-      try {
-        const parsedUrl = new URL(safeRawUrl);
-        const queryParam = parsedUrl.searchParams.get("query");
-        if (queryParam) {
-          return `https://maps.google.com/?q=${encodeURIComponent(queryParam)}`;
-        }
-      } catch (_error) {
-      }
-
-      return fallbackLink || safeRawUrl;
-    };
-
-    historyList.innerHTML = orderedMatches
+    container.innerHTML = matches
       .map((m) => {
         const matchId = encodeURIComponent(String(m.id ?? ""));
         const matchDate = encodeURIComponent(String(m.date ?? ""));
@@ -386,7 +362,7 @@
       .join("");
 
     if (adminAuthenticated && typeof onDelete === "function") {
-      historyList.querySelectorAll(".match-delete-btn").forEach((btn) => {
+      container.querySelectorAll(".match-delete-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           const id = decodeURIComponent(btn.dataset.matchId || "");
           const date = decodeURIComponent(btn.dataset.matchDate || "");
@@ -396,7 +372,7 @@
     }
 
     if (typeof onResolveResult === "function") {
-      historyList.querySelectorAll(".match-resolve-btn").forEach((btn) => {
+      container.querySelectorAll(".match-resolve-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           const id = decodeURIComponent(btn.dataset.matchId || "");
           onResolveResult(id);
@@ -405,7 +381,7 @@
     }
 
     if (typeof onVoteMvp === "function") {
-      historyList.querySelectorAll(".match-mvp-select").forEach((select) => {
+      container.querySelectorAll(".match-mvp-select").forEach((select) => {
         select.addEventListener("change", () => {
           const matchId = decodeURIComponent(select.dataset.matchId || "");
           const candidateId = String(select.value || "").trim();
@@ -416,7 +392,51 @@
     }
   }
 
+  function renderHistoryList({
+    history,
+    adminAuthenticated,
+    onDelete,
+    onResolveResult,
+    onVoteMvp,
+    getCurrentMvpVoteForMatch,
+    resolvePlayerDisplay,
+  }) {
+    const historyList = document.getElementById("historyList");
+    if (!historyList) return;
+
+    const titleEl = document.getElementById("historyGroupTitle");
+    if (!Array.isArray(history) || history.length === 0) {
+      if (titleEl) titleEl.style.display = "none";
+      historyList.innerHTML = '<p class="muted">Sin partidos registrados</p>';
+      return;
+    }
+
+    const validMatches = history.filter(
+      (m) => m.teamA && m.teamB && m.teamA.length > 0 && m.teamB.length > 0
+    );
+
+    const orderedMatches = [...validMatches].sort((a, b) => getMatchTimestamp(b) - getMatchTimestamp(a));
+
+    if (validMatches.length === 0) {
+      if (titleEl) titleEl.style.display = "none";
+      historyList.innerHTML = '<p class="muted">Sin partidos registrados</p>';
+      return;
+    }
+    if (titleEl) titleEl.style.display = "";
+
+    renderMatchCards(orderedMatches, historyList, {
+      adminAuthenticated,
+      onDelete,
+      onResolveResult,
+      onVoteMvp,
+      getCurrentMvpVoteForMatch,
+      resolvePlayerDisplay,
+    });
+  }
+
   global.HistoryView = {
     renderHistoryList,
+    renderMatchCards,
+    getMatchTimestamp,
   };
 })(window);

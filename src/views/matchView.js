@@ -2,6 +2,7 @@
   let matchSongAudio = null;
   let isSongPlaying = false;
   let isSongBusy = false;
+  let fpInstance = null;
 
   function escapeHtml(value) {
     return String(value)
@@ -242,10 +243,16 @@
 
   function setMatchSetupValues({ location = "", scheduledAt = "", fallbackScheduledAt = "", address = "", mapsUrl = "" } = {}) {
     const locationInput = document.getElementById("matchLocation");
-    const datetimeInput = document.getElementById("matchDatetime");
-
     if (locationInput) locationInput.value = location || "";
-    if (datetimeInput) datetimeInput.value = scheduledAt || fallbackScheduledAt || "";
+
+    const dateValue = scheduledAt || fallbackScheduledAt || "";
+    if (fpInstance) {
+      fpInstance.setDate(dateValue, false);
+    } else {
+      const datetimeInput = document.getElementById("matchDatetime");
+      if (datetimeInput) datetimeInput.value = dateValue;
+    }
+
     setDetectedAddressDetails(address, mapsUrl);
   }
 
@@ -464,6 +471,29 @@
     if (scoreTeamA) scoreTeamA.value = 0;
     if (scoreTeamB) scoreTeamB.value = 0;
     if (mvpSelect) mvpSelect.value = "";
+  }
+
+  const datetimeEl = document.getElementById("matchDatetime");
+  if (datetimeEl && typeof flatpickr !== "undefined") {
+    fpInstance = flatpickr(datetimeEl, {
+      enableTime: true,
+      dateFormat: "Y-m-d\\TH:i",
+      altInput: true,
+      altFormat: "d/m/Y H:i",
+      time_24hr: true,
+      locale: "es",
+      disableMobile: false,
+      position: "auto center",
+      monthSelectorType: "static",
+      onReady(_sel, _val, fp) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = "Listo";
+        btn.className = "fp-listo-btn";
+        btn.addEventListener("click", () => fp.close());
+        fp.calendarContainer.appendChild(btn);
+      },
+    });
   }
 
   global.MatchView = {

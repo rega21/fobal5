@@ -18,6 +18,7 @@ const MVP_VOTING_WINDOW_MS = 8 * 60 * 60 * 1000;
 const MVP_VOTES_STORAGE_KEY = "fobal5_mvp_votes_by_match";
 const ADMIN_PIN = "";
 let adminAuthenticated = false;
+let historyViewMode = "list";
 let currentEditingPlayerId = null;
 let feedbackSubmitting = false;
 let currentAdminPin = "";
@@ -2389,7 +2390,30 @@ async function deleteMatch(matchId, matchDate) {
 }
 
 function renderHistory() {
-  historyController.renderHistory();
+  const listEl = document.getElementById("historyList");
+  const calEl = document.getElementById("calendarContainer");
+  if (historyViewMode === "calendar") {
+    listEl?.classList.add("hidden");
+    calEl?.classList.remove("hidden");
+    renderHistoryCalendar();
+  } else {
+    calEl?.classList.add("hidden");
+    listEl?.classList.remove("hidden");
+    historyController.renderHistory();
+  }
+}
+
+function renderHistoryCalendar() {
+  if (!window.CalendarView?.renderCalendar) return;
+  window.CalendarView.renderCalendar({
+    history: historyController.getHistory(),
+    adminAuthenticated: Boolean(adminAuthenticated),
+    onDelete: (id, date) => { void deleteMatch(id, date); },
+    onResolveResult: (matchId) => openPendingResultModal(matchId),
+    onVoteMvp: (matchId, candidateId) => { void voteMvpForMatch(matchId, candidateId); },
+    getCurrentMvpVoteForMatch: (matchId) => getCurrentUserMvpVoteForMatch(matchId),
+    resolvePlayerDisplay: (entry) => resolveHistoryPlayerDisplay(entry),
+  });
 }
 
 async function voteMvpForMatch(matchId, candidateId) {
@@ -3229,6 +3253,20 @@ function showView(key) {
 
 tabs.forEach(btn => {
   btn.addEventListener("click", () => showView(btn.dataset.target));
+});
+
+document.getElementById("historyListToggle")?.addEventListener("click", () => {
+  historyViewMode = "list";
+  document.getElementById("historyListToggle")?.classList.add("history-toggle-btn--active");
+  document.getElementById("historyCalendarToggle")?.classList.remove("history-toggle-btn--active");
+  renderHistory();
+});
+
+document.getElementById("historyCalendarToggle")?.addEventListener("click", () => {
+  historyViewMode = "calendar";
+  document.getElementById("historyCalendarToggle")?.classList.add("history-toggle-btn--active");
+  document.getElementById("historyListToggle")?.classList.remove("history-toggle-btn--active");
+  renderHistory();
 });
 
 document.getElementById("adminBtn")?.addEventListener("click", openAdmin);

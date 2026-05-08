@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fobal5-2026-04-24';
+const CACHE_NAME = 'fobal5-2026-05-07';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -10,6 +10,7 @@ const STATIC_ASSETS = [
   '/src/views/playersView.js',
   '/src/views/matchView.js',
   '/src/views/historyView.js',
+  '/src/views/calendarView.js',
   '/src/controllers/historyController.js',
   '/src/controllers/matchController.js',
   '/src/controllers/adminPlayersController.js',
