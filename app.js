@@ -2792,7 +2792,7 @@ function colorSliderTrack(id, color) {
   const el = document.getElementById(id);
   if (!el) return;
   const pct = (Number(el.value) / Number(el.max)) * 100;
-  el.style.background = `linear-gradient(to right, ${color} ${pct}%, #444 ${pct}%)`;
+  el.style.setProperty('--track-gradient', `linear-gradient(to right, ${color} ${pct}%, #444 ${pct}%)`);
 }
 
 function updateSliderValues() {
