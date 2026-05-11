@@ -481,6 +481,7 @@
   -webkit-appearance:none;
   appearance:none;
   cursor:pointer;
+  touch-action:none;
 }
 .slider-group .slider::-webkit-slider-runnable-track{
   height:6px;
