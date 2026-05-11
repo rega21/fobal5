@@ -1419,10 +1419,6 @@ function updateMenuItemsState() {
   const hasValidated = getPlayersForDisplay(players).some((p) => p.communityStatus === "validated");
   const globalRatingBtn = document.getElementById("globalRatingBtn");
   if (globalRatingBtn) globalRatingBtn.disabled = !hasValidated;
-
-  const hasPlayedMatches = historyController.getHistory().some((m) => m.status === "played");
-  const trajectoryBtn = document.getElementById("trajectoryBtn");
-  if (trajectoryBtn) trajectoryBtn.disabled = !hasPlayedMatches;
 }
 
 async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0, stamina = 0, garra = 0, technique = 0) {
@@ -2388,13 +2384,24 @@ async function deleteMatch(matchId, matchDate) {
 function renderHistory() {
   const listEl = document.getElementById("historyList");
   const calEl = document.getElementById("calendarContainer");
-  if (historyViewMode === "calendar") {
+  const trajEl = document.getElementById("historyTrajectoryContainer");
+  if (historyViewMode === "trajectory") {
+    listEl?.classList.add("hidden");
+    calEl?.classList.add("hidden");
+    trajEl?.classList.remove("hidden");
+    document.body.classList.add("view-trajectory");
+    void window.TrajectoryView.renderTrajectory();
+  } else if (historyViewMode === "calendar") {
     listEl?.classList.add("hidden");
     calEl?.classList.remove("hidden");
+    trajEl?.classList.add("hidden");
+    document.body.classList.remove("view-trajectory");
     renderHistoryCalendar();
   } else {
     calEl?.classList.add("hidden");
+    trajEl?.classList.add("hidden");
     listEl?.classList.remove("hidden");
+    document.body.classList.remove("view-trajectory");
     historyController.renderHistory();
   }
 }
@@ -3227,23 +3234,21 @@ const views = {
   players: document.getElementById("view-players"),
   match: document.getElementById("view-match"),
   history: document.getElementById("view-history"),
-  trajectory: document.getElementById("view-trajectory"),
 };
 
 function showView(key) {
   Object.values(views).forEach(v => v.classList.add("hidden"));
   views[key].classList.remove("hidden");
   tabs.forEach(t => t.classList.toggle("active", t.dataset.target === key));
-  document.body.classList.toggle("view-trajectory", key === "trajectory");
 
   if (key === "players") {
+    document.body.classList.remove("view-trajectory");
     renderPlayers();
   } else if (key === "match") {
+    document.body.classList.remove("view-trajectory");
     renderMatchPlayers();
   } else if (key === "history") {
     renderHistory();
-  } else if (key === "trajectory") {
-    void window.TrajectoryView.renderTrajectory();
   }
 }
 
@@ -3251,19 +3256,17 @@ tabs.forEach(btn => {
   btn.addEventListener("click", () => showView(btn.dataset.target));
 });
 
-document.getElementById("historyListToggle")?.addEventListener("click", () => {
-  historyViewMode = "list";
-  document.getElementById("historyListToggle")?.classList.add("history-toggle-btn--active");
-  document.getElementById("historyCalendarToggle")?.classList.remove("history-toggle-btn--active");
+function setHistoryToggle(mode) {
+  historyViewMode = mode;
+  document.getElementById("historyListToggle")?.classList.toggle("history-toggle-btn--active", mode === "list");
+  document.getElementById("historyCalendarToggle")?.classList.toggle("history-toggle-btn--active", mode === "calendar");
+  document.getElementById("historyTrajectoryToggle")?.classList.toggle("history-toggle-btn--active", mode === "trajectory");
   renderHistory();
-});
+}
 
-document.getElementById("historyCalendarToggle")?.addEventListener("click", () => {
-  historyViewMode = "calendar";
-  document.getElementById("historyCalendarToggle")?.classList.add("history-toggle-btn--active");
-  document.getElementById("historyListToggle")?.classList.remove("history-toggle-btn--active");
-  renderHistory();
-});
+document.getElementById("historyListToggle")?.addEventListener("click", () => setHistoryToggle("list"));
+document.getElementById("historyCalendarToggle")?.addEventListener("click", () => setHistoryToggle("calendar"));
+document.getElementById("historyTrajectoryToggle")?.addEventListener("click", () => setHistoryToggle("trajectory"));
 
 document.getElementById("adminBtn")?.addEventListener("click", openAdmin);
 document.getElementById("voteHistoryBtn")?.addEventListener("click", () => {
@@ -3378,10 +3381,6 @@ if (document.documentElement.getAttribute("data-theme") === "dark") {
   if (fab) fab.innerHTML = ICON_SUN;
 }
 updateBrandLogo();
-document.getElementById("trajectoryBtn")?.addEventListener("click", () => {
-  closeTopbarMenu();
-  showView("trajectory");
-});
 document.getElementById("globalRatingBtn")?.addEventListener("click", () => {
   const firstPlayer = getPlayersForDisplay(players).find((p) => p.communityStatus === "validated");
   if (firstPlayer) openRatingDetailsByPlayerId(firstPlayer.id);

@@ -76,6 +76,7 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Sliders en mobile:** área táctil del thumb era de 6px (el height del input), imposible de agarrar en touch. Solución: input a `height: 44px` con `background: transparent`, track via `::-webkit-slider-runnable-track` a 6px, gradiente de color pasado como CSS variable `--track-gradient` seteada desde JS con `setProperty` (en vez de `el.style.background`).
 - **Emparejamiento con variedad:** el algoritmo evaluaba las 252 combinaciones posibles (5v5) y siempre devolvía la misma (la de menor costo). Ahora ordena todos los candidatos por costo, toma los 15 mejores y elige uno al azar — los equipos varían partido a partido sin perder el balance.
 - **Evitar repetir último partido:** antes de elegir al azar del pool de 15, se excluye la combinación que coincida exactamente con los equipos del partido anterior (chequeando también el split invertido A↔B). Los IDs del último partido jugado se leen del localStorage (`fobal5_history`). Si todas las opciones del pool coinciden (caso extremo), se usa el pool completo como fallback.
+- **Tabla General movida a Historial:** removida del menú hamburguesa y del bottom nav. Ahora es la tercera opción del toggle dentro de Historial (`Lista | Calendario | Tabla`). `view-trajectory` eliminada como sección independiente; el chart vive en `#historyTrajectoryContainer` dentro de `view-history`. El body class `view-trajectory` (efecto teal en bottom nav, dark mode) se aplica/remueve desde `renderHistory()` según el modo activo.
 
 ## v1.2 — Cambios recientes
 
