@@ -2549,7 +2549,7 @@ async function openEditModal(
 
   currentEditPlayerName = normalizedPlayerName;
   const editModalPlayerName = document.getElementById("editModalPlayerName");
-  if (editModalPlayerName) editModalPlayerName.textContent = displayName;
+  if (editModalPlayerName) editModalPlayerName.textContent = hasVotedBefore ? `Actualizar ${displayName}` : `Calificar ${displayName}`;
   currentEditHasVotedBefore = hasVotedBefore;
   currentEditHasPrefilledVote = hasPrefilledPreviousVote;
 
@@ -2604,7 +2604,7 @@ async function openEditModal(
         title.textContent = hasVotedBefore ? personalizedUpdateText : personalizedCalificarText;
       }
       if (saveBtn) {
-        saveBtn.textContent = hasVotedBefore ? personalizedUpdateText : personalizedCalificarText;
+        saveBtn.textContent = "Guardar";
         saveBtn.disabled = currentEditReachedVoteLimit;
       }
       // Mensaje informativo si alcanzó el límite
