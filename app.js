@@ -170,18 +170,8 @@ const matchController = window.createMatchController
           );
 
         let best = null;
+        const candidates = [];
         const pickedIndexes = [];
-
-        const isBetterCandidate = (candidate, currentBest) => {
-          if (!currentBest) return true;
-          if (candidate.cost < currentBest.cost - 1e-9) return true;
-          if (candidate.cost > currentBest.cost + 1e-9) return false;
-          if (candidate.scoreDiff < currentBest.scoreDiff - 1e-9) return true;
-          if (candidate.scoreDiff > currentBest.scoreDiff + 1e-9) return false;
-          if (candidate.defenseDiff < currentBest.defenseDiff - 1e-9) return true;
-          if (candidate.defenseDiff > currentBest.defenseDiff + 1e-9) return false;
-          return candidate.key < currentBest.key;
-        };
 
         const evaluatePickedIndexes = () => {
           const picked = new Set(pickedIndexes);
@@ -209,18 +199,9 @@ const matchController = window.createMatchController
             midfieldDiff +
             defenseDiff * 1.5;
 
-          const candidate = {
-            cost,
-            key: pickedIndexes.join("-"),
-            scoreDiff,
-            defenseDiff,
-            teamA,
-            teamB,
-          };
-
-          if (isBetterCandidate(candidate, best)) {
-            best = candidate;
-          }
+          const candidate = { cost, scoreDiff, defenseDiff, teamA, teamB };
+          candidates.push(candidate);
+          if (!best || cost < best.cost) best = candidate;
         };
 
         const pickTeamA = (startIndex, remaining) => {
@@ -246,7 +227,10 @@ const matchController = window.createMatchController
           };
         }
 
-        return { a: best.teamA, b: best.teamB };
+        candidates.sort((a, b) => a.cost - b.cost);
+        const pool = candidates.slice(0, Math.min(15, candidates.length));
+        const chosen = pool[Math.floor(Math.random() * pool.length)];
+        return { a: chosen.teamA, b: chosen.teamB };
       },
       buildWhatsAppText(currentTeams) {
         if (!currentTeams) return "";
