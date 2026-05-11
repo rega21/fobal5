@@ -69,6 +69,13 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 5. **Stamina** — menos determinante en cancha chica que en fútbol 11
 6. **Defensa** — importante pero menos "glamoroso" en el formato
 
+## v1.3 — Cambios recientes
+
+- **Ícono PWA corregido (Safari/iOS):** el `apple-touch-icon` y el `rel="icon"` del HTML apuntaban a `futbolFoca.png`. Safari ignora el `manifest.json` y usa exclusivamente esas etiquetas para el ícono de la app instalada. Corregido a `FaltaUnoVerde.png`.
+- **Modal Info App:** reemplazado emoji ⚽ por imagen `FaltaUnoLogoIntro.png`; eliminados título y versión redundantes debajo del logo.
+- **Sliders en mobile:** área táctil del thumb era de 6px (el height del input), imposible de agarrar en touch. Solución: input a `height: 44px` con `background: transparent`, track via `::-webkit-slider-runnable-track` a 6px, gradiente de color pasado como CSS variable `--track-gradient` seteada desde JS con `setProperty` (en vez de `el.style.background`).
+- **Emparejamiento con variedad:** el algoritmo evaluaba las 252 combinaciones posibles (5v5) y siempre devolvía la misma (la de menor costo). Ahora ordena todos los candidatos por costo, toma los 15 mejores y elige uno al azar — los equipos varían partido a partido sin perder el balance.
+
 ## v1.2 — Cambios recientes
 
 - **Vista Calendario en Historial:** toggle Lista/Calendario en la sección de historial. El calendario marca en verde los partidos pendientes y en rojo los jugados. Click en un día abre el card del partido directamente.
@@ -108,6 +115,7 @@ Sin este cambio, los usuarios con la app instalada siguen viendo la versión vie
 
 - Persistir promedio validado en `players` cuando un jugador alcance `>= COMMUNITY_MIN_VOTES` votos.
 - Agregar una sección breve de "Parámetros y enlaces de Maps" con ejemplos de entrada/salida para facilitar mantenimiento.
+- **Loading state global:** agregar spinner de carga y botón de reload en todas las secciones que dependen de la API (Jugadores, Historial, Tabla General). Previene que el usuario vea contenido vacío o sin estilos mientras Supabase responde.
 
 ## Roadmap: Escalabilidad multi-grupo
 
