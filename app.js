@@ -785,7 +785,6 @@ function detectPlayerRole(stats) {
 }
 
 let playerRadarChartInstance = null;
-let editRadarChartInstance = null;
 
 function getDominantStatColor(stats) {
   const entries = [
@@ -2650,12 +2649,6 @@ async function openEditModal(
 }
 
 function closeEditModal() {
-  if (editRadarChartInstance) {
-    editRadarChartInstance.destroy();
-    editRadarChartInstance = null;
-  }
-  const editRadarContainer = document.getElementById("editRadarContainer");
-  if (editRadarContainer) editRadarContainer.style.display = "none";
   document.getElementById("editPlayerModal").classList.add("hidden");
   const voteHint = document.getElementById("editPlayerVoteHint");
   if (voteHint) voteHint.classList.add("hidden");
@@ -2817,57 +2810,6 @@ function updateSliderValues() {
   colorSliderTrack("editPlayerStamina",   "#F1C40F");
   colorSliderTrack("editPlayerGarra",     "#F97316");
   colorSliderTrack("editPlayerTechnique", "#9B59B6");
-  updateEditRadarChart({ attack, midfield, defense, stamina, garra, technique });
-}
-
-function updateEditRadarChart(stats) {
-  const container = document.getElementById("editRadarContainer");
-  const canvas = document.getElementById("editPlayerRadarChart");
-  if (!canvas || typeof Chart === "undefined") return;
-
-  if (container) container.style.display = "block";
-
-  const hasAnyValue = Object.values(stats).some((v) => v > 0);
-  const color = hasAnyValue ? getDominantStatColor(stats) : "transparent";
-  const pointColor = hasAnyValue ? color : "transparent";
-
-  if (editRadarChartInstance) {
-    editRadarChartInstance.data.datasets[0].data = [stats.attack, stats.midfield, stats.defense, stats.stamina, stats.garra, stats.technique];
-    editRadarChartInstance.data.datasets[0].borderColor = color;
-    editRadarChartInstance.data.datasets[0].backgroundColor = hasAnyValue ? color + "33" : "transparent";
-    editRadarChartInstance.data.datasets[0].pointBackgroundColor = pointColor;
-    editRadarChartInstance.update("none");
-    return;
-  }
-
-  editRadarChartInstance = new Chart(canvas, {
-    type: "radar",
-    data: {
-      labels: ["Ataque", "Centro", "Defensa", "Resistencia", "Garra", "Técnica"],
-      datasets: [{
-        data: [stats.attack, stats.midfield, stats.defense, stats.stamina, stats.garra, stats.technique],
-        backgroundColor: hasAnyValue ? color + "33" : "transparent",
-        borderColor: color,
-        borderWidth: 2,
-        pointBackgroundColor: pointColor,
-        pointRadius: 4,
-      }],
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        r: {
-          min: 0,
-          max: 10,
-          ticks: { display: false },
-          pointLabels: { color: "#ccc", font: { size: 11 } },
-          grid: { color: "#444" },
-          angleLines: { color: "#444" },
-        },
-      },
-    },
-  });
 }
 
 function openAdmin() {
