@@ -2549,7 +2549,7 @@ async function openEditModal(
 
   currentEditPlayerName = normalizedPlayerName;
   const editModalPlayerName = document.getElementById("editModalPlayerName");
-  if (editModalPlayerName) editModalPlayerName.textContent = hasVotedBefore ? `Actualizar ${displayName}` : `Calificar ${displayName}`;
+  if (editModalPlayerName) editModalPlayerName.textContent = hasVotedBefore ? `Editar ${displayName}` : `Calificar ${displayName}`;
   currentEditHasVotedBefore = hasVotedBefore;
   currentEditHasPrefilledVote = hasPrefilledPreviousVote;
 
