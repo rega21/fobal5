@@ -82,6 +82,8 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Espaciado entre sliders reducido:** `margin-bottom` del `.slider-group` bajado a `-8px` para compensar el espacio interno del input de 44px.
 - **Radar removido del modal de votación:** el radar en tiempo real dentro del modal de calificación ocupaba la mitad de la pantalla sin aportar info real (valores en 0 por defecto). Queda solo en el rating global donde muestra datos consolidados.
 - **Modal de votación rediseñado:** título centrado en el header con acción + nombre del jugador (`Calificar Nombre` / `Editar Nombre`). Botón de guardar simplificado a `Guardar` (en vez de repetir el nombre). Botón en tarjeta: `CALIFICAR` (sin emoji, primera vez) / `✏️ EDITAR` (con lápiz, ya calificado).
+- **Modal no se cierra al guardar:** al guardar una calificación el modal permanece abierto. El título cambia a "✓ Guardado" en verde por 1.5s y luego a "Editar Nombre", permitiendo seguir calificando otros jugadores con las flechas < > sin reabrir el modal.
+- **Estrella de acceso rápido al rating:** en el header del modal de calificación aparece una estrella a la izquierda. ⭐ amarilla si el jugador tiene 3+ votos (abre el modal de rating global al clickear), ☆ gris si tiene menos (indica pendiente). Usa `getPlayerCommunitySummary(playerId).votes` para determinar el estado.
 
 ## v1.2 — Cambios recientes
 
