@@ -2548,6 +2548,8 @@ async function openEditModal(
     : "Actualizar jugador";
 
   currentEditPlayerName = normalizedPlayerName;
+  const editModalPlayerName = document.getElementById("editModalPlayerName");
+  if (editModalPlayerName) editModalPlayerName.textContent = displayName;
   currentEditHasVotedBefore = hasVotedBefore;
   currentEditHasPrefilledVote = hasPrefilledPreviousVote;
 
