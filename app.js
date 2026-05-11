@@ -1592,8 +1592,8 @@ function renderPlayers(options = {}) {
       : "";
 
     const editButtonClass = yaVotaste ? "btn-edit btn-edit--voted" : "btn-edit";
-    const editButtonTitle = yaVotaste ? "Editar voto" : "Votar";
-    const editButtonLabel = yaVotaste ? "✏️ EDITAR" : "🗳️ VOTAR";
+    const editButtonTitle = yaVotaste ? "Editar calificación" : "Calificar";
+    const editButtonLabel = yaVotaste ? "✏️ EDITAR" : "✏️ CALIFICAR";
     const editControl = `<button class="${editButtonClass}" data-id="${p.id}" title="${editButtonTitle}">${editButtonLabel}</button>`;
 
     const adminControls = `<div class="admin-controls">

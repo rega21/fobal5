@@ -143,8 +143,8 @@
           ? `<button class="btn-delete" data-id="${player.id}" title="Eliminar">🗑️</button>`
           : "";
         const editButtonClass = yaVotaste ? "btn-edit btn-edit--voted" : "btn-edit";
-        const editButtonTitle = yaVotaste ? "Editar voto" : "Votar";
-        const editButtonLabel = yaVotaste ? "✏️ EDITAR" : "🗳️ VOTAR";
+        const editButtonTitle = yaVotaste ? "Editar calificación" : "Calificar";
+        const editButtonLabel = yaVotaste ? "✏️ EDITAR" : "✏️ CALIFICAR";
 
         const adminControls = `<div class="admin-controls">
           <button class="${editButtonClass}" data-id="${player.id}" title="${editButtonTitle}">${editButtonLabel}</button>
