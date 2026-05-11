@@ -144,7 +144,7 @@
           : "";
         const editButtonClass = yaVotaste ? "btn-edit btn-edit--voted" : "btn-edit";
         const editButtonTitle = yaVotaste ? "Editar calificación" : "Calificar";
-        const editButtonLabel = yaVotaste ? "✏️ EDITAR" : "⭐ CALIFICAR";
+        const editButtonLabel = yaVotaste ? "✏️ EDITAR" : "CALIFICAR";
 
         const adminControls = `<div class="admin-controls">
           <button class="${editButtonClass}" data-id="${player.id}" title="${editButtonTitle}">${editButtonLabel}</button>

@@ -78,6 +78,10 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Evitar repetir último partido:** antes de elegir al azar del pool de 15, se excluye la combinación que coincida exactamente con los equipos del partido anterior (chequeando también el split invertido A↔B). Los IDs del último partido jugado se leen del localStorage (`fobal5_history`). Si todas las opciones del pool coinciden (caso extremo), se usa el pool completo como fallback.
 - **Tabla General movida a Historial:** removida del menú hamburguesa y del bottom nav. Ahora es la tercera opción del toggle dentro de Historial (`Lista | Calendario | Tabla`). `view-trajectory` eliminada como sección independiente; el chart vive en `#historyTrajectoryContainer` dentro de `view-history`. El body class `view-trajectory` (efecto teal en bottom nav, dark mode) se aplica/remueve desde `renderHistory()` según el modo activo.
 - **MVP renombrado a Mejor gol:** solo cambian los textos visibles al usuario (`Mejor gol: Puntín` en cards, labels de selects, toasts y alerts). Los nombres de campo internos (`mvp`, `mvp_name`, `mvpVotes`, etc.) en Supabase, localStorage y código quedan intactos para no romper datos existentes.
+- **Drag de sliders en mobile:** agregado `touch-action: none` al slider para que el browser no interprete el arrastre horizontal como scroll del modal. Sin esto, el click funcionaba pero el drag no.
+- **Espaciado entre sliders reducido:** `margin-bottom` del `.slider-group` bajado a `-8px` para compensar el espacio interno del input de 44px.
+- **Radar removido del modal de votación:** el radar en tiempo real dentro del modal de calificación ocupaba la mitad de la pantalla sin aportar info real (valores en 0 por defecto). Queda solo en el rating global donde muestra datos consolidados.
+- **Modal de votación rediseñado:** título centrado en el header con acción + nombre del jugador (`Calificar Nombre` / `Editar Nombre`). Botón de guardar simplificado a `Guardar` (en vez de repetir el nombre). Botón en tarjeta: `CALIFICAR` (sin emoji, primera vez) / `✏️ EDITAR` (con lápiz, ya calificado).
 
 ## v1.2 — Cambios recientes
 
