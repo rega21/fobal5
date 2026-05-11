@@ -2550,6 +2550,20 @@ async function openEditModal(
   currentEditPlayerName = normalizedPlayerName;
   const editModalPlayerName = document.getElementById("editModalPlayerName");
   if (editModalPlayerName) editModalPlayerName.textContent = hasVotedBefore ? `Editar ${displayName}` : `Calificar ${displayName}`;
+
+  const _starBtn = document.getElementById("editModalRatingStarBtn");
+  if (_starBtn && playerId) {
+    const _summary = getPlayerCommunitySummary(playerId);
+    const _voteCount = _summary?.votes || 0;
+    const _hasRating = _voteCount >= 3;
+    _starBtn.textContent = _hasRating ? "⭐" : "☆";
+    _starBtn.style.display = "block";
+    _starBtn.style.color = _hasRating ? "" : "rgba(255,255,255,0.4)";
+    _starBtn.onclick = () => openRatingDetailsByPlayerId(playerId);
+  } else if (_starBtn) {
+    _starBtn.style.display = "none";
+  }
+
   currentEditHasVotedBefore = hasVotedBefore;
   currentEditHasPrefilledVote = hasPrefilledPreviousVote;
 
