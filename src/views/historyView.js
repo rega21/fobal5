@@ -216,18 +216,14 @@
   }
 
   function buildMvpBadgeLabel(match, mvpSummary, isAdmin, votingOpen) {
-    const icon = votingOpen ? "⏳" : "⭐";
-    // Si la votación está abierta y hay votos, mostrar pendiente
     if (votingOpen && mvpSummary.totalVotes > 0) {
-      return `${icon} MVP: Pendiente`;
+      return "Mejor gol: Pendiente";
     }
 
-    // Si hay ganador, mostrarlo
     if (mvpSummary.winners.length > 0) {
-      // En caso de empate, gana el primero votado
       const winner = mvpSummary.winners[0];
       const pct = isAdmin ? ` (${winner.percentage}%)` : "";
-      return `${icon} MVP: ${winner.label}${pct}`;
+      return `Mejor gol: ${winner.label}${pct}`;
     }
 
     // Si no hay votos ni ganador, mostrar vacío
@@ -337,7 +333,7 @@
           ${canVote
             ? `<div class="match-mvp-vote-wrap">
                 <select class="match-mvp-select" data-match-id="${matchId}">
-                  <option value="">⭐ MVP Player</option>
+                  <option value="">Mejor gol</option>
                   ${mvpSummary.candidates
                     .map((candidate) => {
                       const label = adminAuthenticated ? `${candidate.label} (${candidate.percentage}%)` : candidate.label;

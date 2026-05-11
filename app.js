@@ -1800,7 +1800,7 @@ function openPendingResultModal(matchId) {
   scoreBInput.value = String(pendingMatch.scoreB ?? 0);
 
   const mvpSummary = getMatchMvpVotesSummary(pendingMatch);
-  mvpSelect.innerHTML = '<option value="">Seleccionar MVP</option>'
+  mvpSelect.innerHTML = '<option value="">Gol del partido</option>'
     + mvpSummary.candidates
       .map((candidate) => `<option value="${escapeHtml(candidate.id)}">${escapeHtml(candidate.label)}</option>`)
       .join("");
@@ -1830,7 +1830,7 @@ async function savePendingResultFromModal() {
 
   const selectedCandidateId = normalizeMvpCandidateId(document.getElementById("historyMvpSelect")?.value || "");
   if (!selectedCandidateId) {
-    alert("Selecciona un MVP para guardar el resultado");
+    alert("Selecciona el mejor gol para guardar el resultado");
     return;
   }
 
@@ -2332,7 +2332,7 @@ async function recordMatch() {
 
   const mvpId = document.getElementById("mvpSelect").value;
   if (!mvpId) {
-    alert("Selecciona un MVP para guardar el resultado");
+    alert("Selecciona el mejor gol para guardar el resultado");
     return;
   }
   const mvpName = mvpId
@@ -2425,7 +2425,7 @@ async function voteMvpForMatch(matchId, candidateId) {
 
   const existingVote = getCurrentUserMvpVoteForMatch(normalizedMatchId);
   if (existingVote) {
-    showToast("Ya votaste el MVP de este partido", 2200, "error");
+    showToast("Ya votaste el mejor gol de este partido", 2200, "error");
     return;
   }
 
@@ -2436,7 +2436,7 @@ async function voteMvpForMatch(matchId, candidateId) {
   }
 
   if (!isMatchMvpVotingOpen(match)) {
-    showToast("La votación MVP ya cerró (8h)", 2200, "error");
+    showToast("La votación de mejor gol ya cerró (8h)", 2200, "error");
     return;
   }
 
@@ -2455,10 +2455,10 @@ async function voteMvpForMatch(matchId, candidateId) {
     historyController.pushMatch(persistedMatch);
     setCurrentUserMvpVoteForMatch(normalizedMatchId, voteResult.selectedCandidateId);
     await fetchMatches();
-    showToast("Voto MVP guardado", 2000, "success");
+    showToast("Mejor gol guardado", 2000, "success");
   } catch (error) {
     console.error("Error saving MVP vote:", error);
-    showToast("No se pudo guardar el voto MVP", 2400, "error");
+    showToast("No se pudo guardar el voto de mejor gol", 2400, "error");
   }
 }
 

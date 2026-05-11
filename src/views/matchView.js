@@ -433,7 +433,7 @@
     if (!mvpSelect || !teams) return;
 
     const allPlayers = [...(teams.a || []), ...(teams.b || [])];
-    mvpSelect.innerHTML = '<option value="">Select MVP</option>'
+    mvpSelect.innerHTML = '<option value="">Mejor gol</option>'
       + allPlayers.map((player) => `<option value="${player.id}">${escapeHtml(player.nickname?.trim() || player.name)}</option>`).join("");
   }
 

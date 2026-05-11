@@ -77,6 +77,7 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Emparejamiento con variedad:** el algoritmo evaluaba las 252 combinaciones posibles (5v5) y siempre devolvía la misma (la de menor costo). Ahora ordena todos los candidatos por costo, toma los 15 mejores y elige uno al azar — los equipos varían partido a partido sin perder el balance.
 - **Evitar repetir último partido:** antes de elegir al azar del pool de 15, se excluye la combinación que coincida exactamente con los equipos del partido anterior (chequeando también el split invertido A↔B). Los IDs del último partido jugado se leen del localStorage (`fobal5_history`). Si todas las opciones del pool coinciden (caso extremo), se usa el pool completo como fallback.
 - **Tabla General movida a Historial:** removida del menú hamburguesa y del bottom nav. Ahora es la tercera opción del toggle dentro de Historial (`Lista | Calendario | Tabla`). `view-trajectory` eliminada como sección independiente; el chart vive en `#historyTrajectoryContainer` dentro de `view-history`. El body class `view-trajectory` (efecto teal en bottom nav, dark mode) se aplica/remueve desde `renderHistory()` según el modo activo.
+- **MVP renombrado a Mejor gol:** solo cambian los textos visibles al usuario (`Mejor gol: Puntín` en cards, labels de selects, toasts y alerts). Los nombres de campo internos (`mvp`, `mvp_name`, `mvpVotes`, etc.) en Supabase, localStorage y código quedan intactos para no romper datos existentes.
 
 ## v1.2 — Cambios recientes
 
