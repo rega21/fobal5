@@ -2768,8 +2768,17 @@ async function saveEditPlayer() {
       await refreshPlayerRatingsSummary();
       await animateEditButtonFadeOut(editPlayerId);
       renderPlayers({ preserveOrder: true });
-      closeEditModal();
-      showToast(hasVotedBefore ? "Voto actualizado" : "Calificación guardada", 2200, "success");
+      currentEditHasVotedBefore = true;
+      const _titleEl = document.getElementById("editModalPlayerName");
+      if (_titleEl) {
+        const _savedName = currentEditPlayerName || "jugador";
+        _titleEl.textContent = "✓ Guardado";
+        _titleEl.style.color = "#10b981";
+        setTimeout(() => {
+          _titleEl.textContent = `Editar ${_savedName}`;
+          _titleEl.style.color = "";
+        }, 1500);
+      }
     } catch (error) {
       console.error("Error guardando calificación:", error);
       showToast("No se pudo guardar la calificación", 2600, "error");
