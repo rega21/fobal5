@@ -1705,7 +1705,19 @@ function generateBalancedTeams() {
     return;
   }
 
-  currentTeams = matchController.createBalancedTeams(selectedPlayers);
+  let lastMatchTeamIds = null;
+  try {
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    const lastPlayed = history.filter((m) => m.status === "played").at(-1);
+    if (lastPlayed) {
+      lastMatchTeamIds = {
+        a: (lastPlayed.teamA || []).map((p) => String(p.id)),
+        b: (lastPlayed.teamB || []).map((p) => String(p.id)),
+      };
+    }
+  } catch (_e) {}
+
+  currentTeams = matchController.createBalancedTeams(selectedPlayers, lastMatchTeamIds);
   renderTeams();
   showMatchSetup();
 }
