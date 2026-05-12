@@ -874,6 +874,10 @@ function openRatingDetailsByPlayerId(playerId) {
   const modal = document.getElementById("ratingDetailsModal");
   if (!modal) return;
 
+  const _ratingTitle = document.getElementById("ratingDetailsTitle");
+  const _playerDisplayName = playerForView.nickname || playerForView.name || "";
+  if (_ratingTitle) _ratingTitle.textContent = `Rating ${_playerDisplayName}`;
+
   const status = document.getElementById("ratingDetailsStatus");
   const ratingAverage = toScoreNumber(playerForView.communityAverage).toFixed(1);
   const ratingIcon = playerForView.communityStatus === "validated" ? ICON_STAR_FILLED : ICON_STAR_OUTLINE;
@@ -2568,17 +2572,6 @@ async function openEditModal(
   currentEditHasPrefilledVote = hasPrefilledPreviousVote;
 
 
-  // Verificar límite de votos para la pestaña Puntos
-  currentEditReachedVoteLimit = false;
-  if (playerId && playerRatingsService?.getOrCreateVoterKey && apiClient?.checkVoteLimitReached) {
-    try {
-      const voterKey = playerRatingsService.getOrCreateVoterKey();
-      currentEditReachedVoteLimit = await apiClient.checkVoteLimitReached({ playerId, voterKey });
-    } catch (_e) {
-      currentEditReachedVoteLimit = false;
-    }
-  }
-
   function applyEditActionMode(nextAction = "rating") {
     const action = nextAction === "identity" ? "identity" : "rating";
     currentEditAction = action;
@@ -2659,9 +2652,33 @@ async function openEditModal(
     editVoteHintTimeoutId = null;
   }
 
+  currentEditReachedVoteLimit = false;
   applyEditActionMode(adminAuthenticated ? "identity" : "rating");
 
   document.getElementById("editPlayerModal").classList.remove("hidden");
+
+  if (playerId && playerRatingsService?.getOrCreateVoterKey && apiClient?.checkVoteLimitReached) {
+    try {
+      const voterKey = playerRatingsService.getOrCreateVoterKey();
+      currentEditReachedVoteLimit = await apiClient.checkVoteLimitReached({ playerId, voterKey });
+      if (currentEditReachedVoteLimit && currentEditAction === "rating") {
+        if (saveBtn) saveBtn.disabled = true;
+        let limitMsg = document.getElementById("voteLimitMsg");
+        if (!limitMsg && saveBtn) {
+          limitMsg = document.createElement("div");
+          limitMsg.id = "voteLimitMsg";
+          limitMsg.className = "muted";
+          saveBtn.parentNode.insertBefore(limitMsg, saveBtn.nextSibling);
+        }
+        if (limitMsg) {
+          limitMsg.textContent = "Alcanzaste el límite de 3 votos en 24hs para este jugador.";
+          limitMsg.style.display = "block";
+        }
+      }
+    } catch (_e) {
+      currentEditReachedVoteLimit = false;
+    }
+  }
 }
 
 function closeEditModal() {
@@ -2829,12 +2846,13 @@ function updateSliderValues() {
   document.getElementById("staminaValue").textContent = stamina;
   document.getElementById("garraValue").textContent = garra;
   document.getElementById("techniqueValue").textContent = technique;
-  colorSliderTrack("editPlayerAttack",    "#FF4C4C");
-  colorSliderTrack("editPlayerDefense",   "#00E5FF");
-  colorSliderTrack("editPlayerMidfield",  "#2ECC71");
-  colorSliderTrack("editPlayerStamina",   "#F1C40F");
-  colorSliderTrack("editPlayerGarra",     "#F97316");
-  colorSliderTrack("editPlayerTechnique", "#9B59B6");
+  const sliderColor = "#7B8FD4";
+  colorSliderTrack("editPlayerAttack",    sliderColor);
+  colorSliderTrack("editPlayerDefense",   sliderColor);
+  colorSliderTrack("editPlayerMidfield",  sliderColor);
+  colorSliderTrack("editPlayerStamina",   sliderColor);
+  colorSliderTrack("editPlayerGarra",     sliderColor);
+  colorSliderTrack("editPlayerTechnique", sliderColor);
 }
 
 function openAdmin() {
@@ -3836,6 +3854,7 @@ if (_editModalContent) {
   let _editSwipeStartX = null;
   let _editSwipeStartY = null;
   _editModalContent.addEventListener("touchstart", (e) => {
+    if (e.target.tagName === "INPUT" && e.target.type === "range") return;
     _editSwipeStartX = e.touches[0].clientX;
     _editSwipeStartY = e.touches[0].clientY;
   }, { passive: true });
