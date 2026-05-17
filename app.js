@@ -136,7 +136,7 @@ const matchController = window.createMatchController
         const shuffled = [...selectedPlayers].sort(() => Math.random() - 0.5);
         return { a: shuffled.slice(0, 5), b: shuffled.slice(5, 10) };
       },
-      createBalancedTeams(selectedPlayers) {
+      createBalancedTeams(selectedPlayers, coOccurrenceMap) {
         const players = (selectedPlayers || []).map((player) => {
           const attack = Number(player.attack) || 0;
           const midfield = Number(player.midfield) || 0;
@@ -169,6 +169,18 @@ const matchController = window.createMatchController
             { score: 0, attack: 0, midfield: 0, defense: 0 }
           );
 
+        const coMap = coOccurrenceMap || {};
+        const pairKey = (a, b) => [String(a.id), String(b.id)].sort().join("_");
+        const coOccurrencePenalty = (team) => {
+          let penalty = 0;
+          for (let x = 0; x < team.length; x++) {
+            for (let y = x + 1; y < team.length; y++) {
+              penalty += coMap[pairKey(team[x], team[y])] || 0;
+            }
+          }
+          return penalty;
+        };
+
         let best = null;
         const candidates = [];
         const pickedIndexes = [];
@@ -197,7 +209,8 @@ const matchController = window.createMatchController
             scoreDiff * 2 +
             attackDiff * 1.25 +
             midfieldDiff +
-            defenseDiff * 1.5;
+            defenseDiff * 1.5 +
+            (coOccurrencePenalty(teamA) + coOccurrencePenalty(teamB)) * 0.1;
 
           const candidate = { cost, scoreDiff, defenseDiff, teamA, teamB };
           candidates.push(candidate);
@@ -1704,19 +1717,26 @@ function generateBalancedTeams() {
     return;
   }
 
-  let lastMatchTeamIds = null;
+  const coOccurrenceMap = {};
   try {
     const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
-    const lastPlayed = history.filter((m) => m.status === "played").at(-1);
-    if (lastPlayed) {
-      lastMatchTeamIds = {
-        a: (lastPlayed.teamA || []).map((p) => String(p.id)),
-        b: (lastPlayed.teamB || []).map((p) => String(p.id)),
-      };
-    }
+    const recentMatches = history.filter((m) => m.status === "played").slice(-5);
+    const pairKey = (a, b) => [a, b].sort().join("_");
+    recentMatches.forEach((match, i) => {
+      const weight = i + 1; // oldest=1, newest=5
+      [match.teamA || [], match.teamB || []].forEach((team) => {
+        const ids = team.map((p) => String(p.id));
+        for (let x = 0; x < ids.length; x++) {
+          for (let y = x + 1; y < ids.length; y++) {
+            const key = pairKey(ids[x], ids[y]);
+            coOccurrenceMap[key] = (coOccurrenceMap[key] || 0) + weight;
+          }
+        }
+      });
+    });
   } catch (_e) {}
 
-  currentTeams = matchController.createBalancedTeams(selectedPlayers, lastMatchTeamIds);
+  currentTeams = matchController.createBalancedTeams(selectedPlayers, coOccurrenceMap);
   renderTeams();
   showMatchSetup();
 }

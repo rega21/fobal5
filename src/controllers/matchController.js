@@ -8,7 +8,7 @@
       };
     }
 
-    function createBalancedTeams(selectedPlayers, lastMatchTeamIds = null) {
+    function createBalancedTeams(selectedPlayers, coOccurrenceMap = null) {
       const players = (selectedPlayers || []).map((player) => {
         const attack = Number(player.attack) || 0;
         const midfield = Number(player.midfield) || 0;
@@ -41,6 +41,18 @@
           { score: 0, attack: 0, midfield: 0, defense: 0 }
         );
 
+      const coMap = coOccurrenceMap || {};
+      const pairKey = (a, b) => [String(a.id), String(b.id)].sort().join("_");
+      const coOccurrencePenalty = (team) => {
+        let penalty = 0;
+        for (let x = 0; x < team.length; x++) {
+          for (let y = x + 1; y < team.length; y++) {
+            penalty += coMap[pairKey(team[x], team[y])] || 0;
+          }
+        }
+        return penalty;
+      };
+
       let best = null;
       const candidates = [];
       const pickedIndexes = [];
@@ -69,7 +81,8 @@
           scoreDiff * 2 +
           attackDiff * 1.25 +
           midfieldDiff +
-          defenseDiff * 1.5;
+          defenseDiff * 1.5 +
+          (coOccurrencePenalty(teamA) + coOccurrencePenalty(teamB)) * 0.1;
 
         const candidate = { cost, scoreDiff, defenseDiff, teamA, teamB };
         candidates.push(candidate);
@@ -101,21 +114,7 @@
 
       candidates.sort((a, b) => a.cost - b.cost);
       const pool = candidates.slice(0, Math.min(15, candidates.length));
-
-      const isLastMatch = (candidate) => {
-        if (!lastMatchTeamIds) return false;
-        const idsA = new Set(candidate.teamA.map((p) => String(p.id)));
-        const idsB = new Set(candidate.teamB.map((p) => String(p.id)));
-        const lastA = lastMatchTeamIds.a;
-        const lastB = lastMatchTeamIds.b;
-        const direct  = lastA.every((id) => idsA.has(id)) && lastB.every((id) => idsB.has(id));
-        const swapped = lastA.every((id) => idsB.has(id)) && lastB.every((id) => idsA.has(id));
-        return direct || swapped;
-      };
-
-      const freshPool = pool.filter((c) => !isLastMatch(c));
-      const finalPool = freshPool.length > 0 ? freshPool : pool;
-      const chosen = finalPool[Math.floor(Math.random() * finalPool.length)];
+      const chosen = pool[Math.floor(Math.random() * pool.length)];
       return { a: chosen.teamA, b: chosen.teamB };
     }
 
