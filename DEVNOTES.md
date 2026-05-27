@@ -122,6 +122,7 @@ Sin este cambio, los usuarios con la app instalada siguen viendo la versión vie
 
 ## Próximo paso recomendado
 
+- **⚠️ Google Maps — habilitar billing en GCP:** el autocomplete de cancha (`gmp-place-autocomplete`) requiere facturación activa en el proyecto de Google Cloud. Sin billing, todos los requests a Places API fallan con `BillingNotEnabledMapError`. Pasos: Google Cloud Console → proyecto de la key `AIzaSyBJn...` → Billing → vincular cuenta → verificar que estén habilitadas **Maps JavaScript API** y **Places API (New)**. El código ya fue migrado de `Autocomplete` (deprecado desde marzo 2025) a `PlaceAutocompleteElement`.
 - Persistir promedio validado en `players` cuando un jugador alcance `>= COMMUNITY_MIN_VOTES` votos.
 - Agregar una sección breve de "Parámetros y enlaces de Maps" con ejemplos de entrada/salida para facilitar mantenimiento.
 - **Loading state global:** agregar spinner de carga y botón de reload en todas las secciones que dependen de la API (Jugadores, Historial, Tabla General). Previene que el usuario vea contenido vacío o sin estilos mientras Supabase responde.

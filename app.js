@@ -832,7 +832,7 @@ function renderPlayerRadarChart(stats) {
   playerRadarChartInstance = new Chart(canvas, {
     type: "radar",
     data: {
-      labels: ["Ataque", "Centro", "Defensa", "Resistencia", "Garra", "Técnica"],
+      labels: ["Ataque", "Medio", "Defensa", "Resistencia", "Garra", "Técnica"],
       datasets: [{
         data,
         backgroundColor: color + "33",
@@ -1852,10 +1852,6 @@ async function savePendingResultFromModal() {
   if (scoreB === null) return;
 
   const selectedCandidateId = normalizeMvpCandidateId(document.getElementById("historyMvpSelect")?.value || "");
-  if (!selectedCandidateId) {
-    alert("Selecciona el mejor gol para guardar el resultado");
-    return;
-  }
 
   const mvpSummary = getMatchMvpVotesSummary(pendingMatch);
   const selectedCandidate = mvpSummary.candidates.find((candidate) => candidate.id === selectedCandidateId);
@@ -2107,6 +2103,8 @@ async function initLocationAutocomplete() {
       failedInput.disabled = false;
       failedInput.placeholder = "Escribí el lugar manualmente";
     }
+    const pacEl = document.querySelector("gmp-place-autocomplete");
+    if (pacEl) pacEl.disabled = false;
     setMatchLocationHint("Google Maps rechazó la API Key (revisa restricciones de dominio, APIs habilitadas y facturación). Puedes escribir el lugar manualmente.");
   };
 
@@ -2125,61 +2123,15 @@ async function initLocationAutocomplete() {
 
   try {
     await loadGoogleMapsPlacesScript();
-    if (!window.google?.maps?.places?.Autocomplete) {
+
+    if (window.google?.maps?.places?.PlaceAutocompleteElement) {
+      initPlaceAutocompleteElement(locationInput);
+    } else if (window.google?.maps?.places?.Autocomplete) {
+      initLegacyAutocomplete(locationInput);
+    } else {
       setMatchLocationHint("No se pudo activar Google Maps Autocomplete. Verifica que estén habilitadas Maps JavaScript API + Places API y que la key permita este dominio.");
       return;
     }
-
-    const autocomplete = new window.google.maps.places.Autocomplete(locationInput, {
-      types: ["establishment"],
-      componentRestrictions: { country: "uy" },
-    });
-
-    if (typeof autocomplete.setFields === "function") {
-      autocomplete.setFields(["place_id", "formatted_address", "name", "geometry", "types"]);
-    }
-
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      if (!place) return;
-
-      const resolvedName = place.name || locationInput.value.trim();
-      const resolvedAddress = place.formatted_address || "";
-
-      locationInput.value = resolvedName || resolvedAddress || locationInput.value.trim();
-
-      const lat = place.geometry?.location?.lat ? place.geometry.location.lat() : null;
-      const lng = place.geometry?.location?.lng ? place.geometry.location.lng() : null;
-      const placeId = place.place_id || "";
-      const placeQuery = locationInput.value.trim() || resolvedAddress || "";
-      const resolvedMapsUrl = placeId
-        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeQuery || "Cancha")}&query_place_id=${encodeURIComponent(placeId)}`
-        : buildMapsSearchUrl(placeQuery, resolvedAddress);
-
-      selectedPlaceData = {
-        location: locationInput.value.trim(),
-        address: resolvedAddress,
-        placeId,
-        mapsUrl: resolvedMapsUrl,
-        latitude: lat,
-        longitude: lng,
-      };
-      setDetectedAddressDetails(resolvedAddress, selectedPlaceData.mapsUrl || "");
-
-      if (seemsSoccerPlace(place)) {
-        setMatchLocationHint("Autocomplete de Google Maps activo.");
-      } else {
-        setMatchLocationHint("Lugar seleccionado. No parece una cancha de fútbol; verifica el nombre/dirección si era para partido.");
-      }
-    });
-
-    locationInput.addEventListener("input", () => {
-      if (!selectedPlaceData) return;
-      if ((locationInput.value || "").trim() !== (selectedPlaceData.location || "").trim()) {
-        selectedPlaceData = null;
-        setDetectedAddressDetails("", "");
-      }
-    });
 
     locationInput.dataset.autocompleteReady = "1";
     setMatchLocationHint("Autocomplete de Google Maps activo.");
@@ -2187,6 +2139,118 @@ async function initLocationAutocomplete() {
     console.warn("Google Places autocomplete no disponible:", error?.message || error);
     setMatchLocationHint("Google Maps no disponible en este momento. Revisa la consola del navegador para el detalle del error y permisos de la API key.");
   }
+}
+
+function initPlaceAutocompleteElement(locationInput) {
+  const pac = new window.google.maps.places.PlaceAutocompleteElement({
+    types: ["establishment"],
+    componentRestrictions: { country: "uy" },
+  });
+
+  pac.style.cssText = "width:100%; display:block;";
+  locationInput.style.display = "none";
+  locationInput.parentNode.insertBefore(pac, locationInput);
+
+  if (locationInput.value) {
+    try { pac.value = locationInput.value; } catch (_) {}
+  }
+
+  pac.addEventListener("gmp-placeselect", async ({ place }) => {
+    try {
+      await place.fetchFields({
+        fields: ["displayName", "formattedAddress", "location", "id", "types"],
+      });
+    } catch (_) {}
+
+    const name = place.displayName || "";
+    const address = place.formattedAddress || "";
+    const placeId = place.id || "";
+    const lat = typeof place.location?.lat === "function" ? place.location.lat() : null;
+    const lng = typeof place.location?.lng === "function" ? place.location.lng() : null;
+
+    locationInput.value = name;
+
+    const placeQuery = name || address;
+    const mapsUrl = placeId
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeQuery || "Cancha")}&query_place_id=${encodeURIComponent(placeId)}`
+      : buildMapsSearchUrl(placeQuery, address);
+
+    selectedPlaceData = { location: name, address, placeId, mapsUrl, latitude: lat, longitude: lng };
+    setDetectedAddressDetails(address, mapsUrl);
+
+    const pacSeemsSoccer =
+      SOCCER_PLACE_KEYWORDS.some((kw) => name.toLowerCase().includes(kw)) ||
+      SOCCER_PLACE_TYPES.some((t) => (place.types || []).includes(t));
+
+    setMatchLocationHint(
+      pacSeemsSoccer
+        ? "Autocomplete de Google Maps activo."
+        : "Lugar seleccionado. No parece una cancha de fútbol; verifica el nombre/dirección si era para partido."
+    );
+  });
+
+  pac.addEventListener("input", () => {
+    const val = String(pac.value || "").trim();
+    locationInput.value = val;
+    if (!val || (selectedPlaceData && selectedPlaceData.location.trim().toLowerCase() !== val.toLowerCase())) {
+      selectedPlaceData = null;
+      setDetectedAddressDetails("", "");
+    }
+    document.getElementById("recentLocationsDropdown")?.classList.add("hidden");
+  });
+}
+
+function initLegacyAutocomplete(locationInput) {
+  const autocomplete = new window.google.maps.places.Autocomplete(locationInput, {
+    types: ["establishment"],
+    componentRestrictions: { country: "uy" },
+  });
+
+  if (typeof autocomplete.setFields === "function") {
+    autocomplete.setFields(["place_id", "formatted_address", "name", "geometry", "types"]);
+  }
+
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
+    if (!place) return;
+
+    const resolvedName = place.name || locationInput.value.trim();
+    const resolvedAddress = place.formatted_address || "";
+
+    locationInput.value = resolvedName || resolvedAddress || locationInput.value.trim();
+
+    const lat = place.geometry?.location?.lat ? place.geometry.location.lat() : null;
+    const lng = place.geometry?.location?.lng ? place.geometry.location.lng() : null;
+    const placeId = place.place_id || "";
+    const placeQuery = locationInput.value.trim() || resolvedAddress || "";
+    const resolvedMapsUrl = placeId
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeQuery || "Cancha")}&query_place_id=${encodeURIComponent(placeId)}`
+      : buildMapsSearchUrl(placeQuery, resolvedAddress);
+
+    selectedPlaceData = {
+      location: locationInput.value.trim(),
+      address: resolvedAddress,
+      placeId,
+      mapsUrl: resolvedMapsUrl,
+      latitude: lat,
+      longitude: lng,
+    };
+    setDetectedAddressDetails(resolvedAddress, selectedPlaceData.mapsUrl || "");
+
+    if (seemsSoccerPlace(place)) {
+      setMatchLocationHint("Autocomplete de Google Maps activo.");
+    } else {
+      setMatchLocationHint("Lugar seleccionado. No parece una cancha de fútbol; verifica el nombre/dirección si era para partido.");
+    }
+  });
+
+  locationInput.addEventListener("input", () => {
+    if (!selectedPlaceData) return;
+    if ((locationInput.value || "").trim() !== (selectedPlaceData.location || "").trim()) {
+      selectedPlaceData = null;
+      setDetectedAddressDetails("", "");
+    }
+  });
 }
 
 async function confirmMatchInfo() {
@@ -2354,10 +2418,6 @@ async function recordMatch() {
   if (scoreB === null) return;
 
   const mvpId = document.getElementById("mvpSelect").value;
-  if (!mvpId) {
-    alert("Selecciona el mejor gol para guardar el resultado");
-    return;
-  }
   const mvpName = mvpId
     ? String(document.querySelector(`#mvpSelect option[value="${mvpId}"]`)?.textContent || "").trim()
     : null;

@@ -113,7 +113,8 @@
     const mapsBtn = document.getElementById("openMapsBtn");
     const trimmedAddress = String(address || "").trim();
     const trimmedMapsUrl = String(mapsUrl || "").trim();
-    const locationValue = String(locationInput?.value || "").trim();
+    const pacEl = document.querySelector("gmp-place-autocomplete");
+    const locationValue = String(pacEl?.value || locationInput?.value || "").trim();
 
     if (locationInput) {
       locationInput.dataset.detectedAddress = trimmedAddress;
@@ -234,8 +235,10 @@
   }
 
   function getMatchSetupValues() {
-    const location = document.getElementById("matchLocation")?.value.trim() || "";
-    const address = document.getElementById("matchLocation")?.dataset.detectedAddress?.trim() || "";
+    const pacEl = document.querySelector("gmp-place-autocomplete");
+    const locationInput = document.getElementById("matchLocation");
+    const location = String(pacEl?.value || locationInput?.value || "").trim();
+    const address = locationInput?.dataset.detectedAddress?.trim() || "";
     const scheduledAt = document.getElementById("matchDatetime")?.value || "";
     const mapsUrl = document.getElementById("openMapsBtn")?.dataset.mapsUrl?.trim() || "";
     return { location, address, scheduledAt, mapsUrl };
@@ -244,6 +247,8 @@
   function setMatchSetupValues({ location = "", scheduledAt = "", fallbackScheduledAt = "", address = "", mapsUrl = "" } = {}) {
     const locationInput = document.getElementById("matchLocation");
     if (locationInput) locationInput.value = location || "";
+    const pacEl = document.querySelector("gmp-place-autocomplete");
+    if (pacEl) { try { pacEl.value = location || ""; } catch (_) {} }
 
     const dateValue = scheduledAt || fallbackScheduledAt || "";
     if (fpInstance) {
@@ -265,7 +270,7 @@
     const resolvedMapsUrl = mapsUrl || buildMapsSearchUrl(location, address);
 
     if (!resolvedMapsUrl) {
-      alert("Primero selecciona un lugar para abrirlo en Google Maps");
+      alert("Primero escribí el lugar para abrirlo en Google Maps");
       return;
     }
 

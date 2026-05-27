@@ -345,6 +345,22 @@
 .location-input-wrap {
   position: relative;
 }
+gmp-place-autocomplete {
+  width: 100%;
+  display: block;
+  font-family: inherit;
+  font-size: 14px;
+  --gmp-place-autocomplete-background-color: var(--card, #fff);
+  --gmp-place-autocomplete-text-color: var(--text, #111827);
+  --gmp-place-autocomplete-border-radius: 8px;
+  border-radius: 8px;
+}
+[data-theme="dark"] gmp-place-autocomplete {
+  --gmp-place-autocomplete-background-color: #111827;
+  --gmp-place-autocomplete-text-color: #f9fafb;
+  --gmp-place-autocomplete-border-color: var(--line);
+  color-scheme: dark;
+}
 .recent-locations-dropdown {
   position: absolute;
   bottom: calc(100% + 4px);
