@@ -4371,11 +4371,14 @@ async function startApp() {
 (async function initWithAuth() {
   LoginScreen.init();
 
+  let appStarted = false;
+
   const session = await UserAuth.getSession();
   if (session) {
     currentUser = session.user;
     playerRatingsService?.setCurrentUserId(session.user?.id || null);
     updateUserAvatar(session.user);
+    appStarted = true;
     startApp();
   }
 
@@ -4383,7 +4386,8 @@ async function startApp() {
     currentUser = user || null;
     playerRatingsService?.setCurrentUserId(user?.id || null);
     updateUserAvatar(user);
-    if (user) {
+    if (user && !appStarted) {
+      appStarted = true;
       hideAuthScreen();
       window.location.reload();
     }
