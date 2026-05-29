@@ -91,7 +91,7 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Tabla `group_members`:** `group_id`, `user_id`, `role` (admin/member), `status` (pending/approved/rejected), `created_at`, `user_email`, `user_name` (para mostrar en panel de admin sin JOIN). RLS deshabilitado (ver nota abajo).
 - **Columna `created_by`** en tabla `groups` (referencia a `auth.users`).
 - **Admin inicial:** para grupos existentes (Futbol Foca, MonkeyTest), el usuario `aregaarrospide@gmail.com` fue insertado manualmente como `role=admin, status=approved`.
-- **RLS deshabilitado en `group_members`:** se intentaron múltiples políticas (`TO authenticated USING (true)`, `USING (true)`) pero Supabase devolvía HTTP 500 en todos los casos. Como los datos de membresía no son sensibles en este contexto (app de fútbol 5), se decidió deshabilitar RLS. La seguridad de escritura se maneja a nivel de aplicación.
+- **RLS deshabilitado en `group_members`:** se intentaron múltiples políticas (`TO authenticated USING (true)`, `USING (true)`, sin restricción de rol) pero Supabase devolvía HTTP 500 en todos los casos. La causa probable es que `FobalApi` usa `fetch` directo contra la REST API de Supabase en vez del Supabase JS client — el JWT se pasa manualmente en el header `Authorization` pero algo en la validación del proyecto falla. El Supabase JS client (que sí usa `UserAuth`) maneja RLS correctamente. **Solución de raíz pendiente:** mover `getMembership` y los métodos de `group_members` al Supabase JS client en vez de fetch directo. Por ahora RLS permanece deshabilitado — los datos de membresía no son sensibles en este contexto.
 
 ### Flujo implementado
 - `resolveGroup(group)` verifica membresía antes de llamar `enterGroup()`:
