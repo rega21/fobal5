@@ -4313,6 +4313,19 @@ function showAuthScreen() {
   document.getElementById("app-shell")?.classList.add("hidden");
 }
 
+function updateUserAvatar(user) {
+  const el = document.getElementById("userAvatar");
+  if (!el) return;
+  if (!user) { el.classList.add("hidden"); return; }
+  el.classList.remove("hidden");
+  const avatarUrl = user.user_metadata?.avatar_url;
+  const name = user.user_metadata?.full_name || user.email || "";
+  const initials = name.trim().split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  el.innerHTML = avatarUrl
+    ? `<img src="${avatarUrl}" alt="${initials}" onerror="this.parentElement.textContent='${initials}'">`
+    : initials;
+}
+
 function hideAuthScreen() {
   document.getElementById("auth-screen")?.classList.add("hidden");
   document.getElementById("app-shell")?.classList.remove("hidden");
@@ -4329,6 +4342,7 @@ async function startApp() {
   const session = await UserAuth.getSession();
   if (session) {
     playerRatingsService?.setCurrentUserId(session.user?.id || null);
+    updateUserAvatar(session.user);
     hideAuthScreen();
     startApp();
   } else {
@@ -4337,6 +4351,7 @@ async function startApp() {
 
   UserAuth.onAuthStateChange((user) => {
     playerRatingsService?.setCurrentUserId(user?.id || null);
+    updateUserAvatar(user);
     if (user) {
       hideAuthScreen();
       startApp();
