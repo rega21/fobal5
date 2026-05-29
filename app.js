@@ -4347,9 +4347,8 @@ async function startApp() {
     currentUser = session.user;
     playerRatingsService?.setCurrentUserId(session.user?.id || null);
     updateUserAvatar(session.user);
+    startApp();
   }
-
-  startApp();
 
   UserAuth.onAuthStateChange((user) => {
     currentUser = user || null;
@@ -4357,10 +4356,7 @@ async function startApp() {
     updateUserAvatar(user);
     if (user) {
       hideAuthScreen();
-      // Si habia un grupo pendiente guardado, recargamos para que el init lo retome
-      if (loadGroupFromStorage()) {
-        window.location.reload();
-      }
+      window.location.reload();
     }
   });
 })();
