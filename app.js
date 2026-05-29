@@ -3453,12 +3453,10 @@ document.getElementById("globalRatingBtn")?.addEventListener("click", () => {
 document.getElementById("infoAppBtn")?.addEventListener("click", openInfoApp);
 document.getElementById("signOutBtn")?.addEventListener("click", async () => {
   closeTopbarMenu();
-  try { await UserAuth.signOut(); } catch (_) {}
-});
-document.getElementById("switchGroupBtn")?.addEventListener("click", () => {
   removeGroupFromStorage();
   const url = new URL(window.location.href);
   url.searchParams.delete("group");
+  try { await UserAuth.signOut(); } catch (_) {}
   window.location.replace(url.toString());
 });
 document.getElementById("closeInfoAppBtn")?.addEventListener("click", () => {
