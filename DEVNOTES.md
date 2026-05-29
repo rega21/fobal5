@@ -127,6 +127,14 @@ Sin este cambio, los usuarios con la app instalada siguen viendo la versión vie
 - Agregar una sección breve de "Parámetros y enlaces de Maps" con ejemplos de entrada/salida para facilitar mantenimiento.
 - **Loading state global:** agregar spinner de carga y botón de reload en todas las secciones que dependen de la API (Jugadores, Historial, Tabla General). Previene que el usuario vea contenido vacío o sin estilos mientras Supabase responde.
 
+## Roadmap: Autenticación con Google (Gmail)
+
+- Implementar login con Google OAuth via Supabase Auth.
+- Supabase tiene el proveedor Google integrado; las credenciales de GCP ya están configuradas en el proyecto.
+- Flujo: activar Google OAuth en Supabase dashboard → agregar botón "Continuar con Google" → reemplazar `voter_key` por `user.id` de Supabase en nuevos votos.
+- **Migración de votos existentes:** los votos anteriores (con `voter_key` anónimo) se conservan como referencia histórica. No se migran ni eliminan — el cálculo de promedios considera ambos tipos.
+- Base natural para implementar multi-grupo después (cada usuario ya tiene identidad).
+
 ## Roadmap: Escalabilidad multi-grupo
 
 La app está pensada actualmente como grupo único (FutbolFoca). Para escalar a múltiples grupos independientes, se contemplan dos etapas:

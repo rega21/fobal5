@@ -3451,6 +3451,10 @@ document.getElementById("globalRatingBtn")?.addEventListener("click", () => {
   if (firstPlayer) openRatingDetailsByPlayerId(firstPlayer.id);
 });
 document.getElementById("infoAppBtn")?.addEventListener("click", openInfoApp);
+document.getElementById("signOutBtn")?.addEventListener("click", async () => {
+  closeTopbarMenu();
+  try { await UserAuth.signOut(); } catch (_) {}
+});
 document.getElementById("switchGroupBtn")?.addEventListener("click", () => {
   removeGroupFromStorage();
   const url = new URL(window.location.href);
@@ -4316,6 +4320,38 @@ function showPinOverlay(group, onSuccess, onBack) {
     pinConfirmInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") submitCreateGroup(); });
   }
 })();
-showView("players");
-// Ensure match mode default
-setTimeout(()=> setMatchMode('balanced'), 50);
+function showAuthScreen() {
+  document.getElementById("auth-screen")?.classList.remove("hidden");
+  document.getElementById("app-shell")?.classList.add("hidden");
+}
+
+function hideAuthScreen() {
+  document.getElementById("auth-screen")?.classList.add("hidden");
+  document.getElementById("app-shell")?.classList.remove("hidden");
+}
+
+async function startApp() {
+  showView("players");
+  setTimeout(() => setMatchMode('balanced'), 50);
+}
+
+(async function initWithAuth() {
+  LoginScreen.init();
+
+  const session = await UserAuth.getSession();
+  if (session) {
+    hideAuthScreen();
+    startApp();
+  } else {
+    showAuthScreen();
+  }
+
+  UserAuth.onAuthStateChange((user) => {
+    if (user) {
+      hideAuthScreen();
+      startApp();
+    } else {
+      showAuthScreen();
+    }
+  });
+})();
