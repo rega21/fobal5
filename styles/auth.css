@@ -43,21 +43,26 @@
 }
 
 .auth-back-btn {
-  align-self: flex-start;
-  background: none;
-  border: none;
-  color: rgba(255,255,255,0.7);
-  font-size: 0.85rem;
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 20px;
+  color: rgba(255,255,255,0.85);
+  font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
-  padding: 0 0 4px;
+  padding: 6px 12px 6px 8px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  transition: color 0.15s;
+  gap: 4px;
+  transition: background 0.15s, color 0.15s;
+  backdrop-filter: blur(4px);
 }
 
 .auth-back-btn:hover {
+  background: rgba(0,0,0,0.55);
   color: #fff;
 }
 
