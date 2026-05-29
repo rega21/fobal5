@@ -4169,7 +4169,7 @@ function showPinOverlay(group, onSuccess, onBack) {
   function resolveGroup(group) {
     saveGroupToStorage(group);
     if (!currentUser) {
-      showAuthScreen();
+      showAuthScreen(group);
       return;
     }
     enterGroup(group);
@@ -4311,8 +4311,20 @@ function showPinOverlay(group, onSuccess, onBack) {
     pinConfirmInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") submitCreateGroup(); });
   }
 })();
-function showAuthScreen() {
-  document.getElementById("auth-screen")?.classList.remove("hidden");
+function showAuthScreen(group) {
+  const screen = document.getElementById("auth-screen");
+  if (!screen) return;
+  if (group) {
+    const logoEl = screen.querySelector(".auth-logo");
+    const titleEl = screen.querySelector(".auth-title");
+    if (logoEl) {
+      logoEl.src = group.logo_url || "icons/FaltaUnoLogoIntro.png";
+      logoEl.alt = group.name || "Falta Uno";
+      logoEl.style.borderRadius = group.logo_url ? "50%" : "";
+    }
+    if (titleEl) titleEl.textContent = group.name || "Falta Uno";
+  }
+  screen.classList.remove("hidden");
 }
 
 function updateUserAvatar(user) {
