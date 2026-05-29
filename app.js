@@ -4271,8 +4271,6 @@ function showPinOverlay(group, onSuccess, onBack) {
       if (createOverlay) {
         nameInput.value = "";
         logoUrlInput.value = "";
-        pinInput.value = "";
-        pinConfirmInput.value = "";
         if (logoPreviewEl) logoPreviewEl.innerHTML = genericLogoSvg;
         errorMsg?.classList.add("hidden");
         createOverlay.classList.remove("hidden");
