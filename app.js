@@ -4260,8 +4260,6 @@ function showPinOverlay(group, onSuccess, onBack) {
   }
 
   // Mostrar selector
-  const overlay = document.getElementById("groupSelectorOverlay");
-  const list = document.getElementById("groupSelectorList");
   if (overlay && list) {
     renderGroupList();
     overlay.classList.remove("hidden");
