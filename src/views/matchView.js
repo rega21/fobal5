@@ -491,6 +491,7 @@
       position: "auto center",
       monthSelectorType: "static",
       onReady(_sel, _val, fp) {
+        if (!fp.calendarContainer) return;
         const btn = document.createElement("button");
         btn.type = "button";
         btn.textContent = "Listo";
