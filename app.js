@@ -4208,10 +4208,8 @@ function showPinOverlay(group, onSuccess, onBack) {
           : `<div style="width:44px;height:44px;border-radius:50%;background:var(--border,#334155);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem;">⚽</div>`;
         btn.innerHTML = `${logoHtml}<span>${g.name}</span>`;
         btn.addEventListener("click", () => {
-          if (currentUser) {
-            overlay.classList.remove("visible");
-            setTimeout(() => overlay.classList.add("hidden"), 250);
-          }
+          overlay.classList.remove("visible");
+          setTimeout(() => overlay.classList.add("hidden"), 250);
           resolveGroup(g);
         });
         list.appendChild(btn);

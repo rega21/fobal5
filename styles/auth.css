@@ -23,9 +23,7 @@
 #auth-screen {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px);
+  background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('../icons/imgPortada.png') center/cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
