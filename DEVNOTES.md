@@ -144,10 +144,11 @@ Sin este cambio, los usuarios con la app instalada siguen viendo la versión vie
 - El creador del grupo es automáticamente el primer miembro aprobado y el admin.
 - Eliminar columna `pin_hash` de la tabla `groups` una vez migrado.
 
-**Flujo de login fusionado con selector de grupo (pendiente):**
-- Pantalla única: lista de grupos visible sin login.
-- Al elegir un grupo → pide login si no está autenticado.
-- Una vez logueado → verifica membresía → entra o muestra solicitud.
+**Flujo de login fusionado con selector de grupo (implementado):**
+- El selector de grupos se muestra primero, sin requerir login.
+- Al elegir un grupo → si no está autenticado, se muestra el login.
+- Una vez logueado → entra directo al grupo elegido.
+- Razón: mostrar login antes del selector era raro — el usuario no tenía contexto de para qué se estaba logueando. Ahora el login tiene sentido ("estoy ingresando a Futbol Foca").
 
 ## Roadmap: Autenticación con Google (Gmail)
 

@@ -4054,6 +4054,7 @@ document.addEventListener("keydown", (e) => {
 
 /* Init */
 const GROUP_STORAGE_KEY = "fobal5_group";
+let currentUser = null;
 
 async function hashPin(pin) {
   const encoder = new TextEncoder();
@@ -4169,6 +4170,10 @@ function showPinOverlay(group, onSuccess, onBack) {
 
   function resolveGroup(group) {
     saveGroupToStorage(group);
+    if (!currentUser) {
+      showAuthScreen();
+      return;
+    }
     enterGroup(group);
   }
 
@@ -4310,7 +4315,6 @@ function showPinOverlay(group, onSuccess, onBack) {
 })();
 function showAuthScreen() {
   document.getElementById("auth-screen")?.classList.remove("hidden");
-  document.getElementById("app-shell")?.classList.add("hidden");
 }
 
 function updateUserAvatar(user) {
@@ -4328,7 +4332,6 @@ function updateUserAvatar(user) {
 
 function hideAuthScreen() {
   document.getElementById("auth-screen")?.classList.add("hidden");
-  document.getElementById("app-shell")?.classList.remove("hidden");
 }
 
 async function startApp() {
@@ -4341,22 +4344,23 @@ async function startApp() {
 
   const session = await UserAuth.getSession();
   if (session) {
+    currentUser = session.user;
     playerRatingsService?.setCurrentUserId(session.user?.id || null);
     updateUserAvatar(session.user);
-    hideAuthScreen();
-    startApp();
-  } else {
-    showAuthScreen();
   }
 
+  startApp();
+
   UserAuth.onAuthStateChange((user) => {
+    currentUser = user || null;
     playerRatingsService?.setCurrentUserId(user?.id || null);
     updateUserAvatar(user);
     if (user) {
       hideAuthScreen();
-      startApp();
-    } else {
-      showAuthScreen();
+      // Si habia un grupo pendiente guardado, recargamos para que el init lo retome
+      if (loadGroupFromStorage()) {
+        window.location.reload();
+      }
     }
   });
 })();
