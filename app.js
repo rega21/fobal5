@@ -4157,9 +4157,6 @@ function showPinOverlay(group, onSuccess, onBack) {
     window.history.replaceState({}, "", url.toString());
     activeGroupLogoUrl = group.logo_url || null;
     activeGroupName = group.name || null;
-    if (!activeGroupPin) {
-      try { activeGroupPin = sessionStorage.getItem("fobal5_group_pin") || ""; } catch (_) {}
-    }
     updateBrandLogo();
     const historyTitle = document.getElementById("historyGroupTitle");
     if (historyTitle) {
@@ -4171,17 +4168,8 @@ function showPinOverlay(group, onSuccess, onBack) {
   }
 
   function resolveGroup(group) {
-    const saved = loadGroupFromStorage();
-    if (saved && saved.id === group.id) {
-      // Ya autenticado previamente
-      enterGroup(group);
-    } else {
-      showPinOverlay(group, () => enterGroup(group), () => {
-        const sel = document.getElementById("groupSelectorOverlay");
-        sel?.classList.remove("hidden");
-        requestAnimationFrame(() => requestAnimationFrame(() => sel?.classList.add("visible")));
-      });
-    }
+    saveGroupToStorage(group);
+    enterGroup(group);
   }
 
   if (slug) {

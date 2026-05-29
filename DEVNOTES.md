@@ -127,6 +127,28 @@ Sin este cambio, los usuarios con la app instalada siguen viendo la versión vie
 - Agregar una sección breve de "Parámetros y enlaces de Maps" con ejemplos de entrada/salida para facilitar mantenimiento.
 - **Loading state global:** agregar spinner de carga y botón de reload en todas las secciones que dependen de la API (Jugadores, Historial, Tabla General). Previene que el usuario vea contenido vacío o sin estilos mientras Supabase responde.
 
+## Decisión arquitectónica: reemplazar PIN por membresía
+
+**Contexto:** con login implementado, pedir PIN al entrar a un grupo es redundante — son dos sistemas de seguridad que hacen lo mismo.
+
+**Decisión:** eliminar el PIN de grupos. El acceso se controla por membresía: el creador del grupo aprueba quién puede entrar.
+
+**Estado actual (transitorio):** PIN eliminado. Los grupos son abiertos para cualquier usuario logueado — cualquiera que tenga la app puede ver y entrar a cualquier grupo. Esto es temporal hasta implementar el sistema de membresía.
+
+**Próximo paso — sistema de membresía:**
+- Agregar tabla `group_members` en Supabase: `group_id`, `user_id`, `status` (pending / approved / rejected), `created_at`.
+- Al elegir un grupo: verificar si el usuario tiene membresía aprobada.
+  - Si tiene membresía → entra directo.
+  - Si no → muestra pantalla "Solicitar acceso" con botón para enviar solicitud.
+- Panel de admin del grupo: lista de solicitudes pendientes con botones Aprobar / Rechazar.
+- El creador del grupo es automáticamente el primer miembro aprobado y el admin.
+- Eliminar columna `pin_hash` de la tabla `groups` una vez migrado.
+
+**Flujo de login fusionado con selector de grupo (pendiente):**
+- Pantalla única: lista de grupos visible sin login.
+- Al elegir un grupo → pide login si no está autenticado.
+- Una vez logueado → verifica membresía → entra o muestra solicitud.
+
 ## Roadmap: Autenticación con Google (Gmail)
 
 - Implementar login con Google OAuth via Supabase Auth.
