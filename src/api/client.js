@@ -161,10 +161,22 @@
   }
 
   let activeGroupId = null;
+  let _userToken = null;
+
+  function buildSupabaseAuthHeaders(extra = {}) {
+    return {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${_userToken || SUPABASE_ANON_KEY}`,
+      ...extra,
+    };
+  }
 
   global.FobalApi = {
     setGroupId(id) {
       activeGroupId = id || null;
+    },
+    setUserToken(token) {
+      _userToken = token || null;
     },
     getGroupId() {
       return activeGroupId;
@@ -561,6 +573,54 @@
           Prefer: "return=minimal",
         }),
         body: JSON.stringify([normalizedPayload]),
+      });
+    },
+
+    async getMembership(groupId, userId) {
+      const rows = await requestSupabase(
+        `/rest/v1/group_members?group_id=eq.${groupId}&user_id=eq.${userId}&select=id,role,status&limit=1`,
+        { method: "GET", headers: buildSupabaseAuthHeaders() }
+      );
+      return Array.isArray(rows) ? (rows[0] || null) : null;
+    },
+
+    async requestMembership(groupId, userId) {
+      const row = await requestSupabase("/rest/v1/group_members", {
+        method: "POST",
+        headers: buildSupabaseAuthHeaders({
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        }),
+        body: JSON.stringify({ group_id: groupId, user_id: userId, role: "member", status: "pending" }),
+      });
+      return Array.isArray(row) ? row[0] : row;
+    },
+
+    async addGroupMember(groupId, userId, role = "member", status = "approved") {
+      const row = await requestSupabase("/rest/v1/group_members", {
+        method: "POST",
+        headers: buildSupabaseAuthHeaders({
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        }),
+        body: JSON.stringify({ group_id: groupId, user_id: userId, role, status }),
+      });
+      return Array.isArray(row) ? row[0] : row;
+    },
+
+    async getPendingMembers(groupId) {
+      const rows = await requestSupabase(
+        `/rest/v1/group_members?group_id=eq.${groupId}&status=eq.pending&select=id,user_id,created_at&order=created_at.asc`,
+        { method: "GET", headers: buildSupabaseAuthHeaders() }
+      );
+      return Array.isArray(rows) ? rows : [];
+    },
+
+    async updateMemberStatus(memberId, status) {
+      await requestSupabase(`/rest/v1/group_members?id=eq.${memberId}`, {
+        method: "PATCH",
+        headers: buildSupabaseAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ status }),
       });
     },
   };

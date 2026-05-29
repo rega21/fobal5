@@ -20,7 +20,8 @@
   object-fit: cover;
 }
 
-#auth-screen {
+#auth-screen,
+#request-access-screen {
   position: fixed;
   inset: 0;
   background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('../icons/imgPortada.png') center/cover no-repeat;

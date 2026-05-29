@@ -4179,10 +4179,22 @@ function showPinOverlay(group, onSuccess, onBack) {
     fetchMatches();
   }
 
-  function resolveGroup(group) {
+  async function resolveGroup(group) {
     saveGroupToStorage(group);
     if (!currentUser) {
       showAuthScreen(group);
+      return;
+    }
+    let membership = null;
+    try {
+      membership = await apiClient.getMembership(group.id, currentUser.id);
+    } catch (_) {}
+    if (!membership) {
+      showRequestAccessScreen(group);
+      return;
+    }
+    if (membership.status === "pending") {
+      showRequestAccessScreen(group, true);
       return;
     }
     enterGroup(group);
@@ -4201,7 +4213,7 @@ function showPinOverlay(group, onSuccess, onBack) {
   if (saved) {
     const match = groups.find((g) => g.id === saved.id);
     if (match) {
-      enterGroup(match);
+      await resolveGroup(match);
       return;
     }
   }
@@ -4299,6 +4311,9 @@ function showPinOverlay(group, onSuccess, onBack) {
       try {
         const newGroup = await apiClient.createGroup({ name, slug, logo_url });
         groups.push(newGroup);
+        if (currentUser) {
+          try { await apiClient.addGroupMember(newGroup.id, currentUser.id, "admin", "approved"); } catch (_) {}
+        }
         createOverlay?.classList.add("hidden");
         saveGroupToStorage(newGroup);
         enterGroup(newGroup);
@@ -4321,6 +4336,35 @@ function showPinOverlay(group, onSuccess, onBack) {
     nameInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") submitCreateGroup(); });
   }
 })();
+function showRequestAccessScreen(group, isPending = false) {
+  const screen = document.getElementById("request-access-screen");
+  if (!screen) return;
+  const logoEl = screen.querySelector("#reqAccessLogo");
+  const titleEl = screen.querySelector("#reqAccessTitle");
+  const subtitleEl = screen.querySelector("#reqAccessSubtitle");
+  const btn = screen.querySelector("#reqAccessBtn");
+  const feedback = screen.querySelector("#reqAccessFeedback");
+  if (logoEl) {
+    logoEl.src = group.logo_url || "icons/FaltaUnoLogoIntro.png";
+    logoEl.style.borderRadius = group.logo_url ? "50%" : "";
+  }
+  if (titleEl) titleEl.textContent = group.name || "Grupo";
+  if (feedback) feedback.classList.add("hidden");
+  if (isPending) {
+    if (subtitleEl) subtitleEl.textContent = "Tu solicitud está pendiente de aprobación";
+    if (btn) { btn.textContent = "Solicitud enviada"; btn.disabled = true; }
+  } else {
+    if (subtitleEl) subtitleEl.textContent = "No tenés acceso a este grupo";
+    if (btn) { btn.textContent = "Solicitar acceso"; btn.disabled = false; }
+  }
+  screen._currentGroup = group;
+  screen.classList.remove("hidden");
+}
+
+function hideRequestAccessScreen() {
+  document.getElementById("request-access-screen")?.classList.add("hidden");
+}
+
 function showAuthScreen(group) {
   const screen = document.getElementById("auth-screen");
   if (!screen) return;
@@ -4367,14 +4411,21 @@ async function startApp() {
   const session = await UserAuth.getSession();
   if (session) {
     currentUser = session.user;
+    apiClient?.setUserToken(session.access_token);
     playerRatingsService?.setCurrentUserId(session.user?.id || null);
     updateUserAvatar(session.user);
     appStarted = true;
     startApp();
   }
 
-  UserAuth.onAuthStateChange((user) => {
+  UserAuth.onAuthStateChange(async (user) => {
     currentUser = user || null;
+    if (user) {
+      const freshSession = await UserAuth.getSession();
+      apiClient?.setUserToken(freshSession?.access_token || null);
+    } else {
+      apiClient?.setUserToken(null);
+    }
     playerRatingsService?.setCurrentUserId(user?.id || null);
     updateUserAvatar(user);
     if (user && !appStarted) {
@@ -4384,3 +4435,27 @@ async function startApp() {
     }
   });
 })();
+
+document.getElementById("reqAccessBtn")?.addEventListener("click", async () => {
+  const screen = document.getElementById("request-access-screen");
+  const group = screen?._currentGroup;
+  if (!group || !currentUser) return;
+  const btn = document.getElementById("reqAccessBtn");
+  const feedback = document.getElementById("reqAccessFeedback");
+  btn.disabled = true;
+  btn.textContent = "Enviando...";
+  try {
+    await apiClient.requestMembership(group.id, currentUser.id);
+    btn.textContent = "Solicitud enviada";
+    if (feedback) { feedback.textContent = "El admin del grupo recibirá tu solicitud."; feedback.classList.remove("hidden"); }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = "Solicitar acceso";
+    if (feedback) { feedback.textContent = "Error al enviar la solicitud. Intentá de nuevo."; feedback.classList.remove("hidden"); }
+  }
+});
+
+document.getElementById("reqAccessBackBtn")?.addEventListener("click", () => {
+  hideRequestAccessScreen();
+  if (window.__showGroupSelector) window.__showGroupSelector();
+});
