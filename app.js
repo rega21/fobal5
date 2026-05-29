@@ -4054,6 +4054,8 @@ document.addEventListener("keydown", (e) => {
 const GROUP_STORAGE_KEY = "fobal5_group";
 let currentUser = null;
 let currentUserMembership = null;
+let _authReadyResolve;
+const authReadyPromise = new Promise((resolve) => { _authReadyResolve = resolve; });
 
 async function hashPin(pin) {
   const encoder = new TextEncoder();
@@ -4163,6 +4165,37 @@ function showPinOverlay(group, onSuccess, onBack) {
     return;
   }
 
+  const overlay = document.getElementById("groupSelectorOverlay");
+  const list = document.getElementById("groupSelectorList");
+
+  function renderGroupList() {
+    if (!list) return;
+    list.innerHTML = "";
+    groups.forEach((g) => {
+      const btn = document.createElement("button");
+      btn.className = "group-selector-btn";
+      btn.style.cssText = "padding:14px 16px;font-size:1.1rem;font-weight:700;border-radius:14px;border:none;cursor:pointer;background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);display:flex;align-items:center;gap:14px;width:100%;";
+      const logoHtml = g.logo_url
+        ? `<img src="${g.logo_url}" alt="${g.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;" />`
+        : `<div style="width:44px;height:44px;border-radius:50%;background:var(--border,#334155);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem;">⚽</div>`;
+      btn.innerHTML = `${logoHtml}<span>${g.name}</span>`;
+      btn.addEventListener("click", () => {
+        overlay.classList.remove("visible");
+        setTimeout(() => overlay.classList.add("hidden"), 250);
+        resolveGroup(g);
+      });
+      list.appendChild(btn);
+    });
+  }
+
+  window.__showGroupSelector = function() {
+    renderGroupList();
+    if (overlay) {
+      overlay.classList.remove("hidden");
+      requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
+    }
+  };
+
   function enterGroup(group) {
     apiClient.setGroupId(group.id);
     const url = new URL(window.location.href);
@@ -4187,6 +4220,7 @@ function showPinOverlay(group, onSuccess, onBack) {
 
   async function resolveGroup(group) {
     saveGroupToStorage(group);
+    await authReadyPromise;
     if (!currentUser) {
       showAuthScreen(group);
       return;
@@ -4229,33 +4263,9 @@ function showPinOverlay(group, onSuccess, onBack) {
   const overlay = document.getElementById("groupSelectorOverlay");
   const list = document.getElementById("groupSelectorList");
   if (overlay && list) {
-    function renderGroupList() {
-      list.innerHTML = "";
-      groups.forEach((g) => {
-        const btn = document.createElement("button");
-        btn.className = "group-selector-btn";
-        btn.style.cssText = "padding:14px 16px;font-size:1.1rem;font-weight:700;border-radius:14px;border:none;cursor:pointer;background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);display:flex;align-items:center;gap:14px;width:100%;";
-        const logoHtml = g.logo_url
-          ? `<img src="${g.logo_url}" alt="${g.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;" />`
-          : `<div style="width:44px;height:44px;border-radius:50%;background:var(--border,#334155);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem;">⚽</div>`;
-        btn.innerHTML = `${logoHtml}<span>${g.name}</span>`;
-        btn.addEventListener("click", () => {
-          overlay.classList.remove("visible");
-          setTimeout(() => overlay.classList.add("hidden"), 250);
-          resolveGroup(g);
-        });
-        list.appendChild(btn);
-      });
-    }
     renderGroupList();
     overlay.classList.remove("hidden");
     requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
-
-    window.__showGroupSelector = function() {
-      renderGroupList();
-      overlay.classList.remove("hidden");
-      requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
-    };
 
     // Crear nuevo grupo
     const createOverlay = document.getElementById("createGroupOverlay");
@@ -4424,6 +4434,9 @@ async function startApp() {
     playerRatingsService?.setCurrentUserId(session.user?.id || null);
     updateUserAvatar(session.user);
     appStarted = true;
+  }
+  _authReadyResolve?.();
+  if (session) {
     startApp();
   }
 
