@@ -4245,8 +4245,6 @@ function showPinOverlay(group, onSuccess, onBack) {
     const nameInput = document.getElementById("createGroupName");
     const logoUrlInput = document.getElementById("createGroupLogoUrl");
     const logoPreviewEl = document.getElementById("createGroupLogoPreview");
-    const pinInput = document.getElementById("createGroupPin");
-    const pinConfirmInput = document.getElementById("createGroupPinConfirm");
     const submitBtn = document.getElementById("createGroupSubmitBtn");
     const errorMsg = document.getElementById("createGroupError");
 
