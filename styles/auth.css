@@ -43,27 +43,21 @@
 }
 
 .auth-back-btn {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  background: rgba(0,0,0,0.35);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 20px;
-  color: rgba(255,255,255,0.85);
-  font-size: 0.82rem;
-  font-weight: 500;
+  width: 100%;
+  padding: 10px;
+  font-size: 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: rgba(255,255,255,0.6);
   cursor: pointer;
-  padding: 6px 12px 6px 8px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
   transition: background 0.15s, color 0.15s;
-  backdrop-filter: blur(4px);
+  margin-top: 4px;
 }
 
 .auth-back-btn:hover {
-  background: rgba(0,0,0,0.55);
-  color: #fff;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.9);
 }
 
 .auth-logo {
