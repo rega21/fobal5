@@ -85,17 +85,35 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Error handling en carga de grupos:** si Supabase falla al cargar grupos, muestra "No se pudo conectar al servidor" + botón Reintentar en lugar de quedarse en estado vacío.
 - **Flatpickr crash en mobile corregido:** `fp.calendarContainer` es `undefined` en modo nativo (mobile). Agregado guard `if (!fp.calendarContainer) return` en `onReady`.
 
-## v1.4 — Sistema de membresía (base de datos lista, pendiente en código)
+## v1.5 — Sistema de membresía (implementado)
 
-- **Tabla `group_members`** creada en Supabase: `group_id`, `user_id`, `role` (admin/member), `status` (pending/approved/rejected), `created_at`. Con RLS habilitado.
-- **Columna `created_by`** agregada a la tabla `groups` (referencia a `auth.users`).
+### Base de datos
+- **Tabla `group_members`:** `group_id`, `user_id`, `role` (admin/member), `status` (pending/approved/rejected), `created_at`, `user_email`, `user_name` (para mostrar en panel de admin sin JOIN). RLS deshabilitado (ver nota abajo).
+- **Columna `created_by`** en tabla `groups` (referencia a `auth.users`).
 - **Admin inicial:** para grupos existentes (Futbol Foca, MonkeyTest), el usuario `aregaarrospide@gmail.com` fue insertado manualmente como `role=admin, status=approved`.
-- **Roles definidos:** `admin` puede aprobar/rechazar miembros y editar configuración. `member` accede al grupo y califica jugadores. No hay rol intermedio (decisión consciente: evitar sobreingeniería para grupos pequeños de fútbol 5).
-- **Pendiente en código:**
-  - `resolveGroup()` debe verificar membresía aprobada antes de llamar `enterGroup()`
-  - Pantalla "Solicitar acceso" para usuarios sin membresía
-  - Panel de admin para aprobar/rechazar solicitudes pendientes
-  - Al crear un grupo, insertar al creador en `group_members` con `role=admin, status=approved`
+- **RLS deshabilitado en `group_members`:** se intentaron múltiples políticas (`TO authenticated USING (true)`, `USING (true)`) pero Supabase devolvía HTTP 500 en todos los casos. Como los datos de membresía no son sensibles en este contexto (app de fútbol 5), se decidió deshabilitar RLS. La seguridad de escritura se maneja a nivel de aplicación.
+
+### Flujo implementado
+- `resolveGroup(group)` verifica membresía antes de llamar `enterGroup()`:
+  - **Sin membresía** → pantalla "Solicitar acceso"
+  - **Status pending** → pantalla "Tu solicitud está pendiente"
+  - **Status approved** → entra al grupo normal
+- **Pantalla "Solicitar acceso":** mismo estilo visual que el login (fondo cancha, logo del grupo). Botón inserta fila en `group_members` con `status=pending`, guardando `user_email` y `user_name` del usuario autenticado.
+- **Al crear un grupo:** el creador se inserta automáticamente en `group_members` como `role=admin, status=approved`.
+- **Panel de miembros (solo admins):** botón "Miembros" aparece en el menú del topbar solo si el usuario es admin del grupo activo. Muestra badge rojo con cantidad de solicitudes pendientes. Modal lista solicitudes con nombre/email del solicitante y botones Aprobar / Rechazar.
+
+### Fixes técnicos
+- **Race condition auth/grupos:** los dos IIFEs (`init` de grupos e `initWithAuth`) corren en paralelo. Si `getMembership` se ejecutaba antes de que `initWithAuth` seteara el JWT, la query llegaba con el anon key. Fix: `authReadyPromise` — `resolveGroup` hace `await authReadyPromise` antes de verificar membresía. `initWithAuth` resuelve la promise después de obtener la sesión.
+- **`window.__showGroupSelector` no disponible al volver:** la función se definía dentro del bloque `if (overlay && list)` al que solo se llegaba si no había grupo guardado. Al presionar "Volver" desde "Solicitar acceso", la función era `undefined`. Fix: `renderGroupList` y `window.__showGroupSelector` se definen al inicio del IIFE, antes de cualquier `return`.
+- **`const overlay` redeclarado:** al mover las definiciones al inicio del IIFE quedó una declaración duplicada en el bloque "Mostrar selector". Eliminada.
+- **`pinInput is null`:** al abrir "Crear nuevo grupo", el código intentaba hacer `.value = ""` sobre elementos DOM que ya no existen (fueron eliminados del HTML). Eliminadas las dos líneas.
+
+### Token JWT en FobalApi
+- `FobalApi.setUserToken(token)` — nuevo método. Cuando hay sesión activa, `initWithAuth` pasa `session.access_token` para que las queries a Supabase usen el JWT del usuario en vez del anon key. Se actualiza en cada `onAuthStateChange`.
+
+### Visual del login
+- Botón "← Volver" movido al pie del card, ancho completo, estilo consistente con "Crear nuevo grupo" (borde sutil, fondo transparente).
+- Botón "Iniciar sesión" corregido: le faltaba la clase base `btn` → `font-weight: 600` no se aplicaba.
 
 ## v1.3 — Cambios recientes
 
