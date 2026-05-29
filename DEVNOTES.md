@@ -90,7 +90,28 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 ### Fix RLS en `group_members` (causa raíz resuelta)
 - **Problema:** `FobalApi` usaba `fetch` directo con JWT manual en `Authorization`. Supabase devolvía HTTP 500 con cualquier política RLS activa — el JWT se pasaba bien pero PostgREST no lo validaba correctamente en ese contexto.
 - **Solución:** `supabaseClient` (creado dentro del IIFE de `userAuth.js`) se expone como `window.SupabaseClient`. Los métodos de `group_members` en `client.js` (`getMembership`, `requestMembership`, `addGroupMember`, `getPendingMembers`, `updateMemberStatus`) se reescribieron para usar `window.SupabaseClient.from(...)` en vez de `fetch` directo. El Supabase JS client maneja el JWT y la sesión automáticamente, lo que permite habilitar RLS correctamente.
-- **Estado RLS:** deshabilitado por ahora. Con el código nuevo ya es posible habilitarlo con políticas estándar (SELECT por `user_id = auth.uid()`, INSERT para usuarios autenticados con propio `user_id`, UPDATE para admins del grupo).
+- **Estado RLS:** habilitado. Políticas activas en producción (ver abajo). Código deployado en Vercel.
+
+### Políticas RLS de `group_members`
+El problema de la query recursiva se resolvió con una función `SECURITY DEFINER`. Las políticas que hacían `WHERE user_id = auth.uid() AND role = 'admin'` sobre la misma tabla `group_members` causaban loop infinito → 500. La función corre con permisos del owner de la DB, bypasseando RLS para esa verificación puntual.
+
+```sql
+CREATE OR REPLACE FUNCTION is_group_admin(gid uuid)
+RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM group_members
+    WHERE group_id = gid AND user_id = auth.uid() AND role = 'admin' AND status = 'approved'
+  );
+$$;
+
+-- SELECT: usuario ve su propio registro O admin ve todos los del grupo
+CREATE POLICY "own membership"    ON group_members FOR SELECT TO authenticated USING (user_id = auth.uid());
+CREATE POLICY "admin see members" ON group_members FOR SELECT TO authenticated USING (is_group_admin(group_id));
+-- INSERT: cualquier usuario autenticado puede insertar su propio registro
+CREATE POLICY "insert own"        ON group_members FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+-- UPDATE: solo admins del grupo
+CREATE POLICY "admin update"      ON group_members FOR UPDATE TO authenticated USING (is_group_admin(group_id));
+```
 
 ### Fix: creador de grupo no veía el botón "Miembros"
 - `submitCreateGroup` llamaba a `enterGroup(newGroup)` sin setear `currentUserMembership`. Como `enterGroup` muestra el botón "Miembros" solo si `currentUserMembership?.role === "admin"`, el creador nunca lo veía. Fix: se setea `currentUserMembership = { role: "admin", status: "approved" }` antes de llamar `enterGroup`.
