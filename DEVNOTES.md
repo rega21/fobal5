@@ -76,9 +76,23 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **voter_key reemplazado por user.id:** los nuevos votos usan el `user.id` de Supabase en lugar del UUID anónimo por dispositivo. Votos históricos (voter_key anónimo) se conservan intactos. Implementado en `playerRatingsService` via `setCurrentUserId()`.
 - **PIN de grupos eliminado:** con login implementado, el PIN era redundante. Los grupos son abiertos a cualquier usuario logueado (estado transitorio hasta implementar membresía).
 - **Avatar de usuario en topbar:** foto de perfil de Google (o iniciales) visible en el topbar cuando hay sesión activa. Desaparece al cerrar sesión.
-- **Botón "Cerrar sesión"** agregado al menú hamburguesa.
+- **"Cerrar sesión" unificado con Exit:** el botón ahora hace signOut + limpia grupo guardado + recarga. Vuelve al selector de grupos.
 - **Mejor gol opcional:** el campo "Mejor gol" al confirmar un partido ya no es obligatorio — se puede guardar resultado sin seleccionarlo.
 - **Etiqueta "Centro" → "Medio"** en el radar chart de rating.
+- **Auth screen como modal contextual:** fondo con imagen del estadio (igual que el selector de grupos). Muestra el logo y nombre del grupo seleccionado en vez del branding genérico. Botón "← Volver" para cancelar y volver al selector.
+- **Flatpickr crash en mobile corregido:** `fp.calendarContainer` es `undefined` en modo nativo (mobile). Agregado guard `if (!fp.calendarContainer) return` en `onReady`.
+
+## v1.4 — Sistema de membresía (base de datos lista, pendiente en código)
+
+- **Tabla `group_members`** creada en Supabase: `group_id`, `user_id`, `role` (admin/member), `status` (pending/approved/rejected), `created_at`. Con RLS habilitado.
+- **Columna `created_by`** agregada a la tabla `groups` (referencia a `auth.users`).
+- **Admin inicial:** para grupos existentes (Futbol Foca, MonkeyTest), el usuario `aregaarrospide@gmail.com` fue insertado manualmente como `role=admin, status=approved`.
+- **Roles definidos:** `admin` puede aprobar/rechazar miembros y editar configuración. `member` accede al grupo y califica jugadores. No hay rol intermedio (decisión consciente: evitar sobreingeniería para grupos pequeños de fútbol 5).
+- **Pendiente en código:**
+  - `resolveGroup()` debe verificar membresía aprobada antes de llamar `enterGroup()`
+  - Pantalla "Solicitar acceso" para usuarios sin membresía
+  - Panel de admin para aprobar/rechazar solicitudes pendientes
+  - Al crear un grupo, insertar al creador en `group_members` con `role=admin, status=approved`
 
 ## v1.3 — Cambios recientes
 
