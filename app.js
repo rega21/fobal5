@@ -4219,6 +4219,12 @@ function showPinOverlay(group, onSuccess, onBack) {
     overlay.classList.remove("hidden");
     requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
 
+    window.__showGroupSelector = function() {
+      renderGroupList();
+      overlay.classList.remove("hidden");
+      requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
+    };
+
     // Crear nuevo grupo
     const createOverlay = document.getElementById("createGroupOverlay");
     const createBtn = document.getElementById("createGroupBtn");
