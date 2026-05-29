@@ -4319,7 +4319,9 @@ function showPinOverlay(group, onSuccess, onBack) {
         const newGroup = await apiClient.createGroup({ name, slug, logo_url });
         groups.push(newGroup);
         if (currentUser) {
-          try { await apiClient.addGroupMember(newGroup.id, currentUser.id, "admin", "approved"); } catch (_) {}
+          const uEmail = currentUser.email || null;
+          const uName = currentUser.user_metadata?.full_name || null;
+          try { await apiClient.addGroupMember(newGroup.id, currentUser.id, "admin", "approved", uEmail, uName); } catch (_) {}
         }
         createOverlay?.classList.add("hidden");
         saveGroupToStorage(newGroup);
@@ -4452,7 +4454,9 @@ document.getElementById("reqAccessBtn")?.addEventListener("click", async () => {
   btn.disabled = true;
   btn.textContent = "Enviando...";
   try {
-    await apiClient.requestMembership(group.id, currentUser.id);
+    const uEmail = currentUser.email || null;
+    const uName = currentUser.user_metadata?.full_name || null;
+    await apiClient.requestMembership(group.id, currentUser.id, uEmail, uName);
     btn.textContent = "Solicitud enviada";
     if (feedback) { feedback.textContent = "El admin del grupo recibirá tu solicitud."; feedback.classList.remove("hidden"); }
   } catch (e) {
@@ -4495,15 +4499,21 @@ async function openMembersModal() {
       list.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">No hay solicitudes pendientes.</p>';
       return;
     }
-    list.innerHTML = pending.map((m) => `
+    list.innerHTML = pending.map((m) => {
+      const name = m.user_name || m.user_email || m.user_id;
+      const sub = m.user_name && m.user_email ? m.user_email : null;
+      return `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line);gap:8px;">
-        <span style="font-size:0.85rem;color:var(--text-secondary);word-break:break-all;">${m.user_id}</span>
+        <div style="min-width:0;">
+          <p style="margin:0;font-size:0.9rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</p>
+          ${sub ? `<p style="margin:0;font-size:0.78rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</p>` : ""}
+        </div>
         <div style="display:flex;gap:6px;flex-shrink:0;">
           <button onclick="handleMemberAction('${m.id}','approved',this)" style="padding:5px 12px;border-radius:8px;border:none;background:var(--success,#10b981);color:#fff;font-size:0.8rem;cursor:pointer;font-weight:600;">Aprobar</button>
           <button onclick="handleMemberAction('${m.id}','rejected',this)" style="padding:5px 12px;border-radius:8px;border:none;background:var(--danger,#ef4444);color:#fff;font-size:0.8rem;cursor:pointer;font-weight:600;">Rechazar</button>
         </div>
       </div>
-    `).join("");
+    `}).join("");
   } catch (e) {
     list.innerHTML = '<p style="color:var(--danger);font-size:0.9rem;">Error al cargar solicitudes.</p>';
   }

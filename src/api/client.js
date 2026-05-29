@@ -584,33 +584,39 @@
       return Array.isArray(rows) ? (rows[0] || null) : null;
     },
 
-    async requestMembership(groupId, userId) {
+    async requestMembership(groupId, userId, userEmail, userName) {
+      const payload = { group_id: groupId, user_id: userId, role: "member", status: "pending" };
+      if (userEmail) payload.user_email = userEmail;
+      if (userName) payload.user_name = userName;
       const row = await requestSupabase("/rest/v1/group_members", {
         method: "POST",
         headers: buildSupabaseAuthHeaders({
           "Content-Type": "application/json",
           Prefer: "return=representation",
         }),
-        body: JSON.stringify({ group_id: groupId, user_id: userId, role: "member", status: "pending" }),
+        body: JSON.stringify(payload),
       });
       return Array.isArray(row) ? row[0] : row;
     },
 
-    async addGroupMember(groupId, userId, role = "member", status = "approved") {
+    async addGroupMember(groupId, userId, role = "member", status = "approved", userEmail, userName) {
+      const payload = { group_id: groupId, user_id: userId, role, status };
+      if (userEmail) payload.user_email = userEmail;
+      if (userName) payload.user_name = userName;
       const row = await requestSupabase("/rest/v1/group_members", {
         method: "POST",
         headers: buildSupabaseAuthHeaders({
           "Content-Type": "application/json",
           Prefer: "return=representation",
         }),
-        body: JSON.stringify({ group_id: groupId, user_id: userId, role, status }),
+        body: JSON.stringify(payload),
       });
       return Array.isArray(row) ? row[0] : row;
     },
 
     async getPendingMembers(groupId) {
       const rows = await requestSupabase(
-        `/rest/v1/group_members?group_id=eq.${groupId}&status=eq.pending&select=id,user_id,created_at&order=created_at.asc`,
+        `/rest/v1/group_members?group_id=eq.${groupId}&status=eq.pending&select=id,user_id,user_email,user_name,created_at&order=created_at.asc`,
         { method: "GET", headers: buildSupabaseAuthHeaders() }
       );
       return Array.isArray(rows) ? rows : [];
