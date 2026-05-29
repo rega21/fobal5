@@ -4147,6 +4147,19 @@ function showPinOverlay(group, onSuccess, onBack) {
     groups = await apiClient.getGroups();
   } catch (e) {
     console.warn("No se pudo cargar grupos:", e);
+    const overlay = document.getElementById("groupSelectorOverlay");
+    const list = document.getElementById("groupSelectorList");
+    if (overlay && list) {
+      list.innerHTML = `<div style="color:rgba(255,255,255,0.7);text-align:center;font-size:0.95rem;padding:16px 0;">
+        No se pudo conectar al servidor.<br>
+        <button onclick="window.location.reload()" style="margin-top:12px;padding:10px 24px;border-radius:10px;border:none;background:var(--primary,#3b82f6);color:#fff;font-size:0.95rem;font-weight:600;cursor:pointer;">
+          Reintentar
+        </button>
+      </div>`;
+      overlay.classList.remove("hidden");
+      requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
+    }
+    return;
   }
 
   function enterGroup(group) {
