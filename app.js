@@ -4328,6 +4328,7 @@ async function startApp() {
 
   const session = await UserAuth.getSession();
   if (session) {
+    playerRatingsService?.setCurrentUserId(session.user?.id || null);
     hideAuthScreen();
     startApp();
   } else {
@@ -4335,6 +4336,7 @@ async function startApp() {
   }
 
   UserAuth.onAuthStateChange((user) => {
+    playerRatingsService?.setCurrentUserId(user?.id || null);
     if (user) {
       hideAuthScreen();
       startApp();

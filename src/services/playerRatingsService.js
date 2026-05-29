@@ -1,11 +1,18 @@
 (function (global) {
   const VOTER_KEY_STORAGE_KEY = "fobal5_voter_key";
+  let currentUserId = null;
+
+  function setCurrentUserId(id) {
+    currentUserId = id || null;
+  }
 
   function generateFallbackKey() {
     return `vk_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
   }
 
   function getOrCreateVoterKey() {
+    if (currentUserId) return currentUserId;
+
     let stored = "";
     try {
       stored = String(localStorage.getItem(VOTER_KEY_STORAGE_KEY) || "").trim();
@@ -92,6 +99,7 @@
 
     return {
       getOrCreateVoterKey,
+      setCurrentUserId,
       getCurrentUserRatingForPlayer,
       savePlayerRating,
     };
