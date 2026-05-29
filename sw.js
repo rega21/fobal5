@@ -1,12 +1,15 @@
-const CACHE_NAME = 'fobal5-2026-05-29';
+const CACHE_NAME = 'fobal5-2026-05-29b';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/styles.css',
+  '/styles/auth.css',
   '/app.js',
   '/config.public.js',
   '/src/api/client.js',
   '/src/api/authClient.js',
+  '/src/auth/userAuth.js',
+  '/src/auth/loginScreen.js',
   '/src/views/playersView.js',
   '/src/views/matchView.js',
   '/src/views/historyView.js',
@@ -19,6 +22,9 @@ const STATIC_ASSETS = [
   '/src/services/feedbackService.js',
   '/manifest.json',
   '/icons/FaltaUnoVerde.png',
+  '/icons/FaltaUnoLogoIntro.png',
+  '/icons/futbolFoca.png',
+  '/icons/imgPortada.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -37,24 +43,23 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Network-first para requests de API; cache-first para assets estáticos
+// Cache-first para assets estáticos; ignora otras origins (Supabase, CDN)
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Ignorar requests de otras origins (Supabase, CDN, etc.)
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
     caches.match(request).then((cached) => {
-      const network = fetch(request).then((response) => {
+      if (cached) return cached;
+      return fetch(request).then((response) => {
         if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
         return response;
       });
-      return cached || network;
-    })
+    }).catch(() => fetch(request))
   );
 });
