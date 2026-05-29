@@ -69,6 +69,17 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 5. **Stamina** — menos determinante en cancha chica que en fútbol 11
 6. **Defensa** — importante pero menos "glamoroso" en el formato
 
+## v1.4 — Autenticación de usuarios
+
+- **Login con Google y email/contraseña:** implementado via Supabase Auth + SDK JS (CDN). Pantalla de login con `src/auth/userAuth.js` (servicio) y `src/auth/loginScreen.js` (UI). Estilos en `styles/auth.css`.
+- **Flujo: grupos primero, login después:** el selector de grupos se muestra sin requerir login. Al elegir un grupo sin sesión activa, aparece el login como overlay. Tras autenticarse, recarga y entra al grupo automáticamente. Razón: el login sin contexto ("¿para qué me logueo?") era confuso.
+- **voter_key reemplazado por user.id:** los nuevos votos usan el `user.id` de Supabase en lugar del UUID anónimo por dispositivo. Votos históricos (voter_key anónimo) se conservan intactos. Implementado en `playerRatingsService` via `setCurrentUserId()`.
+- **PIN de grupos eliminado:** con login implementado, el PIN era redundante. Los grupos son abiertos a cualquier usuario logueado (estado transitorio hasta implementar membresía).
+- **Avatar de usuario en topbar:** foto de perfil de Google (o iniciales) visible en el topbar cuando hay sesión activa. Desaparece al cerrar sesión.
+- **Botón "Cerrar sesión"** agregado al menú hamburguesa.
+- **Mejor gol opcional:** el campo "Mejor gol" al confirmar un partido ya no es obligatorio — se puede guardar resultado sin seleccionarlo.
+- **Etiqueta "Centro" → "Medio"** en el radar chart de rating.
+
 ## v1.3 — Cambios recientes
 
 - **Ícono PWA corregido (Safari/iOS):** el `apple-touch-icon` y el `rel="icon"` del HTML apuntaban a `futbolFoca.png`. Safari ignora el `manifest.json` y usa exclusivamente esas etiquetas para el ícono de la app instalada. Corregido a `FaltaUnoVerde.png`.
