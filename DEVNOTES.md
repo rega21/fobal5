@@ -79,7 +79,10 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **"Cerrar sesión" unificado con Exit:** el botón ahora hace signOut + limpia grupo guardado + recarga. Vuelve al selector de grupos.
 - **Mejor gol opcional:** el campo "Mejor gol" al confirmar un partido ya no es obligatorio — se puede guardar resultado sin seleccionarlo.
 - **Etiqueta "Centro" → "Medio"** en el radar chart de rating.
-- **Auth screen como modal contextual:** fondo con imagen del estadio (igual que el selector de grupos). Muestra el logo y nombre del grupo seleccionado en vez del branding genérico. Botón "← Volver" para cancelar y volver al selector.
+- **Auth screen como modal contextual:** fondo con imagen del estadio (igual que el selector de grupos). Muestra el logo y nombre del grupo seleccionado en vez del branding genérico. Botón "← Volver" para cancelar y volver al selector. Sin card container — elementos directamente sobre el fondo, consistente con "Crear nuevo grupo".
+- **PIN eliminado de "Crear nuevo grupo":** campos PIN y Confirmar PIN removidos del formulario. La columna `pin_hash` queda en la tabla `groups` con valor NULL para grupos nuevos (limpieza pendiente).
+- **Fix loop infinito de recargas post-login:** `onAuthStateChange` de Supabase se dispara múltiples veces (SIGNED_IN, INITIAL_SESSION, TOKEN_REFRESHED). Flag `appStarted` en `initWithAuth` garantiza que `location.reload()` solo se ejecuta una vez.
+- **Error handling en carga de grupos:** si Supabase falla al cargar grupos, muestra "No se pudo conectar al servidor" + botón Reintentar en lugar de quedarse en estado vacío.
 - **Flatpickr crash en mobile corregido:** `fp.calendarContainer` es `undefined` en modo nativo (mobile). Agregado guard `if (!fp.calendarContainer) return` en `onReady`.
 
 ## v1.4 — Sistema de membresía (base de datos lista, pendiente en código)

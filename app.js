@@ -4291,22 +4291,17 @@ function showPinOverlay(group, onSuccess, onBack) {
       const name = nameInput.value.trim();
       const slug = toSlug(name);
       const logo_url = logoUrlInput.value.trim() || null;
-      const pin = pinInput.value;
-      const pinConfirm = pinConfirmInput.value;
 
       errorMsg?.classList.add("hidden");
 
       if (!name) { showCreateError("El nombre es obligatorio."); return; }
       if (!slug) { showCreateError("El nombre no es válido."); return; }
-      if (!pin) { showCreateError("El PIN es obligatorio."); return; }
-      if (pin !== pinConfirm) { showCreateError("Los PINs no coinciden."); return; }
 
       submitBtn.disabled = true;
       submitBtn.textContent = "Creando...";
 
       try {
-        const pin_hash = await hashPin(pin);
-        const newGroup = await apiClient.createGroup({ name, slug, pin_hash, logo_url });
+        const newGroup = await apiClient.createGroup({ name, slug, logo_url });
         groups.push(newGroup);
         createOverlay?.classList.add("hidden");
         saveGroupToStorage(newGroup);
@@ -4327,7 +4322,7 @@ function showPinOverlay(group, onSuccess, onBack) {
     }
 
     submitBtn?.addEventListener("click", submitCreateGroup);
-    pinConfirmInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") submitCreateGroup(); });
+    nameInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") submitCreateGroup(); });
   }
 })();
 function showAuthScreen(group) {
