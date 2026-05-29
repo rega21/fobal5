@@ -577,57 +577,62 @@
     },
 
     async getMembership(groupId, userId) {
-      const rows = await requestSupabase(
-        `/rest/v1/group_members?group_id=eq.${groupId}&user_id=eq.${userId}&select=id,role,status&limit=1`,
-        { method: "GET", headers: buildSupabaseAuthHeaders() }
-      );
-      return Array.isArray(rows) ? (rows[0] || null) : null;
+      const sb = global.SupabaseClient;
+      if (!sb) throw new Error("SupabaseClient not available");
+      const { data, error } = await sb
+        .from("group_members")
+        .select("id,role,status")
+        .eq("group_id", groupId)
+        .eq("user_id", userId)
+        .limit(1)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data || null;
     },
 
     async requestMembership(groupId, userId, userEmail, userName) {
+      const sb = global.SupabaseClient;
+      if (!sb) throw new Error("SupabaseClient not available");
       const payload = { group_id: groupId, user_id: userId, role: "member", status: "pending" };
       if (userEmail) payload.user_email = userEmail;
       if (userName) payload.user_name = userName;
-      const row = await requestSupabase("/rest/v1/group_members", {
-        method: "POST",
-        headers: buildSupabaseAuthHeaders({
-          "Content-Type": "application/json",
-          Prefer: "return=representation",
-        }),
-        body: JSON.stringify(payload),
-      });
-      return Array.isArray(row) ? row[0] : row;
+      const { data, error } = await sb.from("group_members").insert(payload).select().single();
+      if (error) throw new Error(error.message);
+      return data;
     },
 
     async addGroupMember(groupId, userId, role = "member", status = "approved", userEmail, userName) {
+      const sb = global.SupabaseClient;
+      if (!sb) throw new Error("SupabaseClient not available");
       const payload = { group_id: groupId, user_id: userId, role, status };
       if (userEmail) payload.user_email = userEmail;
       if (userName) payload.user_name = userName;
-      const row = await requestSupabase("/rest/v1/group_members", {
-        method: "POST",
-        headers: buildSupabaseAuthHeaders({
-          "Content-Type": "application/json",
-          Prefer: "return=representation",
-        }),
-        body: JSON.stringify(payload),
-      });
-      return Array.isArray(row) ? row[0] : row;
+      const { data, error } = await sb.from("group_members").insert(payload).select().single();
+      if (error) throw new Error(error.message);
+      return data;
     },
 
     async getPendingMembers(groupId) {
-      const rows = await requestSupabase(
-        `/rest/v1/group_members?group_id=eq.${groupId}&status=eq.pending&select=id,user_id,user_email,user_name,created_at&order=created_at.asc`,
-        { method: "GET", headers: buildSupabaseAuthHeaders() }
-      );
-      return Array.isArray(rows) ? rows : [];
+      const sb = global.SupabaseClient;
+      if (!sb) throw new Error("SupabaseClient not available");
+      const { data, error } = await sb
+        .from("group_members")
+        .select("id,user_id,user_email,user_name,created_at")
+        .eq("group_id", groupId)
+        .eq("status", "pending")
+        .order("created_at", { ascending: true });
+      if (error) throw new Error(error.message);
+      return data || [];
     },
 
     async updateMemberStatus(memberId, status) {
-      await requestSupabase(`/rest/v1/group_members?id=eq.${memberId}`, {
-        method: "PATCH",
-        headers: buildSupabaseAuthHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ status }),
-      });
+      const sb = global.SupabaseClient;
+      if (!sb) throw new Error("SupabaseClient not available");
+      const { error } = await sb
+        .from("group_members")
+        .update({ status })
+        .eq("id", memberId);
+      if (error) throw new Error(error.message);
     },
   };
 })(window);

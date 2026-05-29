@@ -3456,8 +3456,20 @@ document.getElementById("signOutBtn")?.addEventListener("click", async () => {
   removeGroupFromStorage();
   const url = new URL(window.location.href);
   url.searchParams.delete("group");
+  window.history.replaceState({}, "", url.toString());
+  document.getElementById("membersBtn")?.classList.add("hidden");
+  currentUserMembership = null;
   try { await UserAuth.signOut(); } catch (_) {}
-  window.location.replace(url.toString());
+  if (window.__showGroupSelector) {
+    window.__showGroupSelector();
+  } else {
+    window.location.reload();
+  }
+});
+
+document.getElementById("changeGroupBtn")?.addEventListener("click", () => {
+  closeTopbarMenu();
+  if (window.__showGroupSelector) window.__showGroupSelector();
 });
 document.getElementById("closeInfoAppBtn")?.addEventListener("click", () => {
   document.getElementById("infoAppModal")?.classList.add("hidden");
@@ -4330,6 +4342,7 @@ function showPinOverlay(group, onSuccess, onBack) {
           const uEmail = currentUser.email || null;
           const uName = currentUser.user_metadata?.full_name || null;
           try { await apiClient.addGroupMember(newGroup.id, currentUser.id, "admin", "approved", uEmail, uName); } catch (_) {}
+          currentUserMembership = { role: "admin", status: "approved" };
         }
         createOverlay?.classList.add("hidden");
         saveGroupToStorage(newGroup);
@@ -4452,6 +4465,11 @@ async function startApp() {
       appStarted = true;
       hideAuthScreen();
       window.location.reload();
+    } else if (user) {
+      const authScreen = document.getElementById("auth-screen");
+      if (authScreen && !authScreen.classList.contains("hidden")) {
+        window.location.reload();
+      }
     }
   });
 })();
@@ -4546,7 +4564,7 @@ window.handleMemberAction = async function(memberId, status, btn) {
 };
 
 document.getElementById("membersBtn")?.addEventListener("click", () => {
-  document.getElementById("topbarMenu")?.classList.remove("open");
+  closeTopbarMenu();
   openMembersModal();
 });
 

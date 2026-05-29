@@ -60,4 +60,6 @@
     signOut,
     onAuthStateChange,
   };
+
+  global.SupabaseClient = supabaseClient;
 })(window);

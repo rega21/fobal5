@@ -85,6 +85,24 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Error handling en carga de grupos:** si Supabase falla al cargar grupos, muestra "No se pudo conectar al servidor" + botón Reintentar en lugar de quedarse en estado vacío.
 - **Flatpickr crash en mobile corregido:** `fp.calendarContainer` es `undefined` en modo nativo (mobile). Agregado guard `if (!fp.calendarContainer) return` en `onReady`.
 
+## v1.6 — Revisión de código + fixes de coherencia UX
+
+### Fix RLS en `group_members` (causa raíz resuelta)
+- **Problema:** `FobalApi` usaba `fetch` directo con JWT manual en `Authorization`. Supabase devolvía HTTP 500 con cualquier política RLS activa — el JWT se pasaba bien pero PostgREST no lo validaba correctamente en ese contexto.
+- **Solución:** `supabaseClient` (creado dentro del IIFE de `userAuth.js`) se expone como `window.SupabaseClient`. Los métodos de `group_members` en `client.js` (`getMembership`, `requestMembership`, `addGroupMember`, `getPendingMembers`, `updateMemberStatus`) se reescribieron para usar `window.SupabaseClient.from(...)` en vez de `fetch` directo. El Supabase JS client maneja el JWT y la sesión automáticamente, lo que permite habilitar RLS correctamente.
+- **Estado RLS:** deshabilitado por ahora. Con el código nuevo ya es posible habilitarlo con políticas estándar (SELECT por `user_id = auth.uid()`, INSERT para usuarios autenticados con propio `user_id`, UPDATE para admins del grupo).
+
+### Fix: creador de grupo no veía el botón "Miembros"
+- `submitCreateGroup` llamaba a `enterGroup(newGroup)` sin setear `currentUserMembership`. Como `enterGroup` muestra el botón "Miembros" solo si `currentUserMembership?.role === "admin"`, el creador nunca lo veía. Fix: se setea `currentUserMembership = { role: "admin", status: "approved" }` antes de llamar `enterGroup`.
+
+### Fix: `membersBtn` no cerraba el menú
+- El handler de `membersBtn` hacía `classList.remove("open")` pero el menú usa la clase `"is-open"`. Corregido a `closeTopbarMenu()`.
+
+### UX: "Cerrar sesión" y nuevo "Cambiar de grupo"
+- **Problema de coherencia:** "Cerrar sesión" hacía `window.location.replace(urlSinGrupo)` — podía fallar en iOS PWA (abre Safari en vez de navegar dentro de la app), y dejaba al usuario sin una ruta clara de vuelta al selector de grupos.
+- **"Cerrar sesión" mejorado:** ya no usa `location.replace`. Ahora: limpia el grupo guardado, actualiza la URL con `history.replaceState` (sin recarga), oculta el botón "Miembros", cierra sesión en Supabase y muestra directamente `window.__showGroupSelector()`. Si el usuario selecciona un grupo → ve la pantalla de login (sin sesión). Al loguearse, `onAuthStateChange` detecta que el auth-screen está visible y ejecuta `location.reload()` para reinicializar con la nueva sesión.
+- **"Cambiar de grupo" (nuevo):** botón en el menú del topbar (entre "Miembros" y "Configuración del grupo"). Llama a `window.__showGroupSelector()` sin cerrar sesión. Si el usuario tiene membresía en otro grupo, entra directo. Resuelve el caso donde querías cambiar de grupo sin tener que desloguearte.
+
 ## v1.5 — Sistema de membresía (implementado)
 
 ### Base de datos
