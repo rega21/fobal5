@@ -79,6 +79,14 @@
     document.getElementById("emailAuthForm")?.addEventListener("submit", handleEmailSubmit);
     document.getElementById("googleSignInBtn")?.addEventListener("click", handleGoogleSignIn);
     document.getElementById("toggleAuthModeBtn")?.addEventListener("click", () => setMode(!isRegisterMode));
+    document.getElementById("authBackBtn")?.addEventListener("click", () => {
+      if (global.hideAuthScreen) global.hideAuthScreen();
+      const overlay = document.getElementById("groupSelectorOverlay");
+      if (overlay && overlay.classList.contains("hidden")) {
+        overlay.classList.remove("hidden");
+        requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
+      }
+    });
   }
 
   global.LoginScreen = { init };
