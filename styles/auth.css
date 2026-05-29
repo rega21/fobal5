@@ -34,10 +34,8 @@
 .auth-card {
   width: 100%;
   max-width: 360px;
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 36px 28px 28px;
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.18);
+  background: transparent;
+  padding: 24px 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -48,7 +46,7 @@
   align-self: flex-start;
   background: none;
   border: none;
-  color: var(--muted);
+  color: rgba(255,255,255,0.7);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
@@ -60,7 +58,7 @@
 }
 
 .auth-back-btn:hover {
-  color: var(--text);
+  color: #fff;
 }
 
 .auth-logo {
@@ -74,13 +72,14 @@
   margin: 0;
   font-size: 1.4rem;
   font-weight: 700;
-  color: var(--text);
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
 
 .auth-subtitle {
   margin: 2px 0 16px;
   font-size: 0.875rem;
-  color: var(--muted);
+  color: rgba(255,255,255,0.7);
 }
 
 .btn-google {
@@ -111,7 +110,7 @@
   align-items: center;
   gap: 10px;
   margin: 14px 0 6px;
-  color: var(--muted);
+  color: rgba(255,255,255,0.5);
   font-size: 0.8rem;
 }
 
@@ -165,7 +164,7 @@
 .auth-toggle-text {
   margin: 12px 0 0;
   font-size: 0.875rem;
-  color: var(--muted);
+  color: rgba(255,255,255,0.7);
 }
 
 .auth-link {
