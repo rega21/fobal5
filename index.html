@@ -82,6 +82,7 @@
         <button class="topbar-menu-item hidden" type="button" id="voteHistoryBtn" role="menuitem" aria-label="Historial de votos">🗳️ Historial de votos</button>
         <button class="topbar-menu-item" type="button" id="globalRatingBtn" role="menuitem" aria-label="Rating global">Rating Global</button>
         <button class="topbar-menu-item hidden" type="button" id="feedbackBtn" role="menuitem" aria-label="Sugerencias o mejoras">Sugerencias</button>
+        <button class="topbar-menu-item hidden" type="button" id="membersBtn" role="menuitem" aria-label="Miembros del grupo">Miembros <span id="pendingBadge" class="hidden" style="background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:0.75rem;margin-left:4px;"></span></button>
         <button class="topbar-menu-item" type="button" id="editGroupLogoBtn" role="menuitem" aria-label="Configuración del grupo">Configuración del grupo</button>
         <button class="topbar-menu-item" type="button" id="infoAppBtn" role="menuitem" aria-label="Info App">Info App</button>
         <button class="topbar-menu-item" type="button" id="signOutBtn" role="menuitem" aria-label="Cerrar sesión">Cerrar sesión</button>
@@ -614,6 +615,21 @@
           Estos valores son temporales.
         </p>
         <button class="btn btn-success" id="createPlayerBtn">Agregar jugador</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="membersModal" class="modal hidden">
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h2>Miembros del grupo</h2>
+        <button class="close-btn" id="closeMembersBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h3 style="margin:0 0 10px;font-size:0.9rem;color:var(--text-secondary,#94a3b8);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Solicitudes pendientes</h3>
+        <div id="pendingMembersList" style="display:flex;flex-direction:column;gap:8px;">
+          <p style="color:var(--text-secondary);font-size:0.9rem;">Cargando...</p>
+        </div>
       </div>
     </div>
   </div>

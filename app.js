@@ -4053,6 +4053,7 @@ document.addEventListener("keydown", (e) => {
 /* Init */
 const GROUP_STORAGE_KEY = "fobal5_group";
 let currentUser = null;
+let currentUserMembership = null;
 
 async function hashPin(pin) {
   const encoder = new TextEncoder();
@@ -4175,6 +4176,11 @@ function showPinOverlay(group, onSuccess, onBack) {
       historyTitle.textContent = group.name ? `Partidos registrados de ${group.name}` : "";
       historyTitle.style.display = "none";
     }
+    if (currentUserMembership?.role === "admin") {
+      const membersBtn = document.getElementById("membersBtn");
+      if (membersBtn) membersBtn.classList.remove("hidden");
+      refreshPendingBadge(group.id);
+    }
     fetchPlayers();
     fetchMatches();
   }
@@ -4197,6 +4203,7 @@ function showPinOverlay(group, onSuccess, onBack) {
       showRequestAccessScreen(group, true);
       return;
     }
+    currentUserMembership = membership;
     enterGroup(group);
   }
 
@@ -4458,4 +4465,70 @@ document.getElementById("reqAccessBtn")?.addEventListener("click", async () => {
 document.getElementById("reqAccessBackBtn")?.addEventListener("click", () => {
   hideRequestAccessScreen();
   if (window.__showGroupSelector) window.__showGroupSelector();
+});
+
+async function refreshPendingBadge(groupId) {
+  try {
+    const pending = await apiClient.getPendingMembers(groupId);
+    const badge = document.getElementById("pendingBadge");
+    if (!badge) return;
+    if (pending.length > 0) {
+      badge.textContent = pending.length;
+      badge.classList.remove("hidden");
+    } else {
+      badge.classList.add("hidden");
+    }
+  } catch (_) {}
+}
+
+async function openMembersModal() {
+  const modal = document.getElementById("membersModal");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  const list = document.getElementById("pendingMembersList");
+  if (!list) return;
+  list.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">Cargando...</p>';
+  try {
+    const groupId = apiClient.getGroupId();
+    const pending = await apiClient.getPendingMembers(groupId);
+    if (pending.length === 0) {
+      list.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">No hay solicitudes pendientes.</p>';
+      return;
+    }
+    list.innerHTML = pending.map((m) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line);gap:8px;">
+        <span style="font-size:0.85rem;color:var(--text-secondary);word-break:break-all;">${m.user_id}</span>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button onclick="handleMemberAction('${m.id}','approved',this)" style="padding:5px 12px;border-radius:8px;border:none;background:var(--success,#10b981);color:#fff;font-size:0.8rem;cursor:pointer;font-weight:600;">Aprobar</button>
+          <button onclick="handleMemberAction('${m.id}','rejected',this)" style="padding:5px 12px;border-radius:8px;border:none;background:var(--danger,#ef4444);color:#fff;font-size:0.8rem;cursor:pointer;font-weight:600;">Rechazar</button>
+        </div>
+      </div>
+    `).join("");
+  } catch (e) {
+    list.innerHTML = '<p style="color:var(--danger);font-size:0.9rem;">Error al cargar solicitudes.</p>';
+  }
+}
+
+window.handleMemberAction = async function(memberId, status, btn) {
+  btn.disabled = true;
+  btn.parentElement.querySelectorAll("button").forEach(b => b.disabled = true);
+  try {
+    await apiClient.updateMemberStatus(memberId, status);
+    const row = btn.closest("div[style]");
+    row.style.opacity = "0.5";
+    row.innerHTML = `<span style="font-size:0.85rem;color:var(--text-secondary);">${status === 'approved' ? '✓ Aprobado' : '✗ Rechazado'}</span>`;
+    const groupId = apiClient.getGroupId();
+    refreshPendingBadge(groupId);
+  } catch (_) {
+    btn.parentElement.querySelectorAll("button").forEach(b => b.disabled = false);
+  }
+};
+
+document.getElementById("membersBtn")?.addEventListener("click", () => {
+  document.getElementById("topbarMenu")?.classList.remove("open");
+  openMembersModal();
+});
+
+document.getElementById("closeMembersBtn")?.addEventListener("click", () => {
+  document.getElementById("membersModal")?.classList.add("hidden");
 });
