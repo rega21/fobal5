@@ -87,6 +87,16 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 
 ## v1.7 — Fix RLS round 2 + hydratación de votos por cuenta
 
+### Pendiente: renombrar columna `midfield` → `vision` en DB
+El stat "Medio" fue renombrado a "Visión" en la UI (labels, radar, log de actividad). El cambio de nombre interno en la DB está pendiente — ejecutar cuando se confirme que el nuevo nombre es definitivo:
+```sql
+ALTER TABLE player_ratings RENAME COLUMN midfield TO vision;
+ALTER TABLE players RENAME COLUMN midfield TO vision;
+```
+Después de ejecutar el SQL, actualizar todas las referencias `midfield` → `vision` en el código JS (client.js, app.js, playerRatingsService.js, adminPlayersController.js, matchController.js, playersView.js) y recrear la vista `player_ratings_with_player` y el RPC `insert_player_rating_limited`.
+
+
+
 ### Fix RLS `group_members` (políticas acumuladas)
 - **Problema:** al hacer drop + recreate de políticas en v1.6, las viejas nunca se borraron. Quedaron 10 políticas activas en simultáneo, incluyendo dos con queries recursivas (`EXISTS (SELECT 1 FROM group_members gm WHERE gm.group_id = group_members.group_id ...)`). PostgreSQL evalúa todas las policies con OR — si una entra en loop, el server devuelve HTTP 500 aunque otra sea válida.
 - **Causa específica:** `"miembros pueden ver su grupo"` (SELECT) y `"admin puede actualizar estado"` (UPDATE) hacían subquery sobre `group_members` dentro de una policy de `group_members` → recursión infinita. También había un `"read_all"` con `USING (true)` que exponía todas las filas sin autenticación.
