@@ -1421,6 +1421,8 @@ async function fetchPlayers() {
   if (adminPlayersController) {
     await adminPlayersController.fetchPlayers();
     await refreshPlayerRatingsSummary();
+    const hydrated = await hydrateVotedPlayersFromServer();
+    if (!hydrated) await reconcileLocalVotesWithServer();
     renderPlayers();
     return;
   }
