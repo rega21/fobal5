@@ -845,7 +845,7 @@ function renderPlayerRadarChart(stats) {
   playerRadarChartInstance = new Chart(canvas, {
     type: "radar",
     data: {
-      labels: ["Ataque", "Medio", "Defensa", "Resistencia", "Garra", "Técnica"],
+      labels: ["Ataque", "Visión", "Defensa", "Resistencia", "Garra", "Técnica"],
       datasets: [{
         data,
         backgroundColor: color + "33",
@@ -3060,7 +3060,7 @@ function renderVoteActivity(rows = []) {
           <span class="vote-activity-name">${escapeHtml(name)}</span>
           <span class="vote-activity-time muted">${escapeHtml(timeAgo)}</span>
         </div>
-        <span class="vote-activity-scores">Atk ${Number(row.attack)} · Med ${Number(row.midfield)} · Def ${Number(row.defense)} · Fis ${Number(row.stamina)} · Gar ${Number(row.garra)} · Tec ${Number(row.technique)}</span>
+        <span class="vote-activity-scores">Atk ${Number(row.attack)} · Vis ${Number(row.midfield)} · Def ${Number(row.defense)} · Fis ${Number(row.stamina)} · Gar ${Number(row.garra)} · Tec ${Number(row.technique)}</span>
       </div>
     `;
   }).join("");
