@@ -512,7 +512,7 @@
       const groupFilter = activeGroupId ? `&group_id=eq.${encodeURIComponent(activeGroupId)}` : "";
       const rows = await requestSupabase(
         `/rest/v1/player_ratings?select=player_id&voter_key=eq.${encodeURIComponent(voterKey)}${groupFilter}`,
-        { method: "GET", headers: buildSupabaseHeaders() }
+        { method: "GET", headers: buildSupabaseAuthHeaders() }
       );
       if (!Array.isArray(rows)) return [];
       return [...new Set(rows.map(r => r.player_id).filter(Boolean))];
