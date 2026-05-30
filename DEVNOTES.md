@@ -85,6 +85,26 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Error handling en carga de grupos:** si Supabase falla al cargar grupos, muestra "No se pudo conectar al servidor" + botón Reintentar en lugar de quedarse en estado vacío.
 - **Flatpickr crash en mobile corregido:** `fp.calendarContainer` es `undefined` en modo nativo (mobile). Agregado guard `if (!fp.calendarContainer) return` en `onReady`.
 
+## v1.7 — Fix RLS round 2 + hydratación de votos por cuenta
+
+### Fix RLS `group_members` (políticas acumuladas)
+- **Problema:** al hacer drop + recreate de políticas en v1.6, las viejas nunca se borraron. Quedaron 10 políticas activas en simultáneo, incluyendo dos con queries recursivas (`EXISTS (SELECT 1 FROM group_members gm WHERE gm.group_id = group_members.group_id ...)`). PostgreSQL evalúa todas las policies con OR — si una entra en loop, el server devuelve HTTP 500 aunque otra sea válida.
+- **Causa específica:** `"miembros pueden ver su grupo"` (SELECT) y `"admin puede actualizar estado"` (UPDATE) hacían subquery sobre `group_members` dentro de una policy de `group_members` → recursión infinita. También había un `"read_all"` con `USING (true)` que exponía todas las filas sin autenticación.
+- **Fix:** drop de las 10 políticas existentes + recrear solo las 5 limpias. La regla a seguir: siempre hacer drop all + recreate en un solo script, nunca agregar encima.
+- **Política `admin delete` agregada:** faltaba política DELETE para que los admins puedan expulsar miembros.
+
+### Fix overlay selector de grupos (scroll escapado)
+- **Problema:** al hacer "Cerrar sesión" o "Cambiar de grupo", el overlay del selector usaba `position: absolute` → relativo al documento. Si la página estaba scrolleada, el overlay aparecía arriba pero el contenido de la app seguía siendo scrolleable por debajo.
+- **Fix:** cambiado a `position: fixed; inset: 0` en `index.html`. Cubre exactamente el viewport sin importar el scroll. Se eliminó `min-height: 100vh` (redundante con `inset: 0`).
+
+### Fix "Editar" vs "Calificar" entre browsers (hydratación desde servidor)
+- **Problema raíz:** el estado de "ya voté" vivía exclusivamente en `localStorage` (`fobal5_voted_players`). Cada browser tiene su propio localStorage → en un segundo browser, todos los jugadores mostraban "Calificar" aunque el usuario ya hubiera votado desde otra sesión.
+- **Problema adicional (pre-login):** antes del login, cada browser generaba un UUID anónimo en localStorage como `voter_key`. Un mismo usuario podía votar múltiples veces al mismo jugador desde distintos browsers, generando duplicados que sesgaban los promedios comunitarios.
+- **Solución — `hydrateVotedPlayersFromServer()`:** al cargar jugadores, si el usuario está autenticado, se hace una query bulk a `player_ratings` filtrando por `voter_key = auth.uid()` y `group_id`. Los IDs retornados se marcan como votados en localStorage. Si el usuario no está autenticado, cae al flow anterior de `reconcileLocalVotesWithServer`.
+- **`getRatedPlayerIds(voterKey)` en `client.js`:** nuevo método usando `SupabaseClient` (no raw fetch) para respetar RLS y auth. Query: `player_ratings?select=player_id` con filtro por `voter_key` y `group_id`.
+- **Fix path `adminPlayersController`:** `fetchPlayers` tenía un early return cuando `adminPlayersController` estaba activo, saltando la hydration. Corregido para correr hydrate + reconcile en ambos paths.
+- **Limpieza de datos históricos:** se eliminaron todos los registros de `player_ratings` (34 voter_keys distintos, todos anónimos de sesiones de testing). A partir de ahora los votos quedan ligados al `auth.uid` del usuario — consistentes entre browsers y dispositivos.
+
 ## v1.6 — Revisión de código + fixes de coherencia UX
 
 ### Fix RLS en `group_members` (causa raíz resuelta)
