@@ -507,6 +507,16 @@
       );
       return Array.isArray(rows) && rows.length >= 10;
     },
+    async getRatedPlayerIds(voterKey) {
+      if (!voterKey) return [];
+      const groupFilter = activeGroupId ? `&group_id=eq.${encodeURIComponent(activeGroupId)}` : "";
+      const rows = await requestSupabase(
+        `/rest/v1/player_ratings?select=player_id&voter_key=eq.${encodeURIComponent(voterKey)}${groupFilter}`,
+        { method: "GET", headers: buildSupabaseHeaders() }
+      );
+      if (!Array.isArray(rows)) return [];
+      return [...new Set(rows.map(r => r.player_id).filter(Boolean))];
+    },
     async getGroups() {
       const rows = await requestSupabase("/rest/v1/groups?select=id,name,slug,pin_hash,logo_url&order=name.asc", {
         method: "GET",

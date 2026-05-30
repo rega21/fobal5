@@ -488,6 +488,19 @@ function unmarkPlayerAsVoted(playerId) {
   }
 }
 
+async function hydrateVotedPlayersFromServer() {
+  if (adminAuthenticated || !currentUser || !playerRatingsService?.getOrCreateVoterKey) return false;
+  const voterKey = playerRatingsService.getOrCreateVoterKey();
+  try {
+    const playerIds = await apiClient.getRatedPlayerIds(voterKey);
+    try { localStorage.setItem(VOTED_PLAYERS_STORAGE_KEY, JSON.stringify([])); } catch (_) {}
+    playerIds.forEach(id => markPlayerAsVoted(id));
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 async function reconcileLocalVotesWithServer() {
   if (adminAuthenticated || !playerRatingsService?.getCurrentUserRatingForPlayer) {
     return false;
@@ -1421,7 +1434,8 @@ async function fetchPlayers() {
   }
 
   await refreshPlayerRatingsSummary();
-  await reconcileLocalVotesWithServer();
+  const hydrated = await hydrateVotedPlayersFromServer();
+  if (!hydrated) await reconcileLocalVotesWithServer();
   renderPlayers();
 }
 
