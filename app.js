@@ -3429,6 +3429,7 @@ const ICON_STAR_OUTLINE = `<svg xmlns="http://www.w3.org/2000/svg" width="14" he
 let activeGroupLogoUrl = null;
 let activeGroupName = null;
 let activeGroupPin = "";
+let activeGroupCreatedBy = null;
 
 function updateBrandLogo() {
   const logo = document.getElementById("brandLogo");
@@ -3499,6 +3500,12 @@ function openEditGroupLogoModal() {
       ? `<img src="${activeGroupLogoUrl}" style="width:100%;height:100%;object-fit:cover;" />`
       : `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary,#94a3b8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`;
   }
+  const isCreator = activeGroupCreatedBy && currentUser?.id === activeGroupCreatedBy;
+  const dangerZone = document.getElementById("deleteGroupBtn")?.parentElement;
+  if (dangerZone) dangerZone.style.display = isCreator ? "" : "none";
+  document.getElementById("deleteGroupSection").style.display = "none";
+  document.getElementById("deleteGroupBtn").style.display = "";
+  document.getElementById("deleteGroupError")?.classList.add("hidden");
   document.getElementById("editGroupLogoModal")?.classList.remove("hidden");
 }
 
@@ -4248,6 +4255,7 @@ function showPinOverlay(group, onSuccess, onBack) {
     window.history.replaceState({}, "", url.toString());
     activeGroupLogoUrl = group.logo_url || null;
     activeGroupName = group.name || null;
+    activeGroupCreatedBy = group.created_by || null;
     updateBrandLogo();
     const historyTitle = document.getElementById("historyGroupTitle");
     if (historyTitle) {
