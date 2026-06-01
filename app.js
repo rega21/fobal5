@@ -4217,11 +4217,7 @@ function showPinOverlay(group, onSuccess, onBack) {
 
   window.__showGroupSelector = function() {
     renderGroupList();
-    const label = document.getElementById("selectorUserLabel");
-    if (label && currentUser) {
-      const name = currentUser.user_metadata?.full_name || currentUser.email || "";
-      label.textContent = name;
-    }
+    updateSelectorAvatar();
     if (overlay) {
       overlay.classList.remove("hidden");
       requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
@@ -4294,11 +4290,7 @@ function showPinOverlay(group, onSuccess, onBack) {
   // Mostrar selector
   if (overlay && list) {
     renderGroupList();
-    const label = document.getElementById("selectorUserLabel");
-    if (label && currentUser) {
-      const name = currentUser.user_metadata?.full_name || currentUser.email || "";
-      label.textContent = name;
-    }
+    updateSelectorAvatar();
     overlay.classList.remove("hidden");
     requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
   }
@@ -4442,6 +4434,19 @@ function showAuthScreen(group) {
     backBtn?.classList.add("hidden");
   }
   screen.classList.remove("hidden");
+}
+
+function updateSelectorAvatar() {
+  const el = document.getElementById("selectorUserAvatar");
+  if (!el) return;
+  if (!currentUser) { el.style.display = "none"; return; }
+  const avatarUrl = currentUser.user_metadata?.avatar_url;
+  const name = currentUser.user_metadata?.full_name || currentUser.email || "";
+  const initials = name.trim().split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  el.style.display = "flex";
+  el.innerHTML = avatarUrl
+    ? `<img src="${avatarUrl}" alt="${initials}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='${initials}'">`
+    : initials;
 }
 
 function updateUserAvatar(user) {
