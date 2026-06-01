@@ -745,6 +745,20 @@
           <button id="saveGroupLogoBtn" class="btn btn-success" style="flex:1;">Guardar</button>
           <button id="cancelEditGroupLogoBtn" class="btn" style="flex:1;background:var(--card-bg,#1e293b);">Cancelar</button>
         </div>
+        <div style="border-top:1px solid var(--border,#334155);padding-top:16px;display:flex;flex-direction:column;gap:10px;">
+          <p style="margin:0;font-size:0.8rem;color:var(--danger,#ef4444);font-weight:600;">Zona peligrosa</p>
+          <div id="deleteGroupSection" style="display:none;flex-direction:column;gap:8px;">
+            <p style="margin:0;font-size:0.82rem;color:var(--text-secondary,#94a3b8);">Escribí el nombre del grupo para confirmar:</p>
+            <input id="deleteGroupConfirmInput" type="text" placeholder="" style="
+              padding:10px 14px;font-size:0.9rem;border-radius:10px;border:1px solid var(--danger,#ef4444);
+              background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
+            "/>
+            <p id="deleteGroupError" class="hidden" style="margin:0;font-size:0.8rem;color:var(--danger,#ef4444);">El nombre no coincide.</p>
+            <button id="deleteGroupConfirmBtn" class="btn" style="background:var(--danger,#ef4444);color:#fff;font-weight:700;">Eliminar grupo definitivamente</button>
+            <button id="deleteGroupCancelBtn" class="btn" style="background:transparent;border:1px solid var(--border,#334155);color:var(--text-secondary,#94a3b8);">Cancelar</button>
+          </div>
+          <button id="deleteGroupBtn" style="padding:10px 14px;border-radius:10px;border:1px solid var(--danger,#ef4444);background:transparent;color:var(--danger,#ef4444);font-size:0.9rem;cursor:pointer;font-weight:600;text-align:left;">Eliminar grupo</button>
+        </div>
       </div>
     </div>
   </div>

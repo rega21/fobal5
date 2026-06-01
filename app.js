@@ -3539,6 +3539,53 @@ document.getElementById("closeEditGroupLogoBtn")?.addEventListener("click", () =
 document.getElementById("cancelEditGroupLogoBtn")?.addEventListener("click", () => {
   document.getElementById("editGroupLogoModal")?.classList.add("hidden");
 });
+
+document.getElementById("deleteGroupBtn")?.addEventListener("click", () => {
+  const section = document.getElementById("deleteGroupSection");
+  const confirmInput = document.getElementById("deleteGroupConfirmInput");
+  const deleteBtn = document.getElementById("deleteGroupBtn");
+  if (section) {
+    section.style.display = "flex";
+    deleteBtn.style.display = "none";
+    if (confirmInput) { confirmInput.value = ""; confirmInput.focus(); }
+    document.getElementById("deleteGroupError")?.classList.add("hidden");
+  }
+});
+
+document.getElementById("deleteGroupCancelBtn")?.addEventListener("click", () => {
+  document.getElementById("deleteGroupSection").style.display = "none";
+  document.getElementById("deleteGroupBtn").style.display = "";
+  document.getElementById("deleteGroupError")?.classList.add("hidden");
+});
+
+document.getElementById("deleteGroupConfirmBtn")?.addEventListener("click", async () => {
+  const input = document.getElementById("deleteGroupConfirmInput");
+  const errorEl = document.getElementById("deleteGroupError");
+  const typed = input?.value.trim();
+  if (typed !== activeGroupName) {
+    errorEl?.classList.remove("hidden");
+    return;
+  }
+  const groupId = apiClient.getGroupId();
+  if (!groupId) return;
+  const btn = document.getElementById("deleteGroupConfirmBtn");
+  btn.disabled = true;
+  btn.textContent = "Eliminando...";
+  try {
+    await apiClient.deleteGroup(groupId);
+    removeGroupFromStorage();
+    const url = new URL(window.location.href);
+    url.searchParams.delete("group");
+    window.history.replaceState({}, "", url.toString());
+    document.getElementById("editGroupLogoModal")?.classList.add("hidden");
+    if (window.__showGroupSelector) window.__showGroupSelector();
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = "Eliminar grupo definitivamente";
+    errorEl.textContent = "Error al eliminar el grupo.";
+    errorEl?.classList.remove("hidden");
+  }
+});
 document.getElementById("editGroupLogoBtn")?.addEventListener("click", openEditGroupLogoModal);
 document.getElementById("menuToggleBtn")?.addEventListener("click", (e) => {
   e.stopPropagation();

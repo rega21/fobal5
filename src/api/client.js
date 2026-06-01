@@ -552,16 +552,22 @@
         body: JSON.stringify({ logo_url }),
       });
     },
-    async updateGroupSettings(groupId, { name, logo_url, pin_hash }) {
+    async updateGroupSettings(groupId, { name, logo_url }) {
       const payload = {};
       if (name !== undefined) payload.name = name;
       if (logo_url !== undefined) payload.logo_url = logo_url;
-      if (pin_hash !== undefined) payload.pin_hash = pin_hash;
       await requestSupabase(`/rest/v1/groups?id=eq.${groupId}`, {
         method: "PATCH",
         headers: buildSupabaseHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(payload),
       });
+    },
+
+    async deleteGroup(groupId) {
+      const sb = global.SupabaseClient;
+      if (!sb) throw new Error("SupabaseClient not available");
+      const { error } = await sb.from("groups").delete().eq("id", groupId);
+      if (error) throw new Error(error.message);
     },
     async createFeedback(payload) {
       if (!HAS_SUPABASE) {

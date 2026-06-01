@@ -85,6 +85,14 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Error handling en carga de grupos:** si Supabase falla al cargar grupos, muestra "No se pudo conectar al servidor" + botón Reintentar en lugar de quedarse en estado vacío.
 - **Flatpickr crash en mobile corregido:** `fp.calendarContainer` es `undefined` en modo nativo (mobile). Agregado guard `if (!fp.calendarContainer) return` en `onReady`.
 
+## v2.0 — Eliminar grupo con confirmación
+
+- **Opción "Eliminar grupo"** en el modal "Configuración del grupo", solo visible para el admin del grupo.
+- **Confirmación por nombre:** al clickear "Eliminar grupo" se despliega una sección con un input que pide escribir el nombre exacto del grupo. Solo habilita el botón de confirmación si el texto coincide — evita borrados accidentales.
+- **Flujo post-borrado:** limpia el grupo del localStorage, elimina el parámetro `?group=` de la URL y muestra el selector de grupos.
+- **`deleteGroup(groupId)`:** nuevo método en `client.js` que usa `SupabaseClient` para respetar RLS. Requiere policy DELETE para el owner del grupo (actualmente no hay RLS en `groups` — si se habilita, agregar policy).
+- **`pin_hash` eliminado de `updateGroupSettings`:** limpieza del parámetro obsoleto que ya no se usaba.
+
 ## v1.9 — Limpieza de PIN + restricciones de admin
 
 ### PIN eliminado de configuración del grupo
