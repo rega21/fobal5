@@ -523,9 +523,10 @@
       });
       return Array.isArray(rows) ? rows : [];
     },
-    async createGroup({ name, slug, pin_hash, logo_url }) {
-      const payload = { name, slug, pin_hash };
+    async createGroup({ name, slug, logo_url, created_by }) {
+      const payload = { name, slug };
       if (logo_url) payload.logo_url = logo_url;
+      if (created_by) payload.created_by = created_by;
       const row = await requestSupabase("/rest/v1/groups", {
         method: "POST",
         headers: buildSupabaseHeaders({

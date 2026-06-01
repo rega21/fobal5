@@ -4358,7 +4358,7 @@ function showPinOverlay(group, onSuccess, onBack) {
     submitBtn.textContent = "Creando...";
 
     try {
-      const newGroup = await apiClient.createGroup({ name, slug, logo_url });
+      const newGroup = await apiClient.createGroup({ name, slug, logo_url, created_by: currentUser?.id || null });
       groups.push(newGroup);
       if (currentUser) {
         const uEmail = currentUser.email || null;
