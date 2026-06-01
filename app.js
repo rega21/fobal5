@@ -4443,10 +4443,12 @@ function updateSelectorAvatar() {
   const avatarUrl = currentUser.user_metadata?.avatar_url;
   const name = currentUser.user_metadata?.full_name || currentUser.email || "";
   const initials = name.trim().split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  const dot = `<span style="position:absolute;right:1px;bottom:1px;width:10px;height:10px;background:#22c55e;border:2px solid rgba(15,23,42,0.9);border-radius:50%;"></span>`;
   el.style.display = "flex";
+  el.style.position = "absolute";
   el.innerHTML = avatarUrl
-    ? `<img src="${avatarUrl}" alt="${initials}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='${initials}'">`
-    : initials;
+    ? `<img src="${avatarUrl}" alt="${initials}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='${initials}${dot}'">${dot}`
+    : `${initials}${dot}`;
 }
 
 function updateUserAvatar(user) {
