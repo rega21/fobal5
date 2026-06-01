@@ -4323,6 +4323,10 @@ function showPinOverlay(group, onSuccess, onBack) {
   });
 
   createBtn?.addEventListener("click", () => {
+    if (!currentUser) {
+      showAuthScreen(null);
+      return;
+    }
     overlay.classList.add("hidden");
     if (createOverlay) {
       nameInput.value = "";
