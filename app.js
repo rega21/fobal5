@@ -4255,8 +4255,8 @@ function showPinOverlay(group, onSuccess, onBack) {
       historyTitle.style.display = "none";
     }
     if (currentUserMembership?.role === "admin") {
-      const membersBtn = document.getElementById("membersBtn");
-      if (membersBtn) membersBtn.classList.remove("hidden");
+      document.getElementById("membersBtn")?.classList.remove("hidden");
+      document.getElementById("editGroupLogoBtn")?.classList.remove("hidden");
       refreshPendingBadge(group.id);
     }
     if (currentUser?.email === "aregaarrospide@gmail.com") {
