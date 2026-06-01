@@ -3494,21 +3494,6 @@ function openEditGroupLogoModal() {
   const preview = document.getElementById("editLogoPreview");
   if (input) input.value = activeGroupLogoUrl || "";
   if (nameInput) nameInput.value = activeGroupName || "";
-  const newPinInput = document.getElementById("editGroupNewPinInput");
-  const confirmPinInput = document.getElementById("editGroupConfirmPinInput");
-  const pinError = document.getElementById("editGroupPinError");
-  if (newPinInput) { newPinInput.value = ""; newPinInput.placeholder = "Nuevo PIN"; }
-  if (confirmPinInput) confirmPinInput.value = "";
-  if (pinError) pinError.classList.add("hidden");
-  const pinLabel = document.getElementById("editGroupPinLabel");
-  if (pinLabel) {
-    if (activeGroupPin) {
-      pinLabel.innerHTML = `PIN actual: <span style="font-weight:500;color:var(--text-primary,#fff);">${activeGroupPin}</span>`;
-      pinLabel.classList.remove("hidden");
-    } else {
-      pinLabel.classList.add("hidden");
-    }
-  }
   if (preview) {
     preview.innerHTML = activeGroupLogoUrl
       ? `<img src="${activeGroupLogoUrl}" style="width:100%;height:100%;object-fit:cover;" />`
@@ -3534,22 +3519,7 @@ document.getElementById("saveGroupLogoBtn")?.addEventListener("click", async () 
   const newUrl = document.getElementById("editLogoUrlInput").value.trim() || null;
   const newName = document.getElementById("editGroupNameInput").value.trim() || activeGroupName;
 
-  const newPin = document.getElementById("editGroupNewPinInput")?.value || "";
-  const confirmPin = document.getElementById("editGroupConfirmPinInput")?.value || "";
-  const pinError = document.getElementById("editGroupPinError");
-
-  if (newPin || confirmPin) {
-    if (newPin !== confirmPin) {
-      if (pinError) pinError.classList.remove("hidden");
-      return;
-    }
-    if (pinError) pinError.classList.add("hidden");
-  }
-
   const settings = { name: newName, logo_url: newUrl };
-  if (newPin) {
-    settings.pin_hash = await hashPin(newPin);
-  }
 
   window.FobalApi.updateGroupSettings(groupId, settings)
     .then(() => {
