@@ -85,6 +85,12 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Error handling en carga de grupos:** si Supabase falla al cargar grupos, muestra "No se pudo conectar al servidor" + botón Reintentar en lugar de quedarse en estado vacío.
 - **Flatpickr crash en mobile corregido:** `fp.calendarContainer` es `undefined` en modo nativo (mobile). Agregado guard `if (!fp.calendarContainer) return` en `onReady`.
 
+## v2.1 — Restricciones de configuración del grupo
+
+- **"Configuración del grupo" oculto para no-admins:** el botón en el menú del topbar ahora es `hidden` por defecto y solo se muestra en `enterGroup()` si `currentUserMembership.role === 'admin'`.
+- **"Eliminar grupo" solo para el creador:** la sección "Zona peligrosa" se oculta si `currentUser.id !== group.created_by`. Un admin que no creó el grupo puede editar nombre/logo pero no borrarlo. Se guarda `activeGroupCreatedBy` al entrar al grupo.
+- **Pendiente:** revisar algo que no cierra del todo — a confirmar.
+
 ## v2.0 — Eliminar grupo con confirmación
 
 - **Opción "Eliminar grupo"** en el modal "Configuración del grupo", solo visible para el admin del grupo.
