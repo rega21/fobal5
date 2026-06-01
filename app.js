@@ -4242,6 +4242,9 @@ function showPinOverlay(group, onSuccess, onBack) {
       if (membersBtn) membersBtn.classList.remove("hidden");
       refreshPendingBadge(group.id);
     }
+    if (currentUser?.email === "aregaarrospide@gmail.com") {
+      document.getElementById("adminBtn")?.classList.remove("hidden");
+    }
     fetchPlayers();
     fetchMatches();
   }
