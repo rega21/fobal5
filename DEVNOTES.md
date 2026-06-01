@@ -85,6 +85,33 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Error handling en carga de grupos:** si Supabase falla al cargar grupos, muestra "No se pudo conectar al servidor" + botón Reintentar en lugar de quedarse en estado vacío.
 - **Flatpickr crash en mobile corregido:** `fp.calendarContainer` es `undefined` en modo nativo (mobile). Agregado guard `if (!fp.calendarContainer) return` en `onReady`.
 
+## v1.8 — Login como primer filtro + mejoras de membresía
+
+### Login como pantalla inicial
+- **Decisión de diseño:** se revirtió el flujo "grupos primero, login después" (v1.4). Ahora el login es el primer filtro — sin sesión activa no se muestra nada. Razón: el botón "Crear nuevo grupo" y otras acciones requerían estar logueado, generando inconsistencias visibles al usuario.
+- **`init()` espera auth:** la IIFE de carga de grupos ahora hace `await authReadyPromise` al inicio. Si no hay `currentUser`, retorna sin mostrar el selector — la pantalla de login ya está visible.
+- **`initWithAuth()` sin sesión:** si `UserAuth.getSession()` devuelve null, se llama `showAuthScreen(null)` inmediatamente en vez de dejar la app en blanco.
+- **"Cerrar sesión":** simplificado a `window.location.reload()` — al recargar sin sesión, el nuevo flujo muestra el login directamente.
+- **Botón "← Volver" en login:** oculto por defecto (`hidden`). Solo se muestra cuando `showAuthScreen(group)` recibe un grupo (contexto de re-autenticación dentro de la app). En la pantalla inicial no tiene sentido.
+
+### Panel de miembros aprobados
+- **`getApprovedMembers(groupId)`:** nuevo método en `client.js` que devuelve los miembros con `status = 'approved'` incluyendo `role`.
+- **Modal "Miembros del grupo":** ahora tiene dos secciones — "Solicitudes pendientes" (igual que antes) y "Miembros aprobados" (nueva). Ambas listas se cargan en paralelo con `Promise.all`.
+- **Vista de aprobados:** cada miembro muestra nombre/email. Los admins tienen badge "ADMIN". Los no-admins tienen botón "Expulsar" (borde rojo, fondo transparente).
+- **`handleRemoveMember`:** nuevo handler global que setea `status = 'rejected'` al miembro expulsado.
+
+### Fix: createGroupBtn no respondía al click
+- **Causa:** el `addEventListener` del botón estaba dentro del bloque `if (overlay && list)`, que solo se ejecuta si el selector se muestra al arrancar la app (sin grupo guardado). Si el usuario entraba directo a un grupo y luego usaba "Cambiar de grupo", el botón existía pero sin handler.
+- **Fix:** el bloque "Crear nuevo grupo" (variables, handlers, `submitCreateGroup`) se movió fuera del `if`, al scope del IIFE — se registra siempre al cargar la página.
+
+### Fix: verificar sesión antes de abrir "Crear nuevo grupo"
+- El formulario de creación ahora verifica `currentUser` al clickear. Si no hay sesión, muestra el login en vez de abrir el formulario directamente.
+
+### Avatar de usuario en selector de grupos
+- Círculo arriba a la derecha del overlay del selector. Estilo integrado con la app: fondo oscuro semitransparente (`rgba(30,41,59,0.75)`), `backdrop-filter: blur(8px)`, borde sutil — en vez del azul sólido del topbar que "rompía" visualmente.
+- Punto verde (`#22c55e`) abajo a la derecha indica sesión activa.
+- Al clickear el avatar se despliega un menú con el nombre/email del usuario y botón "Cerrar sesión". Clickear fuera lo cierra.
+
 ## v1.7 — Fix RLS round 2 + hydratación de votos por cuenta
 
 ### Pendiente: renombrar columna `midfield` → `vision` en DB
