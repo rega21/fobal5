@@ -85,6 +85,19 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Error handling en carga de grupos:** si Supabase falla al cargar grupos, muestra "No se pudo conectar al servidor" + botón Reintentar en lugar de quedarse en estado vacío.
 - **Flatpickr crash en mobile corregido:** `fp.calendarContainer` es `undefined` en modo nativo (mobile). Agregado guard `if (!fp.calendarContainer) return` en `onReady`.
 
+## v1.9 — Limpieza de PIN + restricciones de admin
+
+### PIN eliminado de configuración del grupo
+- Los campos "Nuevo PIN" y "Confirmar PIN" fueron removidos del modal "Configuración del grupo". El PIN ya era obsoleto desde v1.4 (reemplazado por membresía). Solo quedaban los inputs en el HTML y la lógica de validación/guardado en el handler — todo eliminado.
+- El campo `pin_hash` sigue existiendo en la tabla `groups` en DB (con valor NULL). Limpieza pendiente cuando se confirme que no hay dependencias.
+
+### Botón "Admin" restringido al developer
+- El botón "Admin" en el menú del topbar ahora solo aparece si `currentUser.email === 'aregaarrospide@gmail.com'`. Oculto por defecto en HTML, se muestra en `enterGroup()` solo si el email coincide.
+- El PIN de admin sigue funcionando como segunda capa de seguridad una vez que el botón es visible.
+
+### Fix: `created_by` al crear grupo
+- `createGroup` en `client.js` ahora incluye `created_by: currentUser.id` en el payload. Antes el campo quedaba NULL para todos los grupos nuevos.
+
 ## v1.8 — Login como primer filtro + mejoras de membresía
 
 ### Login como pantalla inicial
