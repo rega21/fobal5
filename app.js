@@ -4292,95 +4292,95 @@ function showPinOverlay(group, onSuccess, onBack) {
     renderGroupList();
     overlay.classList.remove("hidden");
     requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
-
-    // Crear nuevo grupo
-    const createOverlay = document.getElementById("createGroupOverlay");
-    const createBtn = document.getElementById("createGroupBtn");
-    const backBtn = document.getElementById("createGroupBackBtn");
-    const nameInput = document.getElementById("createGroupName");
-    const logoUrlInput = document.getElementById("createGroupLogoUrl");
-    const logoPreviewEl = document.getElementById("createGroupLogoPreview");
-    const submitBtn = document.getElementById("createGroupSubmitBtn");
-    const errorMsg = document.getElementById("createGroupError");
-
-    function toSlug(str) {
-      return str.toLowerCase().trim()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-    }
-
-    const genericLogoSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary,#94a3b8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
-
-    logoUrlInput?.addEventListener("input", () => {
-      const url = logoUrlInput.value.trim();
-      if (logoPreviewEl) {
-        logoPreviewEl.innerHTML = url
-          ? `<img src="${url}" alt="logo" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='${genericLogoSvg.replace(/"/g, "&quot;")}'"/>`
-          : genericLogoSvg;
-      }
-    });
-
-    createBtn?.addEventListener("click", () => {
-      overlay.classList.add("hidden");
-      if (createOverlay) {
-        nameInput.value = "";
-        logoUrlInput.value = "";
-        if (logoPreviewEl) logoPreviewEl.innerHTML = genericLogoSvg;
-        errorMsg?.classList.add("hidden");
-        createOverlay.classList.remove("hidden");
-        nameInput.focus();
-      }
-    });
-
-    backBtn?.addEventListener("click", () => {
-      createOverlay?.classList.add("hidden");
-      overlay.classList.remove("hidden");
-    });
-
-    async function submitCreateGroup() {
-      const name = nameInput.value.trim();
-      const slug = toSlug(name);
-      const logo_url = logoUrlInput.value.trim() || null;
-
-      errorMsg?.classList.add("hidden");
-
-      if (!name) { showCreateError("El nombre es obligatorio."); return; }
-      if (!slug) { showCreateError("El nombre no es válido."); return; }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Creando...";
-
-      try {
-        const newGroup = await apiClient.createGroup({ name, slug, logo_url });
-        groups.push(newGroup);
-        if (currentUser) {
-          const uEmail = currentUser.email || null;
-          const uName = currentUser.user_metadata?.full_name || null;
-          try { await apiClient.addGroupMember(newGroup.id, currentUser.id, "admin", "approved", uEmail, uName); } catch (_) {}
-          currentUserMembership = { role: "admin", status: "approved" };
-        }
-        createOverlay?.classList.add("hidden");
-        saveGroupToStorage(newGroup);
-        enterGroup(newGroup);
-      } catch (e) {
-        const msg = e?.message?.includes("duplicate") || e?.message?.includes("unique")
-          ? "Ese slug ya está en uso, elegí otro."
-          : (e?.message || "Error al crear el grupo.");
-        showCreateError(msg);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Crear grupo";
-      }
-    }
-
-    function showCreateError(msg) {
-      if (errorMsg) { errorMsg.textContent = msg; errorMsg.classList.remove("hidden"); }
-    }
-
-    submitBtn?.addEventListener("click", submitCreateGroup);
-    nameInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") submitCreateGroup(); });
   }
+
+  // Crear nuevo grupo (siempre se registra, independiente de si el selector se muestra al inicio)
+  const createOverlay = document.getElementById("createGroupOverlay");
+  const createBtn = document.getElementById("createGroupBtn");
+  const backBtn = document.getElementById("createGroupBackBtn");
+  const nameInput = document.getElementById("createGroupName");
+  const logoUrlInput = document.getElementById("createGroupLogoUrl");
+  const logoPreviewEl = document.getElementById("createGroupLogoPreview");
+  const submitBtn = document.getElementById("createGroupSubmitBtn");
+  const errorMsg = document.getElementById("createGroupError");
+
+  function toSlug(str) {
+    return str.toLowerCase().trim()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  const genericLogoSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary,#94a3b8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
+
+  logoUrlInput?.addEventListener("input", () => {
+    const url = logoUrlInput.value.trim();
+    if (logoPreviewEl) {
+      logoPreviewEl.innerHTML = url
+        ? `<img src="${url}" alt="logo" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='${genericLogoSvg.replace(/"/g, "&quot;")}'"/>`
+        : genericLogoSvg;
+    }
+  });
+
+  createBtn?.addEventListener("click", () => {
+    overlay.classList.add("hidden");
+    if (createOverlay) {
+      nameInput.value = "";
+      logoUrlInput.value = "";
+      if (logoPreviewEl) logoPreviewEl.innerHTML = genericLogoSvg;
+      errorMsg?.classList.add("hidden");
+      createOverlay.classList.remove("hidden");
+      nameInput.focus();
+    }
+  });
+
+  backBtn?.addEventListener("click", () => {
+    createOverlay?.classList.add("hidden");
+    overlay.classList.remove("hidden");
+  });
+
+  async function submitCreateGroup() {
+    const name = nameInput.value.trim();
+    const slug = toSlug(name);
+    const logo_url = logoUrlInput.value.trim() || null;
+
+    errorMsg?.classList.add("hidden");
+
+    if (!name) { showCreateError("El nombre es obligatorio."); return; }
+    if (!slug) { showCreateError("El nombre no es válido."); return; }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Creando...";
+
+    try {
+      const newGroup = await apiClient.createGroup({ name, slug, logo_url });
+      groups.push(newGroup);
+      if (currentUser) {
+        const uEmail = currentUser.email || null;
+        const uName = currentUser.user_metadata?.full_name || null;
+        try { await apiClient.addGroupMember(newGroup.id, currentUser.id, "admin", "approved", uEmail, uName); } catch (_) {}
+        currentUserMembership = { role: "admin", status: "approved" };
+      }
+      createOverlay?.classList.add("hidden");
+      saveGroupToStorage(newGroup);
+      enterGroup(newGroup);
+    } catch (e) {
+      const msg = e?.message?.includes("duplicate") || e?.message?.includes("unique")
+        ? "Ese slug ya está en uso, elegí otro."
+        : (e?.message || "Error al crear el grupo.");
+      showCreateError(msg);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Crear grupo";
+    }
+  }
+
+  function showCreateError(msg) {
+    if (errorMsg) { errorMsg.textContent = msg; errorMsg.classList.remove("hidden"); }
+  }
+
+  submitBtn?.addEventListener("click", submitCreateGroup);
+  nameInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") submitCreateGroup(); });
 })();
 function showRequestAccessScreen(group, isPending = false) {
   const screen = document.getElementById("request-access-screen");
