@@ -4217,6 +4217,11 @@ function showPinOverlay(group, onSuccess, onBack) {
 
   window.__showGroupSelector = function() {
     renderGroupList();
+    const label = document.getElementById("selectorUserLabel");
+    if (label && currentUser) {
+      const name = currentUser.user_metadata?.full_name || currentUser.email || "";
+      label.textContent = name;
+    }
     if (overlay) {
       overlay.classList.remove("hidden");
       requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
@@ -4289,6 +4294,11 @@ function showPinOverlay(group, onSuccess, onBack) {
   // Mostrar selector
   if (overlay && list) {
     renderGroupList();
+    const label = document.getElementById("selectorUserLabel");
+    if (label && currentUser) {
+      const name = currentUser.user_metadata?.full_name || currentUser.email || "";
+      label.textContent = name;
+    }
     overlay.classList.remove("hidden");
     requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
   }
