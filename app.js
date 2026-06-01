@@ -4438,6 +4438,7 @@ function showAuthScreen(group) {
 
 function updateSelectorAvatar() {
   const el = document.getElementById("selectorUserAvatar");
+  const nameEl = document.getElementById("selectorUserName");
   if (!el) return;
   if (!currentUser) { el.style.display = "none"; return; }
   const avatarUrl = currentUser.user_metadata?.avatar_url;
@@ -4445,11 +4446,32 @@ function updateSelectorAvatar() {
   const initials = name.trim().split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase();
   const dot = `<span style="position:absolute;right:1px;bottom:1px;width:10px;height:10px;background:#22c55e;border:2px solid rgba(15,23,42,0.9);border-radius:50%;"></span>`;
   el.style.display = "flex";
-  el.style.position = "absolute";
   el.innerHTML = avatarUrl
     ? `<img src="${avatarUrl}" alt="${initials}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='${initials}${dot}'">${dot}`
     : `${initials}${dot}`;
+  if (nameEl) nameEl.textContent = name;
 }
+
+document.getElementById("selectorUserAvatar")?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const menu = document.getElementById("selectorUserMenu");
+  if (!menu) return;
+  menu.style.display = menu.style.display === "none" ? "block" : "none";
+});
+
+document.getElementById("selectorSignOutBtn")?.addEventListener("click", async () => {
+  removeGroupFromStorage();
+  const url = new URL(window.location.href);
+  url.searchParams.delete("group");
+  window.history.replaceState({}, "", url.toString());
+  try { await UserAuth.signOut(); } catch (_) {}
+  window.location.reload();
+});
+
+document.addEventListener("click", () => {
+  const menu = document.getElementById("selectorUserMenu");
+  if (menu) menu.style.display = "none";
+});
 
 function updateUserAvatar(user) {
   const el = document.getElementById("userAvatar");
