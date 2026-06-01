@@ -4534,33 +4534,58 @@ async function openMembersModal() {
   const modal = document.getElementById("membersModal");
   if (!modal) return;
   modal.classList.remove("hidden");
-  const list = document.getElementById("pendingMembersList");
-  if (!list) return;
-  list.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">Cargando...</p>';
+  const pendingList = document.getElementById("pendingMembersList");
+  const approvedList = document.getElementById("approvedMembersList");
+  if (!pendingList || !approvedList) return;
+  pendingList.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">Cargando...</p>';
+  approvedList.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">Cargando...</p>';
   try {
     const groupId = apiClient.getGroupId();
-    const pending = await apiClient.getPendingMembers(groupId);
+    const [pending, approved] = await Promise.all([
+      apiClient.getPendingMembers(groupId),
+      apiClient.getApprovedMembers(groupId),
+    ]);
+
     if (pending.length === 0) {
-      list.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">No hay solicitudes pendientes.</p>';
-      return;
+      pendingList.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">No hay solicitudes pendientes.</p>';
+    } else {
+      pendingList.innerHTML = pending.map((m) => {
+        const name = m.user_name || m.user_email || m.user_id;
+        const sub = m.user_name && m.user_email ? m.user_email : null;
+        return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line);gap:8px;">
+          <div style="min-width:0;">
+            <p style="margin:0;font-size:0.9rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</p>
+            ${sub ? `<p style="margin:0;font-size:0.78rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</p>` : ""}
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button onclick="handleMemberAction('${m.id}','approved',this)" style="padding:5px 12px;border-radius:8px;border:none;background:var(--success,#10b981);color:#fff;font-size:0.8rem;cursor:pointer;font-weight:600;">Aprobar</button>
+            <button onclick="handleMemberAction('${m.id}','rejected',this)" style="padding:5px 12px;border-radius:8px;border:none;background:var(--danger,#ef4444);color:#fff;font-size:0.8rem;cursor:pointer;font-weight:600;">Rechazar</button>
+          </div>
+        </div>
+      `}).join("");
     }
-    list.innerHTML = pending.map((m) => {
-      const name = m.user_name || m.user_email || m.user_id;
-      const sub = m.user_name && m.user_email ? m.user_email : null;
-      return `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line);gap:8px;">
-        <div style="min-width:0;">
-          <p style="margin:0;font-size:0.9rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</p>
-          ${sub ? `<p style="margin:0;font-size:0.78rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</p>` : ""}
+
+    if (approved.length === 0) {
+      approvedList.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">No hay miembros aprobados.</p>';
+    } else {
+      approvedList.innerHTML = approved.map((m) => {
+        const name = m.user_name || m.user_email || m.user_id;
+        const sub = m.user_name && m.user_email ? m.user_email : null;
+        const isAdmin = m.role === "admin";
+        return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line);gap:8px;">
+          <div style="min-width:0;">
+            <p style="margin:0;font-size:0.9rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}${isAdmin ? ' <span style="font-size:0.7rem;color:var(--accent,#a78bfa);font-weight:700;margin-left:4px;">ADMIN</span>' : ""}</p>
+            ${sub ? `<p style="margin:0;font-size:0.78rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</p>` : ""}
+          </div>
+          ${!isAdmin ? `<button onclick="handleRemoveMember('${m.id}',this)" style="padding:5px 10px;border-radius:8px;border:1px solid var(--danger,#ef4444);background:transparent;color:var(--danger,#ef4444);font-size:0.78rem;cursor:pointer;font-weight:600;flex-shrink:0;">Expulsar</button>` : ""}
         </div>
-        <div style="display:flex;gap:6px;flex-shrink:0;">
-          <button onclick="handleMemberAction('${m.id}','approved',this)" style="padding:5px 12px;border-radius:8px;border:none;background:var(--success,#10b981);color:#fff;font-size:0.8rem;cursor:pointer;font-weight:600;">Aprobar</button>
-          <button onclick="handleMemberAction('${m.id}','rejected',this)" style="padding:5px 12px;border-radius:8px;border:none;background:var(--danger,#ef4444);color:#fff;font-size:0.8rem;cursor:pointer;font-weight:600;">Rechazar</button>
-        </div>
-      </div>
-    `}).join("");
+      `}).join("");
+    }
   } catch (e) {
-    list.innerHTML = '<p style="color:var(--danger);font-size:0.9rem;">Error al cargar solicitudes.</p>';
+    pendingList.innerHTML = '<p style="color:var(--danger);font-size:0.9rem;">Error al cargar solicitudes.</p>';
+    approvedList.innerHTML = '<p style="color:var(--danger);font-size:0.9rem;">Error al cargar miembros.</p>';
   }
 }
 
@@ -4576,6 +4601,18 @@ window.handleMemberAction = async function(memberId, status, btn) {
     refreshPendingBadge(groupId);
   } catch (_) {
     btn.parentElement.querySelectorAll("button").forEach(b => b.disabled = false);
+  }
+};
+
+window.handleRemoveMember = async function(memberId, btn) {
+  btn.disabled = true;
+  try {
+    await apiClient.updateMemberStatus(memberId, "rejected");
+    const row = btn.closest("div[style]");
+    row.style.opacity = "0.5";
+    row.innerHTML = `<span style="font-size:0.85rem;color:var(--text-secondary);">✗ Expulsado</span>`;
+  } catch (_) {
+    btn.disabled = false;
   }
 };
 

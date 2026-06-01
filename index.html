@@ -626,10 +626,18 @@
         <h2>Miembros del grupo</h2>
         <button class="close-btn" id="closeMembersBtn">&times;</button>
       </div>
-      <div class="modal-body">
-        <h3 style="margin:0 0 10px;font-size:0.9rem;color:var(--text-secondary,#94a3b8);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Solicitudes pendientes</h3>
-        <div id="pendingMembersList" style="display:flex;flex-direction:column;gap:8px;">
-          <p style="color:var(--text-secondary);font-size:0.9rem;">Cargando...</p>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:20px;">
+        <div>
+          <h3 style="margin:0 0 10px;font-size:0.9rem;color:var(--text-secondary,#94a3b8);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Solicitudes pendientes</h3>
+          <div id="pendingMembersList" style="display:flex;flex-direction:column;gap:8px;">
+            <p style="color:var(--text-secondary);font-size:0.9rem;">Cargando...</p>
+          </div>
+        </div>
+        <div>
+          <h3 style="margin:0 0 10px;font-size:0.9rem;color:var(--text-secondary,#94a3b8);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Miembros aprobados</h3>
+          <div id="approvedMembersList" style="display:flex;flex-direction:column;gap:8px;">
+            <p style="color:var(--text-secondary);font-size:0.9rem;">Cargando...</p>
+          </div>
         </div>
       </div>
     </div>

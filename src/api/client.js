@@ -634,6 +634,19 @@
       return data || [];
     },
 
+    async getApprovedMembers(groupId) {
+      const sb = global.SupabaseClient;
+      if (!sb) throw new Error("SupabaseClient not available");
+      const { data, error } = await sb
+        .from("group_members")
+        .select("id,user_id,user_email,user_name,role,created_at")
+        .eq("group_id", groupId)
+        .eq("status", "approved")
+        .order("created_at", { ascending: true });
+      if (error) throw new Error(error.message);
+      return data || [];
+    },
+
     async updateMemberStatus(memberId, status) {
       const sb = global.SupabaseClient;
       if (!sb) throw new Error("SupabaseClient not available");
