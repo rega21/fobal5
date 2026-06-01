@@ -4417,6 +4417,7 @@ function hideRequestAccessScreen() {
 function showAuthScreen(group) {
   const screen = document.getElementById("auth-screen");
   if (!screen) return;
+  const backBtn = document.getElementById("authBackBtn");
   if (group) {
     const logoEl = screen.querySelector(".auth-logo");
     const titleEl = screen.querySelector(".auth-title");
@@ -4426,6 +4427,9 @@ function showAuthScreen(group) {
       logoEl.style.borderRadius = group.logo_url ? "50%" : "";
     }
     if (titleEl) titleEl.textContent = group.name || "Falta Uno";
+    backBtn?.classList.remove("hidden");
+  } else {
+    backBtn?.classList.add("hidden");
   }
   screen.classList.remove("hidden");
 }
