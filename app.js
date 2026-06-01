@@ -3476,11 +3476,7 @@ document.getElementById("signOutBtn")?.addEventListener("click", async () => {
   document.getElementById("membersBtn")?.classList.add("hidden");
   currentUserMembership = null;
   try { await UserAuth.signOut(); } catch (_) {}
-  if (window.__showGroupSelector) {
-    window.__showGroupSelector();
-  } else {
-    window.location.reload();
-  }
+  window.location.reload();
 });
 
 document.getElementById("changeGroupBtn")?.addEventListener("click", () => {
@@ -4165,6 +4161,9 @@ function showPinOverlay(group, onSuccess, onBack) {
 }
 
 (async function init() {
+  await authReadyPromise;
+  if (!currentUser) return;
+
   const slug = new URLSearchParams(window.location.search).get("group");
 
   if (typeof apiClient.getGroups !== "function") {
@@ -4469,6 +4468,8 @@ async function startApp() {
   _authReadyResolve?.();
   if (session) {
     startApp();
+  } else {
+    showAuthScreen(null);
   }
 
   UserAuth.onAuthStateChange(async (user) => {
