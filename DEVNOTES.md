@@ -85,6 +85,12 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Error handling en carga de grupos:** si Supabase falla al cargar grupos, muestra "No se pudo conectar al servidor" + botón Reintentar en lugar de quedarse en estado vacío.
 - **Flatpickr crash en mobile corregido:** `fp.calendarContainer` es `undefined` en modo nativo (mobile). Agregado guard `if (!fp.calendarContainer) return` en `onReady`.
 
+## v2.3 — Fixes de roles, acceso y Google Maps
+
+- **Fix botones de rol al cambiar de grupo:** `enterGroup()` ahora oculta `membersBtn`, `editGroupLogoBtn` y `adminBtn` antes de aplicar los permisos del nuevo grupo. Antes quedaban visibles del grupo anterior sin necesidad de F5.
+- **Fix miembros expulsados:** `resolveGroup()` ahora bloquea el acceso si `membership.status !== "approved"`. Antes un miembro con `status = "rejected"` podía entrar al grupo igual.
+- **Fix Google Maps autocomplete:** se habilitó "Places API (New)" en Google Cloud Console para la key `fobal5-maps`. Se invirtió la prioridad de inicialización: ahora usa `google.maps.places.Autocomplete` (legacy, dropdown inline) antes que `PlaceAutocompleteElement` (nuevo, pantalla completa en mobile). Dominio `faltauno5.vercel.app/*` ya estaba en las restricciones de la key.
+
 ## v2.2 — Edición comunitaria del grupo (toggle)
 
 - **Nueva columna `allow_member_edit` (BOOLEAN DEFAULT FALSE)** en la tabla `groups` de Supabase.
