@@ -4279,6 +4279,10 @@ function showPinOverlay(group, onSuccess, onBack) {
     activeGroupName = group.name || null;
     activeGroupCreatedBy = group.created_by || null;
     activeGroupAllowMemberEdit = group.allow_member_edit || false;
+    // Resetear botones condicionales antes de aplicar permisos del nuevo grupo
+    document.getElementById("membersBtn")?.classList.add("hidden");
+    document.getElementById("editGroupLogoBtn")?.classList.add("hidden");
+    document.getElementById("adminBtn")?.classList.add("hidden");
     updateBrandLogo();
     const historyTitle = document.getElementById("historyGroupTitle");
     if (historyTitle) {
