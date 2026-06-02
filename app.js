@@ -2140,10 +2140,10 @@ async function initLocationAutocomplete() {
   try {
     await loadGoogleMapsPlacesScript();
 
-    if (window.google?.maps?.places?.PlaceAutocompleteElement) {
-      initPlaceAutocompleteElement(locationInput);
-    } else if (window.google?.maps?.places?.Autocomplete) {
+    if (window.google?.maps?.places?.Autocomplete) {
       initLegacyAutocomplete(locationInput);
+    } else if (window.google?.maps?.places?.PlaceAutocompleteElement) {
+      initPlaceAutocompleteElement(locationInput);
     } else {
       setMatchLocationHint("No se pudo activar Google Maps Autocomplete. Verifica que estén habilitadas Maps JavaScript API + Places API y que la key permita este dominio.");
       return;
