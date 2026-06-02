@@ -4323,6 +4323,10 @@ function showPinOverlay(group, onSuccess, onBack) {
       showRequestAccessScreen(group, true);
       return;
     }
+    if (membership.status !== "approved") {
+      showRequestAccessScreen(group);
+      return;
+    }
     currentUserMembership = membership;
     enterGroup(group);
   }
