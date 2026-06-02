@@ -3430,6 +3430,7 @@ let activeGroupLogoUrl = null;
 let activeGroupName = null;
 let activeGroupPin = "";
 let activeGroupCreatedBy = null;
+let activeGroupAllowMemberEdit = false;
 
 function updateBrandLogo() {
   const logo = document.getElementById("brandLogo");
@@ -3506,6 +3507,16 @@ function openEditGroupLogoModal() {
   document.getElementById("deleteGroupSection").style.display = "none";
   document.getElementById("deleteGroupBtn").style.display = "";
   document.getElementById("deleteGroupError")?.classList.add("hidden");
+  const toggleSection = document.getElementById("allowMemberEditSection");
+  const toggleCheck = document.getElementById("allowMemberEditCheck");
+  const toggleSlider = document.getElementById("allowMemberEditSlider");
+  if (toggleSection) toggleSection.style.display = isCreator ? "flex" : "none";
+  if (toggleCheck) toggleCheck.checked = activeGroupAllowMemberEdit;
+  if (toggleSlider) {
+    toggleSlider.style.background = activeGroupAllowMemberEdit ? "var(--accent,#10b981)" : "var(--border,#334155)";
+  }
+  const toggleThumb = document.getElementById("allowMemberEditThumb");
+  if (toggleThumb) toggleThumb.style.left = activeGroupAllowMemberEdit ? "23px" : "3px";
   document.getElementById("editGroupLogoModal")?.classList.remove("hidden");
 }
 
@@ -3520,22 +3531,33 @@ document.getElementById("editLogoUrlInput")?.addEventListener("input", () => {
   }
 });
 
+document.getElementById("allowMemberEditCheck")?.addEventListener("change", (e) => {
+  const slider = document.getElementById("allowMemberEditSlider");
+  const thumb = document.getElementById("allowMemberEditThumb");
+  if (slider) slider.style.background = e.target.checked ? "var(--accent,#10b981)" : "var(--border,#334155)";
+  if (thumb) thumb.style.left = e.target.checked ? "23px" : "3px";
+});
+
 document.getElementById("saveGroupLogoBtn")?.addEventListener("click", async () => {
   const groupId = window.FobalApi?.getGroupId?.();
   if (!groupId) return;
   const newUrl = document.getElementById("editLogoUrlInput").value.trim() || null;
   const newName = document.getElementById("editGroupNameInput").value.trim() || activeGroupName;
+  const isCreator = activeGroupCreatedBy && currentUser?.id === activeGroupCreatedBy;
+  const newAllowMemberEdit = isCreator
+    ? (document.getElementById("allowMemberEditCheck")?.checked ?? activeGroupAllowMemberEdit)
+    : activeGroupAllowMemberEdit;
 
-  const settings = { name: newName, logo_url: newUrl };
+  const settings = { name: newName, logo_url: newUrl, allow_member_edit: newAllowMemberEdit };
 
   window.FobalApi.updateGroupSettings(groupId, settings)
     .then(() => {
       activeGroupLogoUrl = newUrl;
       activeGroupName = newName;
+      activeGroupAllowMemberEdit = newAllowMemberEdit;
       updateBrandLogo();
       document.getElementById("editGroupLogoModal")?.classList.add("hidden");
-      const msg = newPin ? "Configuración y PIN guardados" : "Configuración guardada";
-      showToast(msg, 2500, "success");
+      showToast("Configuración guardada", 2500, "success");
     })
     .catch(() => showToast("Error al guardar", 3000, "error"));
 });
@@ -4256,15 +4278,19 @@ function showPinOverlay(group, onSuccess, onBack) {
     activeGroupLogoUrl = group.logo_url || null;
     activeGroupName = group.name || null;
     activeGroupCreatedBy = group.created_by || null;
+    activeGroupAllowMemberEdit = group.allow_member_edit || false;
     updateBrandLogo();
     const historyTitle = document.getElementById("historyGroupTitle");
     if (historyTitle) {
       historyTitle.textContent = group.name ? `Partidos registrados de ${group.name}` : "";
       historyTitle.style.display = "none";
     }
-    if (currentUserMembership?.role === "admin") {
-      document.getElementById("membersBtn")?.classList.remove("hidden");
+    const isAdmin = currentUserMembership?.role === "admin";
+    if (isAdmin || activeGroupAllowMemberEdit) {
       document.getElementById("editGroupLogoBtn")?.classList.remove("hidden");
+    }
+    if (isAdmin) {
+      document.getElementById("membersBtn")?.classList.remove("hidden");
       refreshPendingBadge(group.id);
     }
     if (currentUser?.email === "aregaarrospide@gmail.com") {

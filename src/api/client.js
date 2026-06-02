@@ -517,7 +517,7 @@
       return [...new Set(data.map(r => r.player_id).filter(Boolean))];
     },
     async getGroups() {
-      const rows = await requestSupabase("/rest/v1/groups?select=id,name,slug,pin_hash,logo_url&order=name.asc", {
+      const rows = await requestSupabase("/rest/v1/groups?select=id,name,slug,logo_url,created_by,allow_member_edit&order=name.asc", {
         method: "GET",
         headers: buildSupabaseHeaders(),
       });
@@ -539,12 +539,6 @@
       if (!created || !created.id) throw new Error("No se pudo crear el grupo");
       return created;
     },
-    async deleteGroup(groupId) {
-      await requestSupabase(`/rest/v1/groups?id=eq.${groupId}`, {
-        method: "DELETE",
-        headers: buildSupabaseHeaders(),
-      });
-    },
     async updateGroupLogo(groupId, logo_url) {
       await requestSupabase(`/rest/v1/groups?id=eq.${groupId}`, {
         method: "PATCH",
@@ -552,10 +546,11 @@
         body: JSON.stringify({ logo_url }),
       });
     },
-    async updateGroupSettings(groupId, { name, logo_url }) {
+    async updateGroupSettings(groupId, { name, logo_url, allow_member_edit }) {
       const payload = {};
       if (name !== undefined) payload.name = name;
       if (logo_url !== undefined) payload.logo_url = logo_url;
+      if (allow_member_edit !== undefined) payload.allow_member_edit = allow_member_edit;
       await requestSupabase(`/rest/v1/groups?id=eq.${groupId}`, {
         method: "PATCH",
         headers: buildSupabaseHeaders({ "Content-Type": "application/json" }),
