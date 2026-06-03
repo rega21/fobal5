@@ -4290,11 +4290,11 @@ function showPinOverlay(group, onSuccess, onBack) {
       historyTitle.style.display = "none";
     }
     const isAdmin = currentUserMembership?.role === "admin";
+    document.getElementById("membersBtn")?.classList.remove("hidden");
     if (isAdmin || activeGroupAllowMemberEdit) {
       document.getElementById("editGroupLogoBtn")?.classList.remove("hidden");
     }
     if (isAdmin) {
-      document.getElementById("membersBtn")?.classList.remove("hidden");
       refreshPendingBadge(group.id);
     }
     if (currentUser?.email === "aregaarrospide@gmail.com") {
@@ -4646,34 +4646,43 @@ async function openMembersModal() {
   modal.classList.remove("hidden");
   const pendingList = document.getElementById("pendingMembersList");
   const approvedList = document.getElementById("approvedMembersList");
+  const pendingSection = document.getElementById("pendingMembersSection");
   if (!pendingList || !approvedList) return;
-  pendingList.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">Cargando...</p>';
+
+  const isAdmin = currentUserMembership?.role === "admin";
+  if (pendingSection) pendingSection.style.display = isAdmin ? "" : "none";
+
   approvedList.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">Cargando...</p>';
+  if (isAdmin) pendingList.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">Cargando...</p>';
+
   try {
     const groupId = apiClient.getGroupId();
-    const [pending, approved] = await Promise.all([
-      apiClient.getPendingMembers(groupId),
-      apiClient.getApprovedMembers(groupId),
-    ]);
+    const fetchTasks = [apiClient.getApprovedMembers(groupId)];
+    if (isAdmin) fetchTasks.unshift(apiClient.getPendingMembers(groupId));
+    const results = await Promise.all(fetchTasks);
+    const approved = isAdmin ? results[1] : results[0];
+    const pending = isAdmin ? results[0] : [];
 
-    if (pending.length === 0) {
-      pendingList.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">No hay solicitudes pendientes.</p>';
-    } else {
-      pendingList.innerHTML = pending.map((m) => {
-        const name = m.user_name || m.user_email || m.user_id;
-        const sub = m.user_name && m.user_email ? m.user_email : null;
-        return `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line);gap:8px;">
-          <div style="min-width:0;">
-            <p style="margin:0;font-size:0.9rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</p>
-            ${sub ? `<p style="margin:0;font-size:0.78rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</p>` : ""}
+    if (isAdmin) {
+      if (pending.length === 0) {
+        pendingList.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">No hay solicitudes pendientes.</p>';
+      } else {
+        pendingList.innerHTML = pending.map((m) => {
+          const name = m.user_name || m.user_email || m.user_id;
+          const sub = m.user_name && m.user_email ? m.user_email : null;
+          return `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line);gap:8px;">
+            <div style="min-width:0;">
+              <p style="margin:0;font-size:0.9rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</p>
+              ${sub ? `<p style="margin:0;font-size:0.78rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</p>` : ""}
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+              <button onclick="handleMemberAction('${m.id}','approved',this)" style="padding:5px 12px;border-radius:8px;border:none;background:var(--success,#10b981);color:#fff;font-size:0.8rem;cursor:pointer;font-weight:600;">Aprobar</button>
+              <button onclick="handleMemberAction('${m.id}','rejected',this)" style="padding:5px 12px;border-radius:8px;border:none;background:var(--danger,#ef4444);color:#fff;font-size:0.8rem;cursor:pointer;font-weight:600;">Rechazar</button>
+            </div>
           </div>
-          <div style="display:flex;gap:6px;flex-shrink:0;">
-            <button onclick="handleMemberAction('${m.id}','approved',this)" style="padding:5px 12px;border-radius:8px;border:none;background:var(--success,#10b981);color:#fff;font-size:0.8rem;cursor:pointer;font-weight:600;">Aprobar</button>
-            <button onclick="handleMemberAction('${m.id}','rejected',this)" style="padding:5px 12px;border-radius:8px;border:none;background:var(--danger,#ef4444);color:#fff;font-size:0.8rem;cursor:pointer;font-weight:600;">Rechazar</button>
-          </div>
-        </div>
-      `}).join("");
+        `}).join("");
+      }
     }
 
     if (approved.length === 0) {
@@ -4682,19 +4691,19 @@ async function openMembersModal() {
       approvedList.innerHTML = approved.map((m) => {
         const name = m.user_name || m.user_email || m.user_id;
         const sub = m.user_name && m.user_email ? m.user_email : null;
-        const isAdmin = m.role === "admin";
+        const memberIsAdmin = m.role === "admin";
         return `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line);gap:8px;">
           <div style="min-width:0;">
-            <p style="margin:0;font-size:0.9rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}${isAdmin ? ' <span style="font-size:0.7rem;color:var(--accent,#a78bfa);font-weight:700;margin-left:4px;">ADMIN</span>' : ""}</p>
-            ${sub ? `<p style="margin:0;font-size:0.78rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</p>` : ""}
+            <p style="margin:0;font-size:0.9rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}${memberIsAdmin ? ' <span style="font-size:0.7rem;color:var(--accent,#a78bfa);font-weight:700;margin-left:4px;">ADMIN</span>' : ""}</p>
+            ${isAdmin && sub ? `<p style="margin:0;font-size:0.78rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</p>` : ""}
           </div>
-          ${!isAdmin ? `<button onclick="handleRemoveMember('${m.id}',this)" style="padding:5px 10px;border-radius:8px;border:1px solid var(--danger,#ef4444);background:transparent;color:var(--danger,#ef4444);font-size:0.78rem;cursor:pointer;font-weight:600;flex-shrink:0;">Expulsar</button>` : ""}
+          ${isAdmin && !memberIsAdmin ? `<button onclick="handleRemoveMember('${m.id}',this)" style="padding:5px 10px;border-radius:8px;border:1px solid var(--danger,#ef4444);background:transparent;color:var(--danger,#ef4444);font-size:0.78rem;cursor:pointer;font-weight:600;flex-shrink:0;">Expulsar</button>` : ""}
         </div>
       `}).join("");
     }
   } catch (e) {
-    pendingList.innerHTML = '<p style="color:var(--danger);font-size:0.9rem;">Error al cargar solicitudes.</p>';
+    if (isAdmin) pendingList.innerHTML = '<p style="color:var(--danger);font-size:0.9rem;">Error al cargar solicitudes.</p>';
     approvedList.innerHTML = '<p style="color:var(--danger);font-size:0.9rem;">Error al cargar miembros.</p>';
   }
 }
