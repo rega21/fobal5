@@ -424,3 +424,10 @@ La app está pensada actualmente como grupo único (FutbolFoca). Para escalar a 
   - Si el límite fue alcanzado: botón de guardar en pestaña **Puntos** aparece deshabilitado con mensaje informativo.
   - Pestaña **Identidad**: botón siempre habilitado, independiente del límite.
 - Al cambiar entre pestañas, el estado del botón se recalcula usando `currentEditReachedVoteLimit`.
+## Pendientes / Deuda técnica
+
+- **Revisar código viejo sin uso:** `app.js` y `client.js` han crecido mucho. Revisar si quedan funciones, variables o bloques relacionados con el sistema de PIN (ya eliminado), MockAPI (ya no se usa para matches), o lógica de voter_key que haya sido reemplazada. Limpiar lo que ya no se usa.
+- **Columna `pin_hash` en tabla `groups`:** sigue existiendo en Supabase aunque ya no se usa. Candidata a eliminar.
+- **Columna `midfield` en `player_ratings` y `players`:** pendiente renombrar a `vision` en DB (en UI ya fue renombrado en v1.7).
+- **Filas duplicadas en `group_members`:** algunos usuarios tienen dos filas para el mismo grupo (admin + member). Revisar si conviene agregar una unique constraint o limpiar los duplicados existentes.
+- **Notificaciones push:** cuando llega una solicitud de acceso al grupo, notificar al admin sin que tenga que abrir la app. Requiere service worker + Web Push API.
