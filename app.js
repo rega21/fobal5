@@ -2515,7 +2515,7 @@ function renderHistory() {
     calEl?.classList.add("hidden");
     trajEl?.classList.remove("hidden");
     document.body.classList.add("view-trajectory");
-    void window.TrajectoryView.renderTrajectory();
+    void window.TrajectoryView.renderTrajectory(players);
   } else if (historyViewMode === "calendar") {
     listEl?.classList.add("hidden");
     calEl?.classList.remove("hidden");

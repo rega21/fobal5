@@ -5,15 +5,16 @@
   const COLOR_END_DARK   = "#1a3a4a";
   const COLOR_END_LIGHT  = "#4BC0C0";
 
-  function buildData(matches) {
+  function buildData(matches, players) {
     const played = matches.filter(
       (m) => m.status === "played" && m.scoreA != null && m.scoreB != null
     );
 
     if (!played.length) return null;
 
-    const wins = {};    // key: id || displayName
+    const wins = {};
     const displayNames = {};
+    const playersById = new Map((players || []).map((p) => [String(p.id), p]));
 
     played.forEach((m) => {
       const draw = m.scoreA === m.scoreB;
@@ -21,10 +22,11 @@
 
       [...(m.teamA || []), ...(m.teamB || [])].forEach((p) => {
         const key = p.id || (p.nickname || p.name);
-        const label = p.nickname || p.name;
         if (!wins[key]) wins[key] = 0;
-        // Prefer nickname over name as display label
-        if (!displayNames[key] || p.nickname) displayNames[key] = label;
+        if (!displayNames[key]) {
+          const current = playersById.get(String(p.id));
+          displayNames[key] = (current?.nickname?.trim() || current?.name) ?? (p.nickname || p.name);
+        }
       });
 
       if (winTeam) {
@@ -52,7 +54,7 @@
     return gradient;
   }
 
-  async function renderTrajectory() {
+  async function renderTrajectory(players) {
     const canvas = document.getElementById("trajectoryChart");
     const emptyMsg = document.getElementById("trajectoryEmpty");
     if (!canvas) return;
@@ -69,7 +71,7 @@
       console.error("TrajectoryView: error fetching matches", e);
     }
 
-    const result = buildData(matches);
+    const result = buildData(matches, players);
 
     if (!result) {
       canvas.classList.add("hidden");
