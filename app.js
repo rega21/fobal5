@@ -1491,7 +1491,10 @@ async function deletePlayer(id) {
     return;
   }
 
-  if (!adminAuthenticated) {
+  const canDelete = adminAuthenticated ||
+    (currentUser?.id && currentUser.id === activeGroupCreatedBy) ||
+    currentUserMembership?.role === "admin";
+  if (!canDelete) {
     alert("Solo el admin puede eliminar jugadores");
     return;
   }
@@ -1546,6 +1549,10 @@ function renderPlayers(options = {}) {
   preservePlayersOrderOnNextRender = false;
   const playersForView = getPlayersForDisplay(players);
 
+  const canDelete = adminAuthenticated ||
+    (currentUser?.id && currentUser.id === activeGroupCreatedBy) ||
+    currentUserMembership?.role === "admin";
+
   // Mostrar "Rating Global" solo si hay jugadores con rating validado en el grupo activo
   updateMenuItemsState();
 
@@ -1553,7 +1560,7 @@ function renderPlayers(options = {}) {
     window.PlayersView.renderPlayersList({
       players: playersForView,
       playerSearchTerm,
-      adminAuthenticated,
+      adminAuthenticated: canDelete,
       onEdit: (id) => editPlayer(id),
       onDelete: (id) => deletePlayer(id),
       onRatingClick: (id) => openRatingDetailsByPlayerId(id),
@@ -1620,7 +1627,7 @@ function renderPlayers(options = {}) {
       ? `<span class="player-stats">${scoreText}</span>`
       : "";
 
-    const deleteControl = adminAuthenticated
+    const deleteControl = canDelete
       ? `<button class="btn-delete" data-id="${p.id}" title="Eliminar">🗑️</button>`
       : "";
 
