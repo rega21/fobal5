@@ -172,11 +172,7 @@
       button.addEventListener("click", () => onEdit?.(button.dataset.id));
     });
     playersList.querySelectorAll(".btn-delete").forEach((button) => {
-      button.addEventListener("click", () => {
-        if (confirm("¿Eliminar jugador?")) {
-          onDelete?.(button.dataset.id);
-        }
-      });
+      button.addEventListener("click", () => onDelete?.(button.dataset.id));
     });
     playersList.querySelectorAll(".player-community--rating").forEach((button) => {
       button.addEventListener("click", () => onRatingClick?.(button.dataset.ratingId));

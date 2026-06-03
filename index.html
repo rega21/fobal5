@@ -315,6 +315,22 @@
       </div>
     </div>
 
+    <!-- Modal confirmación eliminar jugador -->
+    <div id="confirmDeleteModal" class="modal hidden">
+      <div class="modal-content modal-small modal-dark">
+        <div class="modal-header">
+          <h2>Eliminar jugador</h2>
+        </div>
+        <div class="modal-body">
+          <p style="margin:0 0 20px; color:#ccc; font-size:14px;">¿Estás seguro? Esta acción no se puede deshacer.</p>
+          <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button class="btn-secondary" id="confirmDeleteCancelBtn">Cancelar</button>
+            <button class="btn btn-danger" id="confirmDeleteOkBtn">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal login admin -->
     <div id="adminLoginModal" class="modal hidden">
       <div class="modal-content modal-small">

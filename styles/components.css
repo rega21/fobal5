@@ -404,6 +404,13 @@
 .btn-success:hover:not(:disabled){
   background: #059669;
 }
+.btn-danger{
+  background: #dc2626;
+  color: white;
+}
+.btn-danger:hover:not(:disabled){
+  background: #b91c1c;
+}
 .btn-secondary{
   background: #e5e7eb;
   color: var(--text);

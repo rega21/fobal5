@@ -1484,6 +1484,28 @@ async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0, 
   }
 }
 
+function showDeleteConfirm(playerId) {
+  const modal = document.getElementById("confirmDeleteModal");
+  if (!modal) { deletePlayer(playerId); return; }
+  modal.classList.remove("hidden");
+
+  const okBtn = document.getElementById("confirmDeleteOkBtn");
+  const cancelBtn = document.getElementById("confirmDeleteCancelBtn");
+
+  function close() {
+    modal.classList.add("hidden");
+    okBtn.removeEventListener("click", onOk);
+    cancelBtn.removeEventListener("click", close);
+    modal.removeEventListener("click", onBackdrop);
+  }
+  function onOk() { close(); deletePlayer(playerId); }
+  function onBackdrop(e) { if (e.target === modal) close(); }
+
+  okBtn.addEventListener("click", onOk);
+  cancelBtn.addEventListener("click", close);
+  modal.addEventListener("click", onBackdrop);
+}
+
 async function deletePlayer(id) {
   if (adminPlayersController) {
     preservePlayersOrderOnNextRender = true;
@@ -1562,7 +1584,7 @@ function renderPlayers(options = {}) {
       playerSearchTerm,
       adminAuthenticated: canDelete,
       onEdit: (id) => editPlayer(id),
-      onDelete: (id) => deletePlayer(id),
+      onDelete: (id) => showDeleteConfirm(id),
       onRatingClick: (id) => openRatingDetailsByPlayerId(id),
       onNameClick: (id) => openIdentityModal(id),
       preserveOrder: shouldPreserveOrder,
@@ -1663,11 +1685,7 @@ function renderPlayers(options = {}) {
   });
 
   document.querySelectorAll(".btn-delete").forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (confirm("¿Eliminar jugador?")) {
-        deletePlayer(btn.dataset.id);
-      }
-    });
+    btn.addEventListener("click", () => showDeleteConfirm(btn.dataset.id));
   });
   document.querySelectorAll(".player-community--rating").forEach((button) => {
     button.addEventListener("click", () => openRatingDetailsByPlayerId(button.dataset.ratingId));
