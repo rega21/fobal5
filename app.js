@@ -4533,7 +4533,14 @@ function updateSelectorAvatar() {
     ? `<img src="${avatarUrl}" alt="${initials}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='${initials}${dot}'">${dot}`
     : `${initials}${dot}`;
   if (nameEl) nameEl.textContent = name;
+  const adminBtn = document.getElementById("selectorAdminBtn");
+  if (adminBtn) adminBtn.style.display = currentUser?.email === "aregaarrospide@gmail.com" ? "block" : "none";
 }
+
+document.getElementById("selectorAdminBtn")?.addEventListener("click", () => {
+  document.getElementById("selectorUserMenu").style.display = "none";
+  document.getElementById("adminLoginModal")?.classList.remove("hidden");
+});
 
 document.getElementById("selectorUserAvatar")?.addEventListener("click", (e) => {
   e.stopPropagation();
