@@ -594,11 +594,11 @@
         .from("group_members")
         .select("id,role,status")
         .eq("group_id", groupId)
-        .eq("user_id", userId)
-        .limit(1)
-        .maybeSingle();
+        .eq("user_id", userId);
       if (error) throw new Error(error.message);
-      return data || null;
+      if (!data || data.length === 0) return null;
+      // Si hay varias filas (ej: admin + member), priorizar admin
+      return data.find((r) => r.role === "admin") || data[0];
     },
 
     async requestMembership(groupId, userId, userEmail, userName) {
