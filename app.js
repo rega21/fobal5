@@ -1582,7 +1582,8 @@ function renderPlayers(options = {}) {
     window.PlayersView.renderPlayersList({
       players: playersForView,
       playerSearchTerm,
-      adminAuthenticated: canDelete,
+      adminAuthenticated,
+      canDelete,
       onEdit: (id) => editPlayer(id),
       onDelete: (id) => showDeleteConfirm(id),
       onRatingClick: (id) => openRatingDetailsByPlayerId(id),
