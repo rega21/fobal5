@@ -141,13 +141,19 @@ const matchController = window.createMatchController
           const attack = Number(player.attack) || 0;
           const midfield = Number(player.midfield) || 0;
           const defense = Number(player.defense) || 0;
+          const stamina = Number(player.stamina) || 0;
+          const garra = Number(player.garra) || 0;
+          const technique = Number(player.technique) || 0;
 
           return {
             ...player,
             attack,
             midfield,
             defense,
-            score: attack * 0.45 + midfield * 0.3 + defense * 0.25,
+            stamina,
+            garra,
+            technique,
+            score: attack * 0.30 + garra * 0.20 + technique * 0.18 + defense * 0.17 + midfield * 0.10 + stamina * 0.05,
           };
         });
 
@@ -159,14 +165,8 @@ const matchController = window.createMatchController
 
         const summarizeTeam = (team) =>
           team.reduce(
-            (acc, player) => {
-              acc.score += player.score;
-              acc.attack += player.attack;
-              acc.midfield += player.midfield;
-              acc.defense += player.defense;
-              return acc;
-            },
-            { score: 0, attack: 0, midfield: 0, defense: 0 }
+            (acc, player) => { acc.score += player.score; return acc; },
+            { score: 0 }
           );
 
         const coMap = coOccurrenceMap || {};
@@ -201,15 +201,9 @@ const matchController = window.createMatchController
           const summaryB = summarizeTeam(teamB);
 
           const scoreDiff = Math.abs(summaryA.score - summaryB.score);
-          const attackDiff = Math.abs(summaryA.attack - summaryB.attack);
-          const midfieldDiff = Math.abs(summaryA.midfield - summaryB.midfield);
-          const defenseDiff = Math.abs(summaryA.defense - summaryB.defense);
 
           const cost =
             scoreDiff * 2 +
-            attackDiff * 1.25 +
-            midfieldDiff +
-            defenseDiff * 1.5 +
             (coOccurrencePenalty(teamA) + coOccurrencePenalty(teamB)) * 0.1;
 
           const candidate = { cost, scoreDiff, defenseDiff, teamA, teamB };
