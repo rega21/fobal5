@@ -1509,9 +1509,12 @@ function showDeleteConfirm(playerId) {
 }
 
 async function deletePlayer(id) {
+  const playerName = players.find(p => p.id == id)?.name || "Jugador";
+
   if (adminPlayersController) {
     preservePlayersOrderOnNextRender = true;
     await adminPlayersController.deletePlayer(id);
+    showToast(`${playerName} fue eliminado`, 2500, "success");
     return;
   }
 
@@ -1520,8 +1523,10 @@ async function deletePlayer(id) {
     players = players.filter(p => p.id !== id);
     renderPlayers({ preserveOrder: true });
     renderAdminPlayers();
+    showToast(`${playerName} fue eliminado`, 2500, "success");
   } catch (e) {
     console.error("Error deleting player:", e);
+    showToast("No se pudo eliminar el jugador", 2600, "error");
   }
 }
 
