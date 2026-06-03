@@ -2647,7 +2647,10 @@ async function editPlayer(id) {
   document.getElementById("editPlayerTechnique").value = initialTechnique;
   
   updateSliderValues();
-  openEditModal(hasVotedBefore, Boolean(userPreviousRating), playerForEdit.name, id);
+  const displayName = playerForEdit.nickname?.trim()
+    ? `${playerForEdit.name} "${playerForEdit.nickname.trim()}"`
+    : playerForEdit.name;
+  openEditModal(hasVotedBefore, Boolean(userPreviousRating), displayName, id);
 }
 
 async function openEditModal(
