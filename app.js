@@ -399,7 +399,9 @@ const adminPlayersController = window.createAdminPlayersController
       setPlayers: (nextPlayers) => {
         players = nextPlayers;
       },
-      getIsAdmin: () => adminAuthenticated,
+      getIsAdmin: () => adminAuthenticated ||
+        (currentUser?.id && currentUser.id === activeGroupCreatedBy) ||
+        currentUserMembership?.role === "admin",
       setIsAdmin: (nextValue) => {
         adminAuthenticated = nextValue;
       },
