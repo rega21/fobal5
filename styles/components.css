@@ -174,16 +174,29 @@
   transition: opacity 160ms ease-out, transform 160ms ease-out;
 }
 .btn-delete{
-  border:0;
+  border:1px solid var(--line);
   background:transparent;
   cursor:pointer;
-  font-size:18px;
-  transition: all 0.2s;
-  padding:4px;
-  border-radius:6px;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+  padding:0;
+  border-radius:999px;
+  width:36px;
+  height:36px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--text-secondary,#6b7280);
+  flex-shrink:0;
 }
 .btn-delete:hover{
   background:#fee2e2;
+  border-color:#fca5a5;
+  color:#dc2626;
+}
+[data-theme="dark"] .btn-delete:hover{
+  background:#3f1212;
+  border-color:#7f1d1d;
+  color:#f87171;
 }
 
 .edit-vote-hint{
