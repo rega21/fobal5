@@ -85,6 +85,15 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Error handling en carga de grupos:** si Supabase falla al cargar grupos, muestra "No se pudo conectar al servidor" + botón Reintentar en lugar de quedarse en estado vacío.
 - **Flatpickr crash en mobile corregido:** `fp.calendarContainer` es `undefined` en modo nativo (mobile). Agregado guard `if (!fp.calendarContainer) return` en `onReady`.
 
+## v2.5 — Fix re-solicitud de acceso para usuarios expulsados
+
+- **Problema:** un usuario expulsado (`status = rejected`) no podía volver a solicitar acceso. El flujo fallaba en tres puntos por gaps en RLS: no podía leer su propia fila (SELECT), no podía actualizarla (UPDATE), y la solicitud se mostraba como enviada pero no se persistía.
+- **Solución:** RPC `request_group_access(p_group_id, p_user_email, p_user_name)` con `SECURITY DEFINER`. Maneja ambos casos en una sola operación: si existe fila `rejected` la actualiza a `pending`; si no existe inserta una nueva fila `pending`.
+- **Policies RLS agregadas en Supabase:**
+  - `"users can view own membership"` — SELECT: `user_id = auth.uid()` (permite ver la propia fila en cualquier status)
+  - `"users can re-request membership"` — UPDATE: `user_id = auth.uid() AND status = 'rejected'` con CHECK `status = 'pending'` (quedó como respaldo aunque la RPC es la que resuelve)
+- **`requestMembership` en `client.js`** simplificado para llamar directamente al RPC en vez de manejar insert/update manual.
+
 ## v2.4 — Lista de miembros visible para todos + fixes RLS
 
 - **Miembros del grupo visible para todos los miembros aprobados:** `membersBtn` ahora se muestra para todos (no solo admins). La vista de miembros normales no incluye solicitudes pendientes, emails ni botón Expulsar.
