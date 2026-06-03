@@ -616,9 +616,9 @@
         const update = { status: "pending" };
         if (userEmail) update.user_email = userEmail;
         if (userName) update.user_name = userName;
-        const { data, error } = await sb.from("group_members").update(update).eq("id", existing.id).select().single();
+        const { error } = await sb.from("group_members").update(update).eq("id", existing.id);
         if (error) throw new Error(error.message);
-        return data;
+        return { id: existing.id, status: "pending" };
       }
       const payload = { group_id: groupId, user_id: userId, role: "member", status: "pending" };
       if (userEmail) payload.user_email = userEmail;
