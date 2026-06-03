@@ -85,6 +85,13 @@ Orden de peso propuesto para fútbol 5 (espacios reducidos):
 - **Error handling en carga de grupos:** si Supabase falla al cargar grupos, muestra "No se pudo conectar al servidor" + botón Reintentar en lugar de quedarse en estado vacío.
 - **Flatpickr crash en mobile corregido:** `fp.calendarContainer` es `undefined` en modo nativo (mobile). Agregado guard `if (!fp.calendarContainer) return` en `onReady`.
 
+## v2.4 — Lista de miembros visible para todos + fixes RLS
+
+- **Miembros del grupo visible para todos los miembros aprobados:** `membersBtn` ahora se muestra para todos (no solo admins). La vista de miembros normales no incluye solicitudes pendientes, emails ni botón Expulsar.
+- **Fix `getMembership`:** antes usaba `.limit(1)` sin orden, podía devolver rol `member` cuando el usuario tenía filas duplicadas (admin + member). Ahora busca todas las filas y prioriza `admin`.
+- **Fix RLS recursiva:** la primera policy `"approved members can view group members"` usaba una subquery sobre `group_members` dentro de una policy de `group_members`, causando recursión infinita (500). Se reemplazó por la función `is_approved_member(gid uuid)` con `SECURITY DEFINER` (mismo patrón que `is_group_admin`).
+- **Nueva función Supabase:** `is_approved_member(gid uuid)` — devuelve true si el usuario autenticado tiene status `approved` en el grupo.
+
 ## v2.3 — Fixes de roles, acceso y Google Maps
 
 - **Fix botones de rol al cambiar de grupo:** `enterGroup()` ahora oculta `membersBtn`, `editGroupLogoBtn` y `adminBtn` antes de aplicar los permisos del nuevo grupo. Antes quedaban visibles del grupo anterior sin necesidad de F5.
