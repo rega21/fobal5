@@ -604,6 +604,22 @@
     async requestMembership(groupId, userId, userEmail, userName) {
       const sb = global.SupabaseClient;
       if (!sb) throw new Error("SupabaseClient not available");
+      // Si ya existe una fila (ej: rejected), actualizarla a pending en vez de insertar
+      const { data: existing } = await sb.from("group_members")
+        .select("id")
+        .eq("group_id", groupId)
+        .eq("user_id", userId)
+        .eq("role", "member")
+        .limit(1)
+        .maybeSingle();
+      if (existing) {
+        const update = { status: "pending" };
+        if (userEmail) update.user_email = userEmail;
+        if (userName) update.user_name = userName;
+        const { data, error } = await sb.from("group_members").update(update).eq("id", existing.id).select().single();
+        if (error) throw new Error(error.message);
+        return data;
+      }
       const payload = { group_id: groupId, user_id: userId, role: "member", status: "pending" };
       if (userEmail) payload.user_email = userEmail;
       if (userName) payload.user_name = userName;
