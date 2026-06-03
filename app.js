@@ -1513,13 +1513,6 @@ async function deletePlayer(id) {
     return;
   }
 
-  const canDelete = adminAuthenticated ||
-    (currentUser?.id && currentUser.id === activeGroupCreatedBy) ||
-    currentUserMembership?.role === "admin";
-  if (!canDelete) {
-    alert("Solo el admin puede eliminar jugadores");
-    return;
-  }
   try {
     await apiClient.deletePlayer(id);
     players = players.filter(p => p.id !== id);
