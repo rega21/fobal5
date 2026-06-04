@@ -36,7 +36,8 @@
     document.getElementById("pstatsLost").textContent = "—";
     document.getElementById("pstatsDraw").textContent = "—";
     document.getElementById("pstatsWinRatePct").textContent = "—%";
-    document.getElementById("pstatsWinRateBar").style.width = "0%";
+    const arcReset = document.getElementById("pstatsGaugeArc");
+    if (arcReset) arcReset.style.strokeDashoffset = "251.3";
 
     modal.classList.remove("hidden");
     if (window.lucide) window.lucide.createIcons();
@@ -55,7 +56,8 @@
     document.getElementById("pstatsLost").textContent = s.lost;
     document.getElementById("pstatsDraw").textContent = s.drawn;
     document.getElementById("pstatsWinRatePct").textContent = s.winRate + "%";
-    document.getElementById("pstatsWinRateBar").style.width = s.winRate + "%";
+    const arc = document.getElementById("pstatsGaugeArc");
+    if (arc) arc.style.strokeDashoffset = String(251.3 * (1 - s.winRate / 100));
   }
 
   document.getElementById("closePlayerStatsBtn")?.addEventListener("click", () => {
