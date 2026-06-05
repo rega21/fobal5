@@ -407,6 +407,7 @@ const adminPlayersController = window.createAdminPlayersController
         updateAdminUI();
         renderPlayers();
       },
+      getVoterKey: () => playerRatingsService?.getOrCreateVoterKey(),
     })
   : null;
 

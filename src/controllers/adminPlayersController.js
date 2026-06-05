@@ -9,6 +9,7 @@
     setIsAdmin,
     onPlayersChanged,
     onAuthChanged,
+    getVoterKey,
   }) {
     async function fetchPlayers() {
       try {
@@ -28,6 +29,15 @@
         const nextPlayers = [...getPlayers(), newPlayer];
         setPlayers(nextPlayers);
         onPlayersChanged?.();
+
+        const voterKey = getVoterKey?.();
+        if (newPlayer?.id && voterKey) {
+          await apiClient.insertPlayerRatingLimited({
+            player_id: newPlayer.id,
+            voter_key: voterKey,
+            attack, defense, midfield, stamina, garra, technique,
+          });
+        }
       } catch (error) {
         console.error("Error adding player:", error);
       }
