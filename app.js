@@ -1463,7 +1463,7 @@ async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0, 
     // Insertar voto automático del creador con los mismos valores
     try {
       const voterKey = playerRatingsService.getOrCreateVoterKey();
-      await apiClient.insertInitialPlayerRating({
+      await apiClient.insertPlayerRatingLimited({
         player_id: newPlayer.id,
         voter_key: voterKey,
         attack, defense, midfield, stamina, garra, technique,
@@ -4770,3 +4770,55 @@ document.getElementById("membersBtn")?.addEventListener("click", () => {
 document.getElementById("closeMembersBtn")?.addEventListener("click", () => {
   document.getElementById("membersModal")?.classList.add("hidden");
 });
+
+// Pull to refresh (mobile only)
+(function () {
+  if (!("ontouchstart" in window)) return;
+  const indicator = document.getElementById("pullRefreshIndicator");
+  if (!indicator) return;
+
+  const THRESHOLD = 75;
+  let startY = 0;
+  let pulling = false;
+
+  function reset() {
+    pulling = false;
+    indicator.style.transition = "";
+    indicator.style.top = "";
+    indicator.classList.remove("ptr-ready", "ptr-spinning");
+  }
+
+  document.addEventListener("touchstart", (e) => {
+    const modalOpen = !!document.querySelector(".modal:not(.hidden)");
+    if (window.scrollY <= 0 && e.touches.length === 1 && !modalOpen) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+      indicator.style.transition = "none";
+    }
+  }, { passive: true });
+
+  document.addEventListener("touchmove", (e) => {
+    if (!pulling) return;
+    const distance = e.touches[0].clientY - startY;
+    if (distance <= 0) return;
+    const capped = Math.min(distance * 0.5, 56);
+    indicator.style.top = `${capped - 56}px`;
+    indicator.classList.toggle("ptr-ready", distance >= THRESHOLD);
+  }, { passive: true });
+
+  document.addEventListener("touchend", (e) => {
+    if (!pulling) return;
+    const distance = e.changedTouches[0].clientY - startY;
+    indicator.style.transition = "";
+    if (distance >= THRESHOLD) {
+      pulling = false;
+      indicator.style.top = "8px";
+      indicator.classList.add("ptr-spinning");
+      setTimeout(() => window.location.reload(), 400);
+    } else {
+      reset();
+    }
+  }, { passive: true });
+
+  document.addEventListener("touchcancel", reset, { passive: true });
+})();

@@ -49,6 +49,35 @@ body{
 }
 
 
+/* Pull to refresh */
+#pullRefreshIndicator {
+  position: fixed;
+  top: -56px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary, #3b82f6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: top 0.15s ease;
+  pointer-events: none;
+  box-shadow: 0 2px 12px rgba(59,130,246,0.4);
+}
+#pullRefreshIndicator.ptr-ready {
+  background: var(--success, #10b981);
+}
+#pullRefreshIndicator.ptr-spinning .ptr-icon {
+  animation: ptr-spin 0.6s linear infinite;
+}
+@keyframes ptr-spin {
+  to { transform: rotate(360deg); }
+}
+
 .hidden{ display: none !important; }
 
 /* Page */
