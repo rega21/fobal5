@@ -408,6 +408,10 @@ const adminPlayersController = window.createAdminPlayersController
         renderPlayers();
       },
       getVoterKey: () => playerRatingsService?.getOrCreateVoterKey(),
+      onPlayerRatingInserted: async () => {
+        await refreshPlayerRatingsSummary();
+        renderPlayers();
+      },
     })
   : null;
 

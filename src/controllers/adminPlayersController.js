@@ -10,6 +10,7 @@
     onPlayersChanged,
     onAuthChanged,
     getVoterKey,
+    onPlayerRatingInserted,
   }) {
     async function fetchPlayers() {
       try {
@@ -37,6 +38,7 @@
             voter_key: voterKey,
             attack, defense, midfield, stamina, garra, technique,
           });
+          await onPlayerRatingInserted?.();
         }
       } catch (error) {
         console.error("Error adding player:", error);
