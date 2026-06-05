@@ -38,7 +38,7 @@
             voter_key: voterKey,
             attack, defense, midfield, stamina, garra, technique,
           });
-          await onPlayerRatingInserted?.();
+          await onPlayerRatingInserted?.(newPlayer.id);
         }
       } catch (error) {
         console.error("Error adding player:", error);

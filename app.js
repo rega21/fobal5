@@ -408,7 +408,8 @@ const adminPlayersController = window.createAdminPlayersController
         renderPlayers();
       },
       getVoterKey: () => playerRatingsService?.getOrCreateVoterKey(),
-      onPlayerRatingInserted: async () => {
+      onPlayerRatingInserted: async (playerId) => {
+        if (playerId) markPlayerAsVoted(playerId);
         await refreshPlayerRatingsSummary();
         renderPlayers();
       },
