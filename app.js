@@ -1489,6 +1489,12 @@ async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0, 
 function showDeleteConfirm(playerId) {
   const modal = document.getElementById("confirmDeleteModal");
   if (!modal) { deletePlayer(playerId); return; }
+
+  const player = players.find(p => p.id === playerId);
+  const label = player?.nickname || player?.name || "";
+  const title = modal.querySelector("h2");
+  if (title) title.textContent = label ? `Eliminar ${label}` : "Eliminar jugador";
+
   modal.classList.remove("hidden");
 
   const okBtn = document.getElementById("confirmDeleteOkBtn");
