@@ -66,6 +66,9 @@
       attack: toNumber(body?.attack),
       defense: toNumber(body?.defense),
       midfield: toNumber(body?.midfield),
+      stamina: toNumber(body?.stamina),
+      garra: toNumber(body?.garra),
+      technique: toNumber(body?.technique),
     };
   }
 
