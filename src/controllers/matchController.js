@@ -81,7 +81,7 @@
           scoreDiff * 2 +
           (coOccurrencePenalty(teamA) + coOccurrencePenalty(teamB)) * 0.1;
 
-        const candidate = { cost, scoreDiff, defenseDiff, teamA, teamB };
+        const candidate = { cost, scoreDiff, teamA, teamB };
         candidates.push(candidate);
         if (!best || cost < best.cost) best = candidate;
       };

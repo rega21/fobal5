@@ -244,6 +244,12 @@
         body: JSON.stringify(payload),
       });
 
+      await requestSupabase(`/rest/v1/match_players?player_id=eq.${encodeURIComponent(String(id))}`, {
+        method: "PATCH",
+        headers: buildSupabaseHeaders({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+        body: JSON.stringify({ name: payload.name, nickname: payload.nickname }),
+      }).catch(() => {});
+
       const updated = Array.isArray(rows) ? rows[0] : rows;
       return mapPlayerFromSupabase(updated || { id, ...payload });
     },
