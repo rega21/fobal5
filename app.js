@@ -2714,7 +2714,7 @@ async function openEditModal(
       if (identityFields) identityFields.classList.remove("hidden");
       if (ratingFields) ratingFields.classList.remove("hidden");
       if (title) title.textContent = "Editar jugador";
-      if (saveBtn) saveBtn.textContent = "Guardar cambios";
+      if (saveBtn) saveBtn.textContent = "Actualizar";
       if (nameInput) nameInput.disabled = false;
       if (nicknameInput) nicknameInput.disabled = false;
       if (voteHint) voteHint.classList.add("hidden");
@@ -2740,7 +2740,7 @@ async function openEditModal(
         title.textContent = hasVotedBefore ? personalizedUpdateText : personalizedCalificarText;
       }
       if (saveBtn) {
-        saveBtn.textContent = "Guardar";
+        saveBtn.textContent = currentEditHasVotedBefore ? "Actualizar" : "Guardar";
         saveBtn.disabled = currentEditReachedVoteLimit;
       }
       // Mensaje informativo si alcanzó el límite

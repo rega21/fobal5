@@ -246,6 +246,15 @@
 .player-name--editable:hover{
   opacity:0.75;
 }
+.player-edit-icon{
+  opacity:0.35;
+  margin-left:4px;
+  vertical-align:middle;
+  transition:opacity 0.15s;
+}
+.player-name--editable:hover .player-edit-icon{
+  opacity:0.7;
+}
 .player-nick{
   font-weight: 500;
   color: var(--muted);
