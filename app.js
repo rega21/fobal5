@@ -118,7 +118,7 @@ const historyController = window.createHistoryController
       onVoteMvp: (matchId, candidateId) => {
         void voteMvpForMatch(matchId, candidateId);
       },
-      getCurrentMvpVoteForMatch: (matchId) => getCurrentUserMvpVoteForMatch(matchId),
+      getCurrentMvpVoteForMatch: (matchId) => mvpVotesService?.getCurrentUserMvpVoteForMatch(matchId),
       resolvePlayerDisplay: (entry) => resolveHistoryPlayerDisplay(entry),
     })
   : {
@@ -384,6 +384,25 @@ const feedbackService = window.createFeedbackService
     })
   : null;
 
+const voterTrackingService = window.createVoterTrackingService
+  ? window.createVoterTrackingService({
+      storageKey: VOTED_PLAYERS_STORAGE_KEY,
+      getAdminAuthenticated: () => adminAuthenticated,
+      getCurrentUser: () => currentUser,
+      getPlayers: () => players,
+      getRatingsService: () => playerRatingsService,
+      getApiClient: () => apiClient,
+    })
+  : null;
+
+const mvpVotesService = window.createMvpVotesService
+  ? window.createMvpVotesService({
+      votingWindowMs: MVP_VOTING_WINDOW_MS,
+      storageKey: MVP_VOTES_STORAGE_KEY,
+      getPlayers: () => players,
+    })
+  : null;
+
 const adminPlayersController = window.createAdminPlayersController
   ? window.createAdminPlayersController({
       apiClient,
@@ -409,7 +428,7 @@ const adminPlayersController = window.createAdminPlayersController
       },
       getVoterKey: () => playerRatingsService?.getOrCreateVoterKey(),
       onPlayerRatingInserted: async (playerId) => {
-        if (playerId) markPlayerAsVoted(playerId);
+        if (playerId) voterTrackingService?.markPlayerAsVoted(playerId);
         await refreshPlayerRatingsSummary();
         renderPlayers();
       },
@@ -433,123 +452,6 @@ function shufflePlayers(list = []) {
     [items[index], items[randomIndex]] = [items[randomIndex], items[index]];
   }
   return items;
-}
-
-function normalizeVotedPlayerId(value) {
-  return String(value ?? "").trim().toLowerCase();
-}
-
-function getVotedPlayerIds() {
-  let parsed = [];
-  try {
-    parsed = JSON.parse(localStorage.getItem(VOTED_PLAYERS_STORAGE_KEY) || "[]");
-  } catch (_error) {
-    parsed = [];
-  }
-
-  if (!Array.isArray(parsed)) return [];
-
-  const normalized = parsed
-    .map((id) => normalizeVotedPlayerId(id))
-    .filter(Boolean);
-
-  return Array.from(new Set(normalized));
-}
-
-function hasUserVotedForPlayer(playerId) {
-  const normalizedId = normalizeVotedPlayerId(playerId);
-  if (!normalizedId) return false;
-  return getVotedPlayerIds().includes(normalizedId);
-}
-
-function markPlayerAsVoted(playerId) {
-  const normalizedId = normalizeVotedPlayerId(playerId);
-  if (!normalizedId) return;
-
-  const votedIds = getVotedPlayerIds();
-  if (!votedIds.includes(normalizedId)) {
-    votedIds.push(normalizedId);
-  }
-
-  try {
-    localStorage.setItem(VOTED_PLAYERS_STORAGE_KEY, JSON.stringify(votedIds));
-  } catch (_error) {
-    // ignore storage write failures
-  }
-}
-
-function unmarkPlayerAsVoted(playerId) {
-  const normalizedId = normalizeVotedPlayerId(playerId);
-  if (!normalizedId) return;
-
-  const votedIds = getVotedPlayerIds().filter((id) => id !== normalizedId);
-  try {
-    localStorage.setItem(VOTED_PLAYERS_STORAGE_KEY, JSON.stringify(votedIds));
-  } catch (_error) {
-    // ignore storage write failures
-  }
-}
-
-async function hydrateVotedPlayersFromServer() {
-  if (adminAuthenticated || !currentUser || !playerRatingsService?.getOrCreateVoterKey) return false;
-  const voterKey = playerRatingsService.getOrCreateVoterKey();
-  try {
-    const playerIds = await apiClient.getRatedPlayerIds(voterKey);
-    try { localStorage.setItem(VOTED_PLAYERS_STORAGE_KEY, JSON.stringify([])); } catch (_) {}
-    playerIds.forEach(id => markPlayerAsVoted(id));
-    return true;
-  } catch (_) {
-    return false;
-  }
-}
-
-async function reconcileLocalVotesWithServer() {
-  if (adminAuthenticated || !playerRatingsService?.getCurrentUserRatingForPlayer) {
-    return false;
-  }
-
-  const votedIds = getVotedPlayerIds();
-  if (votedIds.length === 0) return false;
-
-  const existingPlayerIds = new Set(
-    (players || [])
-      .map((player) => normalizeVotedPlayerId(player?.id))
-      .filter(Boolean)
-  );
-
-  const nextVotedIds = [];
-
-  const checks = votedIds.map(async (playerId) => {
-    if (!existingPlayerIds.has(playerId)) {
-      return { playerId, keep: false };
-    }
-
-    try {
-      const rating = await playerRatingsService.getCurrentUserRatingForPlayer(playerId);
-      return { playerId, keep: Boolean(rating) };
-    } catch (_error) {
-      return { playerId, keep: true };
-    }
-  });
-
-  const results = await Promise.all(checks);
-  results.forEach((result) => {
-    if (result.keep) nextVotedIds.push(result.playerId);
-  });
-
-  const changed =
-    nextVotedIds.length !== votedIds.length ||
-    nextVotedIds.some((id) => !votedIds.includes(id));
-
-  if (!changed) return false;
-
-  try {
-    localStorage.setItem(VOTED_PLAYERS_STORAGE_KEY, JSON.stringify(nextVotedIds));
-  } catch (_error) {
-    // ignore storage write failures
-  }
-
-  return true;
 }
 
 function normalizePlayerId(playerOrId) {
@@ -701,10 +603,6 @@ function animateEditButtonFadeOut(playerId) {
     editButton.classList.add("is-fading-out");
     setTimeout(resolve, 170);
   });
-}
-
-function normalizePlayerId(value) {
-  return String(value ?? "").trim();
 }
 
 function toScoreNumber(value) {
@@ -1074,262 +972,6 @@ function getHistoryPlayerDisplayLabel(entry) {
   return getHistoryEntryName(entry) || "Jugador";
 }
 
-function normalizeMvpCandidateId(value) {
-  return String(value ?? "").trim();
-}
-
-function getStoredMvpVotesByMatch() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(MVP_VOTES_STORAGE_KEY) || "{}");
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
-  } catch (_error) {
-    return {};
-  }
-}
-
-function getCurrentUserMvpVoteForMatch(matchId) {
-  const normalizedMatchId = String(matchId || "").trim();
-  if (!normalizedMatchId) return "";
-
-  const votesByMatch = getStoredMvpVotesByMatch();
-  return normalizeMvpCandidateId(votesByMatch[normalizedMatchId]);
-}
-
-function setCurrentUserMvpVoteForMatch(matchId, candidateId) {
-  const normalizedMatchId = String(matchId || "").trim();
-  if (!normalizedMatchId) return;
-
-  const normalizedCandidateId = normalizeMvpCandidateId(candidateId);
-  const votesByMatch = getStoredMvpVotesByMatch();
-
-  if (normalizedCandidateId) {
-    votesByMatch[normalizedMatchId] = normalizedCandidateId;
-  } else {
-    delete votesByMatch[normalizedMatchId];
-  }
-
-  try {
-    localStorage.setItem(MVP_VOTES_STORAGE_KEY, JSON.stringify(votesByMatch));
-  } catch (_error) {
-    // ignore storage write failures
-  }
-}
-
-function buildMvpCandidateId(entry, label) {
-  const entryId = entry && typeof entry === "object"
-    ? String(entry.id || "").trim()
-    : "";
-  if (entryId) return entryId;
-
-  const normalizedLabel = String(label || "").trim().toLowerCase();
-  return normalizedLabel ? `name:${normalizedLabel}` : "";
-}
-
-function getMatchMvpCandidates(match) {
-  const entries = [...(match?.teamA || []), ...(match?.teamB || [])];
-  const candidatesById = new Map();
-
-  entries.forEach((entry) => {
-    const label = getHistoryPlayerDisplayLabel(entry);
-    const id = buildMvpCandidateId(entry, label);
-    if (!id || !label || candidatesById.has(id)) return;
-    const baseName = String(resolveHistoryPlayerDisplay(entry)?.name || getHistoryEntryName(entry) || "").trim();
-    candidatesById.set(id, { id, label, name: baseName });
-  });
-
-  if (candidatesById.size === 0) {
-    const fallbackMvp = String(match?.mvp || "").trim();
-    const fallbackId = buildMvpCandidateId(null, fallbackMvp);
-    if (fallbackId && fallbackMvp) {
-      candidatesById.set(fallbackId, { id: fallbackId, label: fallbackMvp });
-    }
-  }
-
-  return Array.from(candidatesById.values());
-}
-
-function normalizeMvpVotesMap(rawVotes) {
-  if (!rawVotes || typeof rawVotes !== "object" || Array.isArray(rawVotes)) {
-    return {};
-  }
-
-  const normalized = {};
-  Object.entries(rawVotes).forEach(([candidateId, votes]) => {
-    const normalizedCandidateId = normalizeMvpCandidateId(candidateId);
-    const normalizedVotes = Math.floor(Number(votes));
-    if (!normalizedCandidateId || !Number.isFinite(normalizedVotes) || normalizedVotes <= 0) {
-      return;
-    }
-    normalized[normalizedCandidateId] = normalizedVotes;
-  });
-
-  return normalized;
-}
-
-function resolveFallbackMvpCandidateId(match, candidates = []) {
-  const mvpLabel = String(match?.mvp || "").trim().toLowerCase();
-  if (!mvpLabel) return "";
-
-  const byLabel = candidates.find((candidate) => String(candidate.label || "").trim().toLowerCase() === mvpLabel);
-  if (byLabel) return byLabel.id;
-
-  // Fallback: match against base name (handles nickname changes — e.g. mvp:"Seba" after nickname→"Sebita")
-  const byName = candidates.find((candidate) => String(candidate.name || "").trim().toLowerCase() === mvpLabel);
-  if (byName) return byName.id;
-
-  const byId = candidates.find((candidate) => String(candidate.id || "").trim() === String(match?.mvp || "").trim());
-  return byId ? byId.id : "";
-}
-
-function getNormalizedMatchMvpVotes(match, candidates = []) {
-  const normalizedVotes = normalizeMvpVotesMap(match?.mvpVotes);
-  const totalVotes = Object.values(normalizedVotes).reduce((total, votes) => total + votes, 0);
-  if (totalVotes > 0) return normalizedVotes;
-
-  const fallbackCandidateId = resolveFallbackMvpCandidateId(match, candidates);
-  if (!fallbackCandidateId) return {};
-
-  return { [fallbackCandidateId]: 1 };
-}
-
-function buildMvpVotesSummaryFromCandidates(candidates, votesByCandidateId = {}) {
-  const normalizedVotes = normalizeMvpVotesMap(votesByCandidateId);
-  const totalVotes = Object.values(normalizedVotes).reduce((total, votes) => total + votes, 0);
-
-  const candidateStats = candidates.map((candidate) => {
-    const votes = normalizedVotes[candidate.id] || 0;
-    const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
-    return {
-      ...candidate,
-      votes,
-      percentage,
-    };
-  });
-
-  const maxVotes = candidateStats.reduce((maxValue, candidate) => Math.max(maxValue, candidate.votes), 0);
-  const winners = maxVotes > 0
-    ? candidateStats.filter((candidate) => candidate.votes === maxVotes)
-    : [];
-
-  return {
-    candidates: candidateStats,
-    normalizedVotes,
-    totalVotes,
-    maxVotes,
-    winners,
-  };
-}
-
-function getMatchMvpVotesSummary(match) {
-  const candidates = getMatchMvpCandidates(match);
-  const votesByCandidateId = getNormalizedMatchMvpVotes(match, candidates);
-  const summary = buildMvpVotesSummaryFromCandidates(candidates, votesByCandidateId);
-
-  const leadWinner = summary.winners.length === 1 ? summary.winners[0] : null;
-  const tieWinners = summary.winners.length > 1 ? summary.winners : [];
-
-  let resolvedMvpLabel = "";
-  if (leadWinner) {
-    resolvedMvpLabel = leadWinner.label;
-  } else if (tieWinners.length > 1) {
-    resolvedMvpLabel = `Empate: ${tieWinners.map((item) => item.label).join(" / ")}`;
-  } else {
-    resolvedMvpLabel = String(match?.mvp || "").trim();
-  }
-
-  return {
-    ...summary,
-    leadWinner,
-    tieWinners,
-    resolvedMvpLabel,
-  };
-}
-
-function getMatchPlayedTimestampMs(match) {
-  const candidates = [
-    match?.playedAt,
-    match?.updatedAt,
-    match?.createdAt,
-    match?.scheduledAt,
-    match?.date,
-  ];
-
-  for (const rawValue of candidates) {
-    const parsedMs = new Date(String(rawValue || "")).getTime();
-    if (Number.isFinite(parsedMs) && parsedMs > 0) {
-      return parsedMs;
-    }
-  }
-
-  return 0;
-}
-
-function getMatchMvpVotingEndsAtMs(match) {
-  const explicitEndsAtMs = new Date(String(match?.mvpVotingEndsAt || "")).getTime();
-  if (Number.isFinite(explicitEndsAtMs) && explicitEndsAtMs > 0) {
-    return explicitEndsAtMs;
-  }
-
-  const playedAtMs = getMatchPlayedTimestampMs(match);
-  if (!playedAtMs) return 0;
-  return playedAtMs + MVP_VOTING_WINDOW_MS;
-}
-
-function isMatchMvpVotingOpen(match) {
-  const status = String(match?.status || "played").trim().toLowerCase();
-  if (status !== "played") return false;
-
-  const votingEndsAtMs = getMatchMvpVotingEndsAtMs(match);
-  if (!votingEndsAtMs) return true;
-  return Date.now() <= votingEndsAtMs;
-}
-
-function buildUpdatedMatchAfterMvpVote(match, selectedCandidateId) {
-  const normalizedCandidateId = normalizeMvpCandidateId(selectedCandidateId);
-  if (!normalizedCandidateId) return null;
-
-  const summary = getMatchMvpVotesSummary(match);
-  const selectedCandidate = summary.candidates.find((candidate) => candidate.id === normalizedCandidateId);
-  if (!selectedCandidate) return null;
-
-  const nextVotes = { ...summary.normalizedVotes };
-
-  const normalizedMatchId = String(match?.id || "").trim();
-  const previousCandidateId = normalizedMatchId
-    ? getCurrentUserMvpVoteForMatch(normalizedMatchId)
-    : "";
-
-  // Voto único por partido/dispositivo: si ya existe, no se permite modificar.
-  if (previousCandidateId) return null;
-
-  nextVotes[normalizedCandidateId] = (nextVotes[normalizedCandidateId] || 0) + 1;
-
-  const updatedSummary = buildMvpVotesSummaryFromCandidates(summary.candidates, nextVotes);
-  const leadWinner = updatedSummary.winners.length === 1 ? updatedSummary.winners[0] : null;
-  const tieWinners = updatedSummary.winners.length > 1 ? updatedSummary.winners : [];
-  const resolvedMvpLabel = leadWinner
-    ? leadWinner.label
-    : tieWinners.length > 1
-      ? `Empate: ${tieWinners.map((item) => item.label).join(" / ")}`
-      : selectedCandidate.label;
-
-  const playedAtMs = getMatchPlayedTimestampMs(match) || Date.now();
-  const fallbackVotingEndsAtMs = playedAtMs + MVP_VOTING_WINDOW_MS;
-  const votingEndsAtMs = getMatchMvpVotingEndsAtMs(match) || fallbackVotingEndsAtMs;
-
-  return {
-    selectedCandidateId: normalizedCandidateId,
-    updatedMatch: {
-      ...match,
-      status: "played",
-      playedAt: String(match?.playedAt || "").trim() || new Date(playedAtMs).toISOString(),
-      mvpVotingEndsAt: new Date(votingEndsAtMs).toISOString(),
-      mvpVotes: updatedSummary.normalizedVotes,
-      mvp: resolvedMvpLabel,
-    },
-  };
-}
-
 function getPlayerCommunitySummary(playerId) {
   const key = normalizePlayerId(playerId);
   return playerRatingsSummaryById[key] || null;
@@ -1423,8 +1065,8 @@ async function fetchPlayers() {
   if (adminPlayersController) {
     await adminPlayersController.fetchPlayers();
     await refreshPlayerRatingsSummary();
-    const hydrated = await hydrateVotedPlayersFromServer();
-    if (!hydrated) await reconcileLocalVotesWithServer();
+    const hydrated = await voterTrackingService?.hydrateVotedPlayersFromServer();
+    if (!hydrated) await voterTrackingService?.reconcileLocalVotesWithServer();
     renderPlayers();
     return;
   }
@@ -1438,8 +1080,8 @@ async function fetchPlayers() {
   }
 
   await refreshPlayerRatingsSummary();
-  const hydrated = await hydrateVotedPlayersFromServer();
-  if (!hydrated) await reconcileLocalVotesWithServer();
+  const hydrated = await voterTrackingService?.hydrateVotedPlayersFromServer();
+  if (!hydrated) await voterTrackingService?.reconcileLocalVotesWithServer();
   renderPlayers();
 }
 
@@ -1474,7 +1116,7 @@ async function addPlayer(name, nickname, attack = 0, defense = 0, midfield = 0, 
         voter_key: voterKey,
         attack, defense, midfield, stamina, garra, technique,
       });
-      markPlayerAsVoted(newPlayer.id);
+      voterTrackingService?.markPlayerAsVoted(newPlayer.id);
     } catch (e) {
       console.error("No se pudo insertar voto inicial del jugador:", e, "player_id:", newPlayer?.id);
     }
@@ -1622,7 +1264,7 @@ function renderPlayers(options = {}) {
   const visualPlayers = getVisualPlayersForRender(filteredPlayers, term, shouldPreserveOrder);
 
   playersList.innerHTML = visualPlayers.map(p => {
-    const yaVotaste = !adminAuthenticated && hasUserVotedForPlayer(p.id);
+    const yaVotaste = !adminAuthenticated && voterTrackingService?.hasUserVotedForPlayer(p.id);
     const nick = p.nickname?.trim()
       ? `<span class="player-nick">"${escapeHtml(p.nickname)}"</span>`
       : "";
@@ -1870,14 +1512,19 @@ function openPendingResultModal(matchId) {
   scoreAInput.value = String(pendingMatch.scoreA ?? 0);
   scoreBInput.value = String(pendingMatch.scoreB ?? 0);
 
-  const mvpSummary = getMatchMvpVotesSummary(pendingMatch);
+  const mvpSummary = mvpVotesService.getMatchMvpVotesSummary(pendingMatch);
   mvpSelect.innerHTML = '<option value="">Gol del partido</option>'
     + mvpSummary.candidates
       .map((candidate) => `<option value="${escapeHtml(candidate.id)}">${escapeHtml(candidate.label)}</option>`)
       .join("");
 
+  const _mvpFallbackLabel = String(pendingMatch?.mvp || "").trim().toLowerCase();
   const selectedCandidateId = mvpSummary.leadWinner?.id
-    || resolveFallbackMvpCandidateId(pendingMatch, mvpSummary.candidates)
+    || (_mvpFallbackLabel && (
+      mvpSummary.candidates.find(c => String(c.label || "").trim().toLowerCase() === _mvpFallbackLabel)?.id
+      || mvpSummary.candidates.find(c => String(c.name || "").trim().toLowerCase() === _mvpFallbackLabel)?.id
+      || mvpSummary.candidates.find(c => String(c.id || "").trim() === String(pendingMatch?.mvp || "").trim())?.id
+    ))
     || "";
   mvpSelect.value = selectedCandidateId;
 
@@ -1899,9 +1546,9 @@ async function savePendingResultFromModal() {
   const scoreB = parseValidatedScore("historyScoreTeamB", "Equipo B");
   if (scoreB === null) return;
 
-  const selectedCandidateId = normalizeMvpCandidateId(document.getElementById("historyMvpSelect")?.value || "");
+  const selectedCandidateId = String(document.getElementById("historyMvpSelect")?.value || "").trim();
 
-  const mvpSummary = getMatchMvpVotesSummary(pendingMatch);
+  const mvpSummary = mvpVotesService.getMatchMvpVotesSummary(pendingMatch);
   const selectedCandidate = mvpSummary.candidates.find((candidate) => candidate.id === selectedCandidateId);
   const selectedLabel = selectedCandidate?.label
     || String(document.querySelector("#historyMvpSelect option:checked")?.textContent || "").trim();
@@ -1922,7 +1569,7 @@ async function savePendingResultFromModal() {
 
   const storedMatch = await matchController.saveMatch(updatedMatch);
   if (storedMatch?.id && selectedCandidateId) {
-    setCurrentUserMvpVoteForMatch(storedMatch.id, selectedCandidateId);
+    mvpVotesService.setCurrentUserMvpVoteForMatch(storedMatch.id, selectedCandidateId);
   }
   historyController.pushMatch(storedMatch);
   await fetchMatches();
@@ -2035,7 +1682,8 @@ function loadGoogleMapsPlacesScript() {
     return googleMapsPlacesPromise;
   }
 
-  googleMapsPlacesPromise = new Promise((resolve, reject) => {
+  googleMapsPlacesPromise = new Promise((resolve, _reject) => {
+    const reject = (err) => { googleMapsPlacesPromise = null; _reject(err); };
     const callbackName = "__fobalGoogleMapsPlacesReady";
 
     const finishIfReady = () => {
@@ -2471,7 +2119,7 @@ async function recordMatch() {
     : null;
   const playedAt = new Date().toISOString();
   const mvpVotingEndsAt = new Date(Date.now() + MVP_VOTING_WINDOW_MS).toISOString();
-  const normalizedMvpId = normalizeMvpCandidateId(mvpId);
+  const normalizedMvpId = String(mvpId ?? "").trim();
 
   const match = matchController.buildMatchPayload(
     currentTeams,
@@ -2490,7 +2138,7 @@ async function recordMatch() {
 
   const storedMatch = await matchController.saveMatch(match);
   if (storedMatch?.id && normalizedMvpId) {
-    setCurrentUserMvpVoteForMatch(storedMatch.id, normalizedMvpId);
+    mvpVotesService.setCurrentUserMvpVoteForMatch(storedMatch.id, normalizedMvpId);
   }
 
   historyController.pushMatch(storedMatch);
@@ -2545,7 +2193,7 @@ function renderHistoryCalendar() {
     onDelete: (id, date) => { void deleteMatch(id, date); },
     onResolveResult: (matchId) => openPendingResultModal(matchId),
     onVoteMvp: (matchId, candidateId) => { void voteMvpForMatch(matchId, candidateId); },
-    getCurrentMvpVoteForMatch: (matchId) => getCurrentUserMvpVoteForMatch(matchId),
+    getCurrentMvpVoteForMatch: (matchId) => mvpVotesService?.getCurrentUserMvpVoteForMatch(matchId),
     resolvePlayerDisplay: (entry) => resolveHistoryPlayerDisplay(entry),
   });
 }
@@ -2554,7 +2202,7 @@ async function voteMvpForMatch(matchId, candidateId) {
   const normalizedMatchId = String(matchId || "").trim();
   if (!normalizedMatchId) return;
 
-  const existingVote = getCurrentUserMvpVoteForMatch(normalizedMatchId);
+  const existingVote = mvpVotesService.getCurrentUserMvpVoteForMatch(normalizedMatchId);
   if (existingVote) {
     showToast("Ya votaste el mejor gol de este partido", 2200, "error");
     return;
@@ -2566,12 +2214,12 @@ async function voteMvpForMatch(matchId, candidateId) {
     return;
   }
 
-  if (!isMatchMvpVotingOpen(match)) {
+  if (!mvpVotesService.isMatchMvpVotingOpen(match)) {
     showToast("La votación de mejor gol ya cerró (8h)", 2200, "error");
     return;
   }
 
-  const voteResult = buildUpdatedMatchAfterMvpVote(match, candidateId);
+  const voteResult = mvpVotesService.buildUpdatedMatchAfterMvpVote(match, candidateId);
   if (!voteResult) {
     showToast("No se pudo registrar el voto", 2200, "error");
     return;
@@ -2584,7 +2232,7 @@ async function voteMvpForMatch(matchId, candidateId) {
       : voteResult.updatedMatch;
 
     historyController.pushMatch(persistedMatch);
-    setCurrentUserMvpVoteForMatch(normalizedMatchId, voteResult.selectedCandidateId);
+    mvpVotesService.setCurrentUserMvpVoteForMatch(normalizedMatchId, voteResult.selectedCandidateId);
     await fetchMatches();
     showToast("Mejor gol guardado", 2000, "success");
   } catch (error) {
@@ -2599,7 +2247,7 @@ async function editPlayer(id) {
   if (!player) return;
 
   const playerForEdit = enrichPlayerWithCommunityState(player);
-  let hasVotedBefore = !adminAuthenticated && hasUserVotedForPlayer(id);
+  let hasVotedBefore = !adminAuthenticated && voterTrackingService?.hasUserVotedForPlayer(id);
   let userPreviousRating = null;
 
   if (hasVotedBefore && playerRatingsService?.getCurrentUserRatingForPlayer) {
@@ -2607,7 +2255,7 @@ async function editPlayer(id) {
       userPreviousRating = await playerRatingsService.getCurrentUserRatingForPlayer(id);
       if (!userPreviousRating) {
         hasVotedBefore = false;
-        unmarkPlayerAsVoted(id);
+        voterTrackingService?.unmarkPlayerAsVoted(id);
         renderPlayers({ preserveOrder: true });
       }
     } catch (error) {
@@ -2864,7 +2512,7 @@ async function saveEditPlayer() {
   }
 
   if (!adminAuthenticated) {
-    const hasVotedBefore = hasUserVotedForPlayer(editPlayerId);
+    const hasVotedBefore = voterTrackingService?.hasUserVotedForPlayer(editPlayerId);
     const player = players.find((item) => String(item.id) === editPlayerId);
 
     if (!name) {
@@ -2923,7 +2571,7 @@ async function saveEditPlayer() {
         garra,
         technique,
       });
-      markPlayerAsVoted(editPlayerId);
+      voterTrackingService?.markPlayerAsVoted(editPlayerId);
       _maybeShowInstall();
       await refreshPlayerRatingsSummary();
       await animateEditButtonFadeOut(editPlayerId);
@@ -3705,7 +3353,6 @@ if (clearSearchBtn) {
 
 function openNewPlayerModal(){
   document.getElementById('newPlayerModal').classList.remove('hidden');
-  // set default values
   document.getElementById('newPlayerName').value = '';
   document.getElementById('newPlayerNickname').value = '';
   document.getElementById('newPlayerAttack').value = 0;
@@ -3714,6 +3361,7 @@ function openNewPlayerModal(){
   document.getElementById('newPlayerStamina').value = 0;
   document.getElementById('newPlayerGarra').value = 0;
   document.getElementById('newPlayerTechnique').value = 0;
+  document.getElementById('newPlayerDuplicateWarning')?.classList.add('hidden');
   updateNewSliderValues();
 }
 
@@ -3747,6 +3395,7 @@ document.getElementById('newPlayerTechnique')?.addEventListener('input', updateN
 
 document.getElementById('newPlayerName')?.addEventListener('input', () => {
   document.getElementById('newPlayerNameError')?.classList.add('hidden');
+  document.getElementById('newPlayerDuplicateWarning')?.classList.add('hidden');
 });
 document.getElementById('createPlayerBtn')?.addEventListener('click', () => {
   const name = document.getElementById('newPlayerName').value.trim();
@@ -3771,8 +3420,12 @@ document.getElementById('createPlayerBtn')?.addEventListener('click', () => {
   const duplicate = players.find(p => p.name?.toLowerCase() === name.toLowerCase() || (nickname && p.nickname?.toLowerCase() === nickname.toLowerCase()));
   if (duplicate) {
     const label = duplicate.nickname || duplicate.name;
-    const confirmed = confirm(`Ya existe un jugador llamado "${label}". ¿Querés crearlo igual?`);
-    if (!confirmed) return;
+    const warn = document.getElementById('newPlayerDuplicateWarning');
+    const nameSpan = document.getElementById('newPlayerDuplicateName');
+    if (nameSpan) nameSpan.textContent = `"${label}"`;
+    warn?.classList.remove('hidden');
+    document.getElementById('newPlayerName')?.focus();
+    return;
   }
   addPlayer(name, nickname, attack, defense, midfield, stamina, garra, technique);
   _maybeShowInstall();

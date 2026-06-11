@@ -625,6 +625,7 @@
           <label>Nombre <span style="color:#ef4444;">*</span></label>
           <input type="text" id="newPlayerName" placeholder="" maxlength="20">
           <p id="newPlayerNameError" class="hidden" style="margin:4px 0 0;font-size:0.8rem;color:#ef4444;">El nombre es obligatorio.</p>
+          <div id="newPlayerDuplicateWarning" class="hidden" style="margin:6px 0 0;padding:8px 10px;border-radius:6px;background:rgba(251,191,36,0.13);border:1px solid rgba(251,191,36,0.45);font-size:0.82rem;color:#d97706;line-height:1.4;">&#9888; Ya existe un jugador llamado <strong id="newPlayerDuplicateName"></strong>.</div>
         </div>
         <div class="form-group">
           <label>Apodo <span style="font-size:0.8rem;color:var(--text-secondary,#94a3b8);">(opcional)</span></label>
@@ -870,6 +871,8 @@
   <script src="src/services/whatsappShareService.js"></script>
   <script src="src/services/playerRatingsService.js"></script>
   <script src="src/services/feedbackService.js"></script>
+  <script src="src/services/voterTrackingService.js"></script>
+  <script src="src/services/mvpVotesService.js"></script>
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
