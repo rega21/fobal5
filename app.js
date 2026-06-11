@@ -4466,8 +4466,8 @@ document.getElementById("closeMembersBtn")?.addEventListener("click", () => {
     if (!pulling) return;
     const distance = e.touches[0].clientY - startY;
     if (distance <= 0) return;
-    const capped = Math.min(distance * 0.5, 56);
-    indicator.style.top = `${capped - 56}px`;
+    const capped = Math.min(distance * 0.5, 48);
+    indicator.style.top = `${capped - 40}px`;
     indicator.classList.toggle("ptr-ready", distance >= THRESHOLD);
   }, { passive: true });
 

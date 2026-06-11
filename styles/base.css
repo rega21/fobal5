@@ -52,27 +52,26 @@ body{
 /* Pull to refresh */
 #pullRefreshIndicator {
   position: fixed;
-  top: -56px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 40px;
+  top: -40px;
+  left: calc(50% - 14px);
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: var(--primary, #3b82f6);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 3px solid rgba(255,255,255,0.2);
+  border-top-color: rgba(255,255,255,0.85);
   z-index: 9999;
-  transition: top 0.15s ease;
   pointer-events: none;
-  box-shadow: 0 2px 12px rgba(59,130,246,0.4);
+  transition: top 0.2s ease, opacity 0.15s;
+  opacity: 0.5;
 }
 #pullRefreshIndicator.ptr-ready {
-  background: var(--success, #10b981);
+  opacity: 1;
+  border-color: rgba(255,255,255,0.35);
+  border-top-color: #fff;
 }
-#pullRefreshIndicator.ptr-spinning .ptr-icon {
-  animation: ptr-spin 0.6s linear infinite;
+#pullRefreshIndicator.ptr-spinning {
+  animation: ptr-spin 0.7s linear infinite;
+  opacity: 1;
 }
 @keyframes ptr-spin {
   to { transform: rotate(360deg); }
