@@ -3322,8 +3322,7 @@ document.getElementById("deleteGroupConfirmBtn")?.addEventListener("click", asyn
   btn.textContent = "Eliminando...";
   try {
     await apiClient.deleteGroup(groupId);
-    const idx = groups.findIndex(g => g.id === groupId);
-    if (idx !== -1) groups.splice(idx, 1);
+    if (window.__removeGroupFromList) window.__removeGroupFromList(groupId);
     removeGroupFromStorage();
     const url = new URL(window.location.href);
     url.searchParams.delete("group");
@@ -3996,6 +3995,11 @@ function showPinOverlay(group, onSuccess, onBack) {
       overlay.classList.remove("hidden");
       requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("visible")));
     }
+  };
+
+  window.__removeGroupFromList = function(groupId) {
+    const idx = groups.findIndex(g => g.id === groupId);
+    if (idx !== -1) groups.splice(idx, 1);
   };
 
   function enterGroup(group) {
