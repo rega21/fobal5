@@ -756,21 +756,16 @@
         <button class="close-btn" id="closeEditGroupLogoBtn">&times;</button>
       </div>
       <div class="modal-body" style="padding:20px;display:flex;flex-direction:column;gap:16px;">
-        <div style="display:flex;justify-content:center;">
-          <div id="editLogoPreview" style="width:72px;height:72px;border-radius:50%;border:2px dashed var(--border,#334155);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--card-bg,#1e293b);">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <input id="editLogoFileInput" type="file" accept="image/*" style="display:none">
+          <div id="editLogoPreview" title="Cambiar logo" style="width:72px;height:72px;border-radius:50%;border:2px dashed var(--border,#334155);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--card-bg,#1e293b);cursor:pointer;position:relative;">
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary,#94a3b8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
           </div>
+          <button id="editLogoUploadBtn" type="button" style="font-size:0.8rem;color:var(--text-secondary,#94a3b8);background:none;border:none;cursor:pointer;padding:2px 0;">Subir imagen</button>
         </div>
         <div>
           <label style="display:block;font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin-bottom:6px;">Nombre del grupo</label>
           <input id="editGroupNameInput" type="text" maxlength="40" placeholder="" style="
-            padding:12px 14px;font-size:0.95rem;border-radius:10px;border:1px solid var(--border,#334155);
-            background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
-          "/>
-        </div>
-        <div>
-          <label style="display:block;font-size:0.8rem;color:var(--text-secondary,#94a3b8);margin-bottom:6px;">URL del logo</label>
-          <input id="editLogoUrlInput" type="url" placeholder="https://..." style="
             padding:12px 14px;font-size:0.95rem;border-radius:10px;border:1px solid var(--border,#334155);
             background:var(--card-bg,#1e293b);color:var(--text-primary,#fff);width:100%;box-sizing:border-box;
           "/>

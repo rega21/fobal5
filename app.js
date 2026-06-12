@@ -3170,12 +3170,15 @@ document.getElementById("closeInfoAppBtn")?.addEventListener("click", () => {
   document.getElementById("infoAppModal")?.classList.add("hidden");
 });
 
+let pendingLogoFile = null;
+
 function openEditGroupLogoModal() {
   closeTopbarMenu();
-  const input = document.getElementById("editLogoUrlInput");
+  pendingLogoFile = null;
+  const fileInput = document.getElementById("editLogoFileInput");
+  if (fileInput) fileInput.value = "";
   const nameInput = document.getElementById("editGroupNameInput");
   const preview = document.getElementById("editLogoPreview");
-  if (input) input.value = activeGroupLogoUrl || "";
   if (nameInput) nameInput.value = activeGroupName || "";
   if (preview) {
     preview.innerHTML = activeGroupLogoUrl
@@ -3201,15 +3204,23 @@ function openEditGroupLogoModal() {
   document.getElementById("editGroupLogoModal")?.classList.remove("hidden");
 }
 
-document.getElementById("editLogoUrlInput")?.addEventListener("input", () => {
-  const url = document.getElementById("editLogoUrlInput").value.trim();
-  const preview = document.getElementById("editLogoPreview");
-  if (!preview) return;
-  if (url) {
-    preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<span style=color:#ef4444;font-size:11px>Error</span>'" />`;
-  } else {
-    preview.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary,#94a3b8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`;
-  }
+document.getElementById("editLogoFileInput")?.addEventListener("change", (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  pendingLogoFile = file;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const preview = document.getElementById("editLogoPreview");
+    if (preview) preview.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;" />`;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById("editLogoUploadBtn")?.addEventListener("click", () => {
+  document.getElementById("editLogoFileInput")?.click();
+});
+document.getElementById("editLogoPreview")?.addEventListener("click", () => {
+  document.getElementById("editLogoFileInput")?.click();
 });
 
 document.getElementById("allowMemberEditCheck")?.addEventListener("change", (e) => {
@@ -3222,25 +3233,33 @@ document.getElementById("allowMemberEditCheck")?.addEventListener("change", (e) 
 document.getElementById("saveGroupLogoBtn")?.addEventListener("click", async () => {
   const groupId = window.FobalApi?.getGroupId?.();
   if (!groupId) return;
-  const newUrl = document.getElementById("editLogoUrlInput").value.trim() || null;
-  const newName = document.getElementById("editGroupNameInput").value.trim() || activeGroupName;
-  const isCreator = activeGroupCreatedBy && currentUser?.id === activeGroupCreatedBy;
-  const newAllowMemberEdit = isCreator
-    ? (document.getElementById("allowMemberEditCheck")?.checked ?? activeGroupAllowMemberEdit)
-    : activeGroupAllowMemberEdit;
-
-  const settings = { name: newName, logo_url: newUrl, allow_member_edit: newAllowMemberEdit };
-
-  window.FobalApi.updateGroupSettings(groupId, settings)
-    .then(() => {
-      activeGroupLogoUrl = newUrl;
-      activeGroupName = newName;
-      activeGroupAllowMemberEdit = newAllowMemberEdit;
-      updateBrandLogo();
-      document.getElementById("editGroupLogoModal")?.classList.add("hidden");
-      showToast("Configuración guardada", 2500, "success");
-    })
-    .catch(() => showToast("Error al guardar", 3000, "error"));
+  const saveBtn = document.getElementById("saveGroupLogoBtn");
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Guardando...";
+  try {
+    let newUrl = activeGroupLogoUrl;
+    if (pendingLogoFile) {
+      newUrl = await window.FobalApi.uploadGroupLogo(groupId, pendingLogoFile);
+    }
+    const newName = document.getElementById("editGroupNameInput").value.trim() || activeGroupName;
+    const isCreator = activeGroupCreatedBy && currentUser?.id === activeGroupCreatedBy;
+    const newAllowMemberEdit = isCreator
+      ? (document.getElementById("allowMemberEditCheck")?.checked ?? activeGroupAllowMemberEdit)
+      : activeGroupAllowMemberEdit;
+    await window.FobalApi.updateGroupSettings(groupId, { name: newName, logo_url: newUrl, allow_member_edit: newAllowMemberEdit });
+    activeGroupLogoUrl = newUrl;
+    activeGroupName = newName;
+    activeGroupAllowMemberEdit = newAllowMemberEdit;
+    pendingLogoFile = null;
+    updateBrandLogo();
+    document.getElementById("editGroupLogoModal")?.classList.add("hidden");
+    showToast("Configuración guardada", 2500, "success");
+  } catch {
+    showToast("Error al guardar", 3000, "error");
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Guardar";
+  }
 });
 
 document.getElementById("closeEditGroupLogoBtn")?.addEventListener("click", () => {

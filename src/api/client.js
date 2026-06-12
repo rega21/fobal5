@@ -548,6 +548,18 @@
       if (!created || !created.id) throw new Error("No se pudo crear el grupo");
       return created;
     },
+    async uploadGroupLogo(groupId, file) {
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const path = `${groupId}.${ext}`;
+      const { error } = await window.SupabaseClient.storage
+        .from('group-logos')
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (error) throw error;
+      const { data: { publicUrl } } = window.SupabaseClient.storage
+        .from('group-logos')
+        .getPublicUrl(path);
+      return publicUrl;
+    },
     async updateGroupLogo(groupId, logo_url) {
       await requestSupabase(`/rest/v1/groups?id=eq.${groupId}`, {
         method: "PATCH",
