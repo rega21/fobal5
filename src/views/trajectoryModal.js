@@ -55,9 +55,21 @@
     document.getElementById("pstatsWon").textContent = s.won;
     document.getElementById("pstatsLost").textContent = s.lost;
     document.getElementById("pstatsDraw").textContent = s.drawn;
-    document.getElementById("pstatsWinRatePct").textContent = s.winRate + "%";
     const arc = document.getElementById("pstatsGaugeArc");
+    const pct = document.getElementById("pstatsWinRatePct");
     if (arc) arc.style.strokeDashoffset = String(251.3 * (1 - s.winRate / 100));
+    if (pct) {
+      const target = s.winRate;
+      const duration = 1200;
+      const startTime = performance.now();
+      function tick(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        pct.textContent = Math.round(eased * target) + "%";
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
   }
 
   document.getElementById("closePlayerStatsBtn")?.addEventListener("click", () => {
