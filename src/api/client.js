@@ -582,7 +582,7 @@
       await requestSupabase(`/rest/v1/groups?id=eq.${groupId}`, {
         method: "PATCH",
         headers: buildSupabaseHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ deleted_at: new Date().toISOString() }),
+        body: JSON.stringify({ deleted_at: new Date().toISOString(), slug: `deleted_${groupId}` }),
       });
     },
     async createFeedback(payload) {

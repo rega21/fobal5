@@ -4094,10 +4094,12 @@ function showPinOverlay(group, onSuccess, onBack) {
   const createBtn = document.getElementById("createGroupBtn");
   const backBtn = document.getElementById("createGroupBackBtn");
   const nameInput = document.getElementById("createGroupName");
-  const logoUrlInput = document.getElementById("createGroupLogoUrl");
   const logoPreviewEl = document.getElementById("createGroupLogoPreview");
+  const logoFileInput = document.getElementById("createGroupLogoFileInput");
+  const logoPickBtn = document.getElementById("createGroupLogoPickBtn");
   const submitBtn = document.getElementById("createGroupSubmitBtn");
   const errorMsg = document.getElementById("createGroupError");
+  let pendingCreateLogoFile = null;
 
   function toSlug(str) {
     return str.toLowerCase().trim()
@@ -4106,15 +4108,23 @@ function showPinOverlay(group, onSuccess, onBack) {
       .replace(/^-+|-+$/g, "");
   }
 
-  const genericLogoSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary,#94a3b8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
+  const genericLogoSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
 
-  logoUrlInput?.addEventListener("input", () => {
-    const url = logoUrlInput.value.trim();
-    if (logoPreviewEl) {
-      logoPreviewEl.innerHTML = url
-        ? `<img src="${url}" alt="logo" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='${genericLogoSvg.replace(/"/g, "&quot;")}'"/>`
-        : genericLogoSvg;
-    }
+  if (logoPreviewEl) logoPreviewEl.innerHTML = genericLogoSvg;
+
+  logoPreviewEl?.addEventListener("click", () => logoFileInput?.click());
+  logoPickBtn?.addEventListener("click", () => logoFileInput?.click());
+
+  logoFileInput?.addEventListener("change", () => {
+    const file = logoFileInput.files?.[0];
+    if (!file) return;
+    pendingCreateLogoFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (logoPreviewEl) logoPreviewEl.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;" />`;
+      if (logoPickBtn) logoPickBtn.textContent = "Cambiar logo";
+    };
+    reader.readAsDataURL(file);
   });
 
   createBtn?.addEventListener("click", () => {
@@ -4125,8 +4135,10 @@ function showPinOverlay(group, onSuccess, onBack) {
     overlay.classList.add("hidden");
     if (createOverlay) {
       nameInput.value = "";
-      logoUrlInput.value = "";
+      pendingCreateLogoFile = null;
       if (logoPreviewEl) logoPreviewEl.innerHTML = genericLogoSvg;
+      if (logoPickBtn) logoPickBtn.textContent = "Agregar logo (opcional)";
+      if (logoFileInput) logoFileInput.value = "";
       errorMsg?.classList.add("hidden");
       createOverlay.classList.remove("hidden");
       nameInput.focus();
@@ -4141,7 +4153,6 @@ function showPinOverlay(group, onSuccess, onBack) {
   async function submitCreateGroup() {
     const name = nameInput.value.trim();
     const slug = toSlug(name);
-    const logo_url = logoUrlInput.value.trim() || null;
 
     errorMsg?.classList.add("hidden");
 
@@ -4152,7 +4163,17 @@ function showPinOverlay(group, onSuccess, onBack) {
     submitBtn.textContent = "Creando...";
 
     try {
-      const newGroup = await apiClient.createGroup({ name, slug, logo_url, created_by: currentUser?.id || null });
+      const newGroup = await apiClient.createGroup({ name, slug, logo_url: null, created_by: currentUser?.id || null });
+
+      if (pendingCreateLogoFile) {
+        try {
+          const compressed = await compressImage(pendingCreateLogoFile, 512, 0.85);
+          const publicUrl = await apiClient.uploadGroupLogo(newGroup.id, compressed);
+          await apiClient.updateGroupLogo(newGroup.id, publicUrl);
+          newGroup.logo_url = publicUrl;
+        } catch (_) {}
+      }
+
       groups.push(newGroup);
       if (currentUser) {
         const uEmail = currentUser.email || null;
@@ -4164,8 +4185,8 @@ function showPinOverlay(group, onSuccess, onBack) {
       saveGroupToStorage(newGroup);
       enterGroup(newGroup);
     } catch (e) {
-      const msg = e?.message?.includes("duplicate") || e?.message?.includes("unique")
-        ? "Ese slug ya está en uso, elegí otro."
+      const msg = e?.message?.includes("duplicate") || e?.message?.includes("unique") || e?.message?.includes("409")
+        ? "Ese nombre ya está en uso, elegí otro."
         : (e?.message || "Error al crear el grupo.");
       showCreateError(msg);
     } finally {
