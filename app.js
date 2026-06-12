@@ -3327,6 +3327,7 @@ document.getElementById("deleteGroupConfirmBtn")?.addEventListener("click", asyn
     url.searchParams.delete("group");
     window.history.replaceState({}, "", url.toString());
     document.getElementById("editGroupLogoModal")?.classList.add("hidden");
+    showToast("Grupo eliminado", 2500, "success");
     if (window.__showGroupSelector) window.__showGroupSelector();
   } catch (e) {
     btn.disabled = false;
