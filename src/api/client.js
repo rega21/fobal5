@@ -579,7 +579,7 @@
     },
 
     async deleteGroup(groupId) {
-      const sb = global.SupabaseClient;
+      const sb = window.SupabaseClient;
       if (!sb) throw new Error("SupabaseClient not available");
       const { error } = await sb.from("groups").delete().eq("id", groupId);
       if (error) throw new Error(error.message);
