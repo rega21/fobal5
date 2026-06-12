@@ -526,7 +526,7 @@
       return [...new Set(data.map(r => r.player_id).filter(Boolean))];
     },
     async getGroups() {
-      const rows = await requestSupabase("/rest/v1/groups?select=id,name,slug,logo_url,created_by,allow_member_edit&order=name.asc", {
+      const rows = await requestSupabase("/rest/v1/groups?select=id,name,slug,logo_url,created_by,allow_member_edit&deleted_at=is.null&order=name.asc", {
         method: "GET",
         headers: buildSupabaseHeaders(),
       });
@@ -581,7 +581,7 @@
     async deleteGroup(groupId) {
       const sb = window.SupabaseClient;
       if (!sb) throw new Error("SupabaseClient not available");
-      const { error } = await sb.from("groups").delete().eq("id", groupId);
+      const { error } = await sb.from("groups").update({ deleted_at: new Date().toISOString() }).eq("id", groupId);
       if (error) throw new Error(error.message);
     },
     async createFeedback(payload) {
