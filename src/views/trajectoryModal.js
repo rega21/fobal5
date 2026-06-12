@@ -40,6 +40,8 @@
     if (arcReset) arcReset.style.strokeDashoffset = "251.3";
     const msgReset = document.getElementById("pstatsWinRateMsg");
     if (msgReset) { msgReset.textContent = ""; msgReset.setAttribute("opacity", "0"); }
+    const sepReset = document.getElementById("pstatsWinRateSep");
+    if (sepReset) sepReset.setAttribute("opacity", "0");
 
     modal.classList.remove("hidden");
     if (window.lucide) window.lucide.createIcons();
@@ -60,8 +62,10 @@
     const arc = document.getElementById("pstatsGaugeArc");
     const pct = document.getElementById("pstatsWinRatePct");
     const msg = document.getElementById("pstatsWinRateMsg");
+    const sep = document.getElementById("pstatsWinRateSep");
     if (arc) arc.style.strokeDashoffset = String(251.3 * (1 - s.winRate / 100));
     if (msg) { msg.textContent = ""; msg.setAttribute("opacity", "0"); }
+    if (sep) sep.setAttribute("opacity", "0");
     if (pct) {
       const target = s.winRate;
       const duration = 1200;
@@ -82,6 +86,7 @@
             : w <= 80 ? "Viene dulce"
             : "Modo campeón";
           msg.setAttribute("opacity", "1");
+          if (sep) sep.setAttribute("opacity", "1");
         }
       }
       requestAnimationFrame(tick);
