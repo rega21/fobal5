@@ -39,7 +39,7 @@
     const arcReset = document.getElementById("pstatsGaugeArc");
     if (arcReset) arcReset.style.strokeDashoffset = "251.3";
     const msgReset = document.getElementById("pstatsWinRateMsg");
-    if (msgReset) { msgReset.textContent = ""; msgReset.style.opacity = "0"; }
+    if (msgReset) { msgReset.textContent = ""; msgReset.setAttribute("opacity", "0"); }
 
     modal.classList.remove("hidden");
     if (window.lucide) window.lucide.createIcons();
@@ -61,7 +61,7 @@
     const pct = document.getElementById("pstatsWinRatePct");
     const msg = document.getElementById("pstatsWinRateMsg");
     if (arc) arc.style.strokeDashoffset = String(251.3 * (1 - s.winRate / 100));
-    if (msg) { msg.textContent = ""; msg.style.opacity = "0"; }
+    if (msg) { msg.textContent = ""; msg.setAttribute("opacity", "0"); }
     if (pct) {
       const target = s.winRate;
       const duration = 1200;
@@ -81,7 +81,7 @@
             : w <= 65 ? "Buen rendimiento"
             : w <= 80 ? "Viene dulce"
             : "Modo campeón";
-          msg.style.opacity = "1";
+          msg.setAttribute("opacity", "1");
         }
       }
       requestAnimationFrame(tick);
