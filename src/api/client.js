@@ -579,10 +579,11 @@
     },
 
     async deleteGroup(groupId) {
-      const sb = window.SupabaseClient;
-      if (!sb) throw new Error("SupabaseClient not available");
-      const { error } = await sb.from("groups").update({ deleted_at: new Date().toISOString() }).eq("id", groupId);
-      if (error) throw new Error(error.message);
+      await requestSupabase(`/rest/v1/groups?id=eq.${groupId}`, {
+        method: "PATCH",
+        headers: buildSupabaseHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ deleted_at: new Date().toISOString() }),
+      });
     },
     async createFeedback(payload) {
       if (!HAS_SUPABASE) {
