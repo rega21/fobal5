@@ -78,13 +78,17 @@
           requestAnimationFrame(tick);
         } else if (msg) {
           const w = target;
-          msg.textContent = w <= 20 ? "Temporada para el olvido"
-            : w <= 35 ? "Le está costando entrar en ritmo"
-            : w <= 49 ? "Puede y debe mejorar"
-            : w === 50 ? "Campaña pareja"
-            : w <= 65 ? "Buen rendimiento"
-            : w <= 80 ? "Viene dulce"
-            : "Dale campeón";
+          const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+          const phrases =
+            w === 100 ? ["¿Cuándo te vas a Europa?"]
+            : w <= 20  ? ["No liga una", "Clara crisis institucional"]
+            : w <= 35  ? ["Necesita pretemporada", "Le está costando arrancar"]
+            : w <= 49  ? ["Está para levantar", "Puede dar más"]
+            : w === 50 ? ["Ni fu ni fa", "Suma un puntito", "Campaña pareja"]
+            : w <= 65  ? ["Cumple y suma", "Viene bien"]
+            : w <= 80  ? ["Anda dulce", "Está fino"]
+            :            ["Está intratable", "Dale campeón"];
+          msg.textContent = pick(phrases);
           msg.setAttribute("opacity", "1");
           if (sep) sep.setAttribute("opacity", "1");
         }
