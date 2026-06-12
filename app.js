@@ -3170,6 +3170,25 @@ document.getElementById("closeInfoAppBtn")?.addEventListener("click", () => {
   document.getElementById("infoAppModal")?.classList.add("hidden");
 });
 
+function compressImage(file, maxPx, quality) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      canvas.toBlob((blob) => resolve(blob), "image/jpeg", quality);
+    };
+    img.src = url;
+  });
+}
+
 let pendingLogoFile = null;
 
 function openEditGroupLogoModal() {
@@ -3239,7 +3258,8 @@ document.getElementById("saveGroupLogoBtn")?.addEventListener("click", async () 
   try {
     let newUrl = activeGroupLogoUrl;
     if (pendingLogoFile) {
-      newUrl = await window.FobalApi.uploadGroupLogo(groupId, pendingLogoFile);
+      const compressed = await compressImage(pendingLogoFile, 256, 0.82);
+      newUrl = await window.FobalApi.uploadGroupLogo(groupId, compressed);
     }
     const newName = document.getElementById("editGroupNameInput").value.trim() || activeGroupName;
     const isCreator = activeGroupCreatedBy && currentUser?.id === activeGroupCreatedBy;

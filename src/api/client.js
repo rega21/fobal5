@@ -549,11 +549,10 @@
       return created;
     },
     async uploadGroupLogo(groupId, file) {
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const path = `${groupId}.${ext}`;
+      const path = `${groupId}.jpg`;
       const { error } = await window.SupabaseClient.storage
         .from('group-logos')
-        .upload(path, file, { upsert: true, contentType: file.type });
+        .upload(path, file, { upsert: true, contentType: 'image/jpeg' });
       if (error) throw error;
       const { data: { publicUrl } } = window.SupabaseClient.storage
         .from('group-logos')
