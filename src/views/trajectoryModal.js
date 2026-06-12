@@ -84,7 +84,7 @@
             : w === 50 ? "Campaña pareja"
             : w <= 65 ? "Buen rendimiento"
             : w <= 80 ? "Viene dulce"
-            : "Modo campeón";
+            : "Dale campeón";
           msg.setAttribute("opacity", "1");
           if (sep) sep.setAttribute("opacity", "1");
         }
