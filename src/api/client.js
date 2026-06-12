@@ -581,7 +581,7 @@
     async deleteGroup(groupId) {
       await requestSupabase(`/rest/v1/groups?id=eq.${groupId}`, {
         method: "PATCH",
-        headers: buildSupabaseAuthHeaders({ "Content-Type": "application/json" }),
+        headers: buildSupabaseHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ deleted_at: new Date().toISOString() }),
       });
     },
