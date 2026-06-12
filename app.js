@@ -4445,6 +4445,7 @@ document.getElementById("closeMembersBtn")?.addEventListener("click", () => {
   const THRESHOLD = 75;
   let startY = 0;
   let pulling = false;
+  const sat = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat')) || 0;
 
   function reset() {
     pulling = false;
@@ -4467,7 +4468,7 @@ document.getElementById("closeMembersBtn")?.addEventListener("click", () => {
     const distance = e.touches[0].clientY - startY;
     if (distance <= 0) return;
     const capped = Math.min(distance * 0.5, 48);
-    indicator.style.top = `${capped - 40}px`;
+    indicator.style.top = `${sat + capped - 40}px`;
     indicator.classList.toggle("ptr-ready", distance >= THRESHOLD);
   }, { passive: true });
 
@@ -4477,7 +4478,7 @@ document.getElementById("closeMembersBtn")?.addEventListener("click", () => {
     indicator.style.transition = "";
     if (distance >= THRESHOLD) {
       pulling = false;
-      indicator.style.top = "8px";
+      indicator.style.top = `${sat + 8}px`;
       indicator.classList.add("ptr-spinning");
       setTimeout(() => window.location.reload(), 400);
     } else {
