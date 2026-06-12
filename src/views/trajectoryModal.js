@@ -38,6 +38,8 @@
     document.getElementById("pstatsWinRatePct").textContent = "—%";
     const arcReset = document.getElementById("pstatsGaugeArc");
     if (arcReset) arcReset.style.strokeDashoffset = "251.3";
+    const msgReset = document.getElementById("pstatsWinRateMsg");
+    if (msgReset) { msgReset.textContent = ""; msgReset.style.opacity = "0"; }
 
     modal.classList.remove("hidden");
     if (window.lucide) window.lucide.createIcons();
@@ -57,7 +59,9 @@
     document.getElementById("pstatsDraw").textContent = s.drawn;
     const arc = document.getElementById("pstatsGaugeArc");
     const pct = document.getElementById("pstatsWinRatePct");
+    const msg = document.getElementById("pstatsWinRateMsg");
     if (arc) arc.style.strokeDashoffset = String(251.3 * (1 - s.winRate / 100));
+    if (msg) { msg.textContent = ""; msg.style.opacity = "0"; }
     if (pct) {
       const target = s.winRate;
       const duration = 1200;
@@ -66,7 +70,19 @@
         const progress = Math.min((now - startTime) / duration, 1);
         const eased = 1 - Math.pow(1 - progress, 3);
         pct.textContent = Math.round(eased * target) + "%";
-        if (progress < 1) requestAnimationFrame(tick);
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        } else if (msg) {
+          const w = target;
+          msg.textContent = w <= 20 ? "Temporada para el olvido"
+            : w <= 35 ? "Le está costando entrar en ritmo"
+            : w <= 49 ? "Puede y debe mejorar"
+            : w === 50 ? "Campaña pareja"
+            : w <= 65 ? "Buen rendimiento"
+            : w <= 80 ? "Viene dulce"
+            : "Modo campeón";
+          msg.style.opacity = "1";
+        }
       }
       requestAnimationFrame(tick);
     }
