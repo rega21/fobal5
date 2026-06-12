@@ -3210,6 +3210,8 @@ function openEditGroupLogoModal() {
   document.getElementById("deleteGroupSection").style.display = "none";
   document.getElementById("deleteGroupBtn").style.display = "";
   document.getElementById("deleteGroupError")?.classList.add("hidden");
+  const confirmBtnReset = document.getElementById("deleteGroupConfirmBtn");
+  if (confirmBtnReset) { confirmBtnReset.disabled = false; confirmBtnReset.textContent = "Eliminar grupo definitivamente"; }
   const toggleSection = document.getElementById("allowMemberEditSection");
   const toggleCheck = document.getElementById("allowMemberEditCheck");
   const toggleSlider = document.getElementById("allowMemberEditSlider");
@@ -3331,10 +3333,11 @@ document.getElementById("deleteGroupConfirmBtn")?.addEventListener("click", asyn
     showToast("Grupo eliminado", 2500, "success");
     if (window.__showGroupSelector) window.__showGroupSelector();
   } catch (e) {
-    btn.disabled = false;
-    btn.textContent = "Eliminar grupo definitivamente";
     errorEl.textContent = "Error al eliminar el grupo.";
     errorEl?.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Eliminar grupo definitivamente";
   }
 });
 document.getElementById("editGroupLogoBtn")?.addEventListener("click", openEditGroupLogoModal);
