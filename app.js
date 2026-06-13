@@ -5,7 +5,7 @@
 })();
 
 const HISTORY_KEY = "fobal5_history";
-const DEFAULT_COMMUNITY_MIN_VOTES = 3;
+const DEFAULT_COMMUNITY_MIN_VOTES = 5;
 const configuredCommunityMinVotes = Number(window.APP_CONFIG?.COMMUNITY_MIN_VOTES);
 const COMMUNITY_MIN_VOTES =
   Number.isFinite(configuredCommunityMinVotes) && configuredCommunityMinVotes > 0
