@@ -68,32 +68,38 @@
     if (sep) sep.setAttribute("opacity", "0");
     if (pct) {
       const target = s.winRate;
-      const duration = 1200;
-      const startTime = performance.now();
-      function tick(now) {
-        const progress = Math.min((now - startTime) / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        pct.textContent = Math.round(eased * target) + "%";
-        if (progress < 1) {
-          requestAnimationFrame(tick);
-        } else if (msg) {
-          const w = target;
-          const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-          const phrases =
-            w === 100 ? ["¿Cuándo te vas a Europa?"]
-            : w <= 20  ? ["No liga una", "Clara crisis institucional"]
-            : w <= 35  ? ["Necesita pretemporada", "Le está costando arrancar"]
-            : w <= 49  ? ["Está para levantar", "Puede dar más"]
-            : w === 50 ? ["Ni fu ni fa", "Suma un puntito", "Campaña pareja"]
-            : w <= 65  ? ["Cumple y suma", "Viene bien"]
-            : w <= 80  ? ["Anda dulce", "Está fino"]
-            :            ["Está intratable", "Dale campeón"];
-          msg.textContent = pick(phrases);
-          msg.setAttribute("opacity", "1");
-          if (sep) sep.setAttribute("opacity", "1");
+      const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+      const showMsg = () => {
+        if (!msg) return;
+        const w = target;
+        const phrases =
+          w === 100 ? ["¿Cuándo te vas a Europa?"]
+          : w <= 20  ? ["No liga una", "Clara crisis institucional"]
+          : w <= 35  ? ["Necesita pretemporada", "Le está costando arrancar"]
+          : w <= 49  ? ["Está para levantar", "Puede dar más"]
+          : w === 50 ? ["Ni fu ni fa", "Ni frío ni caliente", "Campaña pareja"]
+          : w <= 65  ? ["Cumple y suma", "Viene bien"]
+          : w <= 80  ? ["Anda dulce", "Está fino"]
+          :            ["Está intratable", "Dale campeón"];
+        msg.textContent = pick(phrases);
+        msg.setAttribute("opacity", "1");
+        if (sep) sep.setAttribute("opacity", "1");
+      };
+      if (target === 0) {
+        pct.textContent = "0%";
+        setTimeout(showMsg, 400);
+      } else {
+        const duration = 1200;
+        const startTime = performance.now();
+        function tick(now) {
+          const progress = Math.min((now - startTime) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          pct.textContent = Math.round(eased * target) + "%";
+          if (progress < 1) requestAnimationFrame(tick);
+          else showMsg();
         }
+        requestAnimationFrame(tick);
       }
-      requestAnimationFrame(tick);
     }
   }
 
