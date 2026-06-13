@@ -745,7 +745,7 @@ function renderPlayerRadarChart(stats) {
   playerRadarChartInstance = new Chart(canvas, {
     type: "radar",
     data: {
-      labels: ["Ataque", "Visión", "Defensa", "Resistencia", "Garra", "Técnica"],
+      labels: ["Ataque", "Velocidad", "Defensa", "Resistencia", "Garra", "Técnica"],
       datasets: [{
         data,
         backgroundColor: color + "33",

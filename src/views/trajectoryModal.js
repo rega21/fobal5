@@ -77,7 +77,7 @@
           : w <= 20  ? ["No liga una", "Clara crisis institucional"]
           : w <= 35  ? ["Necesita pretemporada", "Le está costando arrancar"]
           : w <= 49  ? ["Está para levantar", "Puede dar más"]
-          : w === 50 ? ["Ni fu ni fa", "Ni frío ni caliente", "Campaña pareja"]
+          : w === 50 ? ["Ni fu ni fa", "Ni frío ni caliente", "Temporada pareja"]
           : w <= 65  ? ["Cumple y suma", "Viene bien"]
           : w <= 80  ? ["Anda dulce", "Está fino"]
           :            ["Está intratable", "Dale campeón"];
