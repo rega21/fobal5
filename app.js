@@ -153,7 +153,7 @@ const matchController = window.createMatchController
             stamina,
             garra,
             technique,
-            score: attack * 0.30 + garra * 0.20 + technique * 0.18 + defense * 0.17 + midfield * 0.10 + stamina * 0.05,
+            score: attack * 0.27 + technique * 0.20 + garra * 0.18 + defense * 0.15 + stamina * 0.12 + midfield * 0.08,
           };
         });
 
